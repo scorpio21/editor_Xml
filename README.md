@@ -1,6 +1,26 @@
 # Editor XML de Juegos
 
-Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos (formato `datafile`). Pensada para ejecutarse en XAMPP (Windows) o cualquier servidor compatible con PHP 8+.
+[![Estado](https://img.shields.io/badge/estado-activo-success.svg)](./) [![PHP](https://img.shields.io/badge/PHP-8%2B-777bb3.svg)](https://www.php.net/) [![Licencia](https://img.shields.io/badge/licencia-MIT-blue.svg)](./LICENSE)
+
+Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos (formato `datafile`). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
+
+## Tabla de contenidos
+
+- [Características](#características)
+- [Pila tecnológica](#pila-tecnológica)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Uso](#uso)
+- [Capturas](#capturas)
+- [Notas técnicas](#notas-técnicas)
+- [Buenas prácticas seguidas](#buenas-prácticas-seguidas)
+- [Seguridad (pendiente/mejorable)](#seguridad-pendientemejorable)
+- [Roadmap](#roadmap)
+- [Contribuir](#contribuir)
+- [Versionado](#versionado)
+- [Soporte](#soporte)
+- [Licencia](#licencia)
 
 ## Características
 
@@ -17,6 +37,14 @@ Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de ca
 - **Restaurar desde .bak**: botón para recuperar el XML previo.
 - **Compactar XML**: limpieza de nodos de texto vacíos y guardado con indentación consistente.
 - **Ayuda integrada**: botón “Ayuda” con modal explicativo paso a paso.
+
+## Pila tecnológica
+
+- PHP 8+
+- Extensión DOM de PHP (para manipulación XML)
+- HTML5 + CSS3 (estilos en `css/`)
+- JavaScript (vanilla, en `js/`)
+- XAMPP/Apache (entorno recomendado en Windows)
 
 ## Requisitos
 
@@ -48,7 +76,7 @@ editor_Xml/
 └─ README.md               # Este archivo
 ```
 
-## Puesta en marcha (XAMPP)
+## Instalación
 
 1. Copia la carpeta `editor_Xml` a `xampp/htdocs/`.
 2. Asegúrate de que la carpeta `uploads/` existe (se crea automáticamente si falta).
@@ -84,7 +112,9 @@ editor_Xml/
 - Tokens CSRF en formularios POST.
 - Protección de la carpeta `uploads/` (si aplica en tu entorno) con `.htaccess`.
 
-Consulta `MEJORAS.md` para el roadmap detallado y el progreso reciente.
+## Roadmap
+
+Revisa [`MEJORAS.md`](./MEJORAS.md) para el roadmap detallado, mejoras planificadas y progreso reciente.
 
 ## Contribuir
 
@@ -95,6 +125,21 @@ Consulta `MEJORAS.md` para el roadmap detallado y el progreso reciente.
 ## Licencia
 
 Este proyecto está licenciado bajo los términos de la **MIT License**. Consulta el archivo [`LICENSE`](./LICENSE) para más información.
+
+## Versionado
+
+Se sigue un esquema inspirado en [SemVer](https://semver.org/lang/es/): `MAJOR.MINOR.PATCH`.
+
+- Cambios incompatibles: incremento de `MAJOR`.
+- Funcionalidad retrocompatible: incremento de `MINOR`.
+- Corrección de errores: incremento de `PATCH`.
+
+Se recomienda usar tags en Git para marcar versiones estables.
+
+## Soporte
+
+- Abre un issue en GitHub describiendo claramente el problema o la propuesta.
+- Incluye pasos de reproducción, capturas y, si aplica, fragmentos de XML (sin datos sensibles).
 
 ## Capturas
 
