@@ -559,6 +559,36 @@ textarea:focus {
   background: #fff;
 }
 
+/* Buscador y opciones (ROMs/Hashes) */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 10px 0 var(--space-m);
+}
+.search-form label[for="q"] { margin: 0; }
+.search-form input#q {
+  flex: 1 1 320px;
+}
+.search-form .search-options {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+}
+.search-form .search-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: normal;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .search-form { flex-direction: column; align-items: stretch; }
+  .search-form .search-options { justify-content: flex-start; }
+}
+
 /* Paginación */
 .pagination {
   display: flex;
