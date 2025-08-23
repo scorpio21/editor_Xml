@@ -331,7 +331,7 @@ function mapearRegionesIdiomas(array $includeRegions, array $excludeLangs, array
         'NTSC' => ['NTSC']
     ];
     foreach ($includeRegions as $r) {
-        $key = strtoupper(trim((string)$r));
+        $key = mb_strtoupper(trim((string)$r), 'UTF-8');
         if (isset($regionMap[$key])) { foreach ($regionMap[$key] as $pat) { $includeTerms[] = $pat; } }
     }
     $langMap = [
@@ -340,7 +340,7 @@ function mapearRegionesIdiomas(array $includeRegions, array $excludeLangs, array
         'ZH' => ['ZH'], 'KO' => ['KO'], 'PL' => ['PL'], 'RU' => ['RU'], 'CS' => ['CS'], 'HU' => ['HU']
     ];
     foreach ($excludeLangs as $l) {
-        $key = strtoupper(trim((string)$l));
+        $key = mb_strtoupper(trim((string)$l), 'UTF-8');
         if (isset($langMap[$key])) { foreach ($langMap[$key] as $pat) { $excludeTerms[] = $pat; } }
     }
 }
@@ -690,6 +690,238 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     }
 
     header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// === Dedupe por región: conteo previo ===
+if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region_count' && $xml) {
+    requireValidCsrf();
+    $prefer = trim((string)($_POST['prefer_region'] ?? ''));
+    $keepEU = isset($_POST['keep_europe']) && (string)$_POST['keep_europe'] === '1';
+    if ($prefer === '') {
+        $_SESSION['error'] = 'Debes seleccionar una región a conservar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Cargar DOM y preparar XPath
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+    $games = $xpath->query('/datafile/game');
+
+    // Mapear términos de la región preferida (+Europa opcional)
+    $includeTerms = [];
+    $excludeTerms = [];
+    $regionsPref = [$prefer];
+    if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
+    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+
+    // Agrupar por nombre base (eliminando paréntesis)
+    $groups = [];
+    for ($i = 0; $i < $games->length; $i++) {
+        $g = $games->item($i);
+        if (!($g instanceof DOMElement)) { continue; }
+        $name = (string)$g->getAttribute('name');
+        $base = trim((string)preg_replace('/\s*\([^)]*\)\s*/', ' ', $name));
+        if ($base === '') { $base = $name; }
+        $groups[$base] = $groups[$base] ?? [];
+        $groups[$base][] = $g;
+    }
+
+    $toRemove = 0;
+    foreach ($groups as $base => $items) {
+        if (count($items) <= 1) { continue; }
+        // Ver si existe al menos una variante de la región preferida
+        $hasPreferred = false;
+        $isPreferred = [];
+        foreach ($items as $idx => $el) {
+            $hay = strtoupper((string)$el->getAttribute('name'));
+            $d = $xpath->query('./description', $el)->item(0);
+            if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
+            $tokens = tokenizar($hay);
+            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $isPreferred[$idx] = $pref;
+            if ($pref) { $hasPreferred = true; }
+        }
+        if (!$hasPreferred) {
+            // No hay preferida en este grupo: no contamos nada (no deduplicar)
+            continue;
+        }
+        // Contar solo las NO preferidas
+        foreach ($items as $idx => $el) {
+            if (!$isPreferred[$idx]) { $toRemove++; }
+        }
+    }
+
+    if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'ok' => true,
+            'duplicates' => $toRemove,
+            'message' => $toRemove > 0
+                ? ("Se pueden eliminar " . $toRemove . " duplicados. Pulsa 'Eliminar duplicados' para continuar.")
+                : 'No se encontraron duplicados para la región seleccionada.'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $_SESSION['message'] = ($toRemove > 0)
+        ? ('Se pueden eliminar ' . $toRemove . ' duplicados. Pulsa "Eliminar duplicados" para continuar.')
+        : 'No se encontraron duplicados para la región seleccionada.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// === Dedupe por región: ejecución ===
+if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region' && $xml) {
+    requireValidCsrf();
+    $prefer = trim((string)($_POST['prefer_region'] ?? ''));
+    $keepEU = isset($_POST['keep_europe']) && (string)$_POST['keep_europe'] === '1';
+    if ($prefer === '') {
+        $_SESSION['error'] = 'Debes seleccionar una región a conservar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+    $games = $xpath->query('/datafile/game');
+
+    // Mapear términos de la región preferida (+Europa opcional)
+    $includeTerms = [];
+    $excludeTerms = [];
+    $regionsPref = [$prefer];
+    if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
+    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+
+    // Construir grupos por nombre base
+    $groups = [];
+    for ($i = 0; $i < $games->length; $i++) {
+        $g = $games->item($i);
+        if (!($g instanceof DOMElement)) { continue; }
+        $name = (string)$g->getAttribute('name');
+        $base = trim((string)preg_replace('/\s*\([^)]*\)\s*/', ' ', $name));
+        if ($base === '') { $base = $name; }
+        $groups[$base] = $groups[$base] ?? [];
+        $groups[$base][] = $g;
+    }
+
+    crearBackup($xmlFile);
+
+    $deleted = 0;
+    foreach ($groups as $base => $items) {
+        if (count($items) <= 1) { continue; }
+        // Marcar preferidos y comprobar si existe alguno
+        $hasPreferred = false;
+        $isPreferred = [];
+        foreach ($items as $idx => $el) {
+            $hay = strtoupper((string)$el->getAttribute('name'));
+            $d = $xpath->query('./description', $el)->item(0);
+            if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
+            $tokens = tokenizar($hay);
+            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $isPreferred[$idx] = $pref;
+            if ($pref) { $hasPreferred = true; }
+        }
+        if (!$hasPreferred) { continue; }
+        // Eliminar solo los NO preferidos
+        foreach ($items as $idx => $el) {
+            if ($isPreferred[$idx]) { continue; }
+            if ($el->parentNode) { $el->parentNode->removeChild($el); $deleted++; }
+        }
+    }
+
+    // Guardar bonito
+    $dom->formatOutput = true;
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+    if (!guardarDomConBackup($dom, $xmlFile)) {
+        $_SESSION['error'] = 'No se pudo guardar el XML tras eliminar duplicados. Se revirtió al respaldo.';
+    } else {
+        $_SESSION['message'] = 'Eliminación de duplicados completada. Registros eliminados: ' . $deleted . '.';
+        $_SESSION['pending_save'] = true;
+    }
+
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// === Dedupe por región: exportar CSV de duplicados ===
+if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region_export_csv' && $xml) {
+    requireValidCsrf();
+    $prefer = trim((string)($_POST['prefer_region'] ?? ''));
+    $keepEU = isset($_POST['keep_europe']) && (string)$_POST['keep_europe'] === '1';
+    if ($prefer === '') {
+        $_SESSION['error'] = 'Debes seleccionar una región a conservar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+    $games = $xpath->query('/datafile/game');
+
+    // Términos para preferencia de región (+Europa opcional)
+    $includeTerms = [];
+    $excludeTerms = [];
+    $regionsPref = [$prefer];
+    if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
+    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+
+    // Agrupar por nombre base y determinar duplicados
+    $groups = [];
+    for ($i = 0; $i < $games->length; $i++) {
+        $g = $games->item($i);
+        if (!($g instanceof DOMElement)) { continue; }
+        $name = (string)$g->getAttribute('name');
+        $base = trim((string)preg_replace('/\s*\([^)]*\)\s*/', ' ', $name));
+        if ($base === '') { $base = $name; }
+        $groups[$base] = $groups[$base] ?? [];
+        $groups[$base][] = $g;
+    }
+
+    $toExport = [];
+    foreach ($groups as $base => $items) {
+        if (count($items) <= 1) { continue; }
+        // Marcar preferidos y comprobar si existe alguno
+        $hasPreferred = false;
+        $isPreferred = [];
+        foreach ($items as $idx => $el) {
+            $hay = strtoupper((string)$el->getAttribute('name'));
+            $d = $xpath->query('./description', $el)->item(0);
+            if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
+            $tokens = tokenizar($hay);
+            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $isPreferred[$idx] = $pref;
+            if ($pref) { $hasPreferred = true; }
+        }
+        if (!$hasPreferred) { continue; }
+        // Exportar solo los NO preferidos
+        foreach ($items as $idx => $el) {
+            if ($isPreferred[$idx]) { continue; }
+            $toExport[] = [ 'nombre' => (string)$el->getAttribute('name') ];
+        }
+    }
+
+    // Preparar descarga CSV
+    $filename = 'duplicados_' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $prefer) . '_' . date('Ymd_His') . '.csv';
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    // BOM para compatibilidad con Excel (UTF-8)
+    echo "\xEF\xBB\xBF";
+    $out = fopen('php://output', 'w');
+    // Encabezado
+    fputcsv($out, ['nombre']);
+    foreach ($toExport as $row) {
+        fputcsv($out, [$row['nombre']]);
+    }
+    fclose($out);
     exit;
 }
 

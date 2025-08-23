@@ -51,11 +51,19 @@ function closeModal() {
 }
 
 // Modal de ayuda
+var lastHelpTrigger = null; // recordamos quién abrió el modal para devolver el foco
 function openHelpModal() {
   var modal = document.getElementById('helpModal');
   if (modal) {
+    // Recordar el elemento activo (botón/enlace que abrió el modal)
+    lastHelpTrigger = (document.activeElement && document.activeElement instanceof HTMLElement) ? document.activeElement : null;
     modal.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
+    // Enfocar el primer enlace del índice para accesibilidad
+    var firstLink = modal.querySelector('nav a, nav button, a, button');
+    if (firstLink && typeof firstLink.focus === 'function') {
+      firstLink.focus();
+    }
   }
 }
 
@@ -64,6 +72,10 @@ function closeHelpModal() {
   if (modal) {
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
+    // Devolver foco al disparador si existe
+    if (lastHelpTrigger && typeof lastHelpTrigger.focus === 'function') {
+      try { lastHelpTrigger.focus(); } catch (e) {}
+    }
   }
 }
 
@@ -546,6 +558,106 @@ afterLoad(function initMultiSelects() {
       }
     });
   }
+
+  // === Dedupe por región: conteo y activación del botón ===
+  var dedupeAjax = false;
+  function handleDedupeCount(ev) {
+    var countBtn = ev.target && ev.target.closest('form#dedupe-form button[name="action"][value="dedupe_region_count"]');
+    if (!countBtn) return;
+    var form = document.getElementById('dedupe-form');
+    if (!form) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+    var live = document.getElementById('dedupe-count-result');
+    if (live) { live.textContent = 'Calculando…'; }
+    var btnDedupe = document.getElementById('btn-dedupe');
+    if (btnDedupe) { btnDedupe.disabled = true; }
+    var btnExport = document.getElementById('btn-dedupe-export');
+    if (btnExport) { btnExport.disabled = true; }
+    var fd = new FormData(form);
+    fd.set('action', 'dedupe_region_count');
+    fd.set('ajax', '1');
+    // Asegurar token CSRF
+    var csrfInput = form.querySelector('input[name="csrf_token"]');
+    if (csrfInput) { fd.set('csrf_token', csrfInput.value); }
+    dedupeAjax = true;
+    fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
+      .then(function (resp) {
+        var msg = 'Operación completada.';
+        var duplicates = 0;
+        try {
+          var data = JSON.parse(resp.text);
+          if (data && typeof data === 'object') {
+            if (data.message) msg = data.message;
+            if (typeof data.duplicates === 'number') duplicates = data.duplicates;
+          }
+        } catch (e) {
+          if (resp.text) { msg = resp.text; }
+        }
+        if (live) { live.textContent = msg; }
+        var has = duplicates > 0;
+        if (btnDedupe) { btnDedupe.disabled = !has; }
+        if (btnExport) { btnExport.disabled = !has; }
+      })
+      .catch(function(){
+        if (live) { live.textContent = 'No se pudo completar el conteo de duplicados.'; }
+        if (btnDedupe) { btnDedupe.disabled = true; }
+        if (btnExport) { btnExport.disabled = true; }
+      })
+      .finally(function(){ dedupeAjax = false; });
+  }
+  document.addEventListener('click', handleDedupeCount);
+
+  // Al cambiar la región, resetear estado del botón y resultado
+  var pref = document.getElementById('prefer_region');
+  if (pref) {
+    pref.addEventListener('change', function(){
+      var live = document.getElementById('dedupe-count-result');
+      if (live) { live.textContent = ''; }
+      var btnD = document.getElementById('btn-dedupe');
+      if (btnD) { btnD.disabled = true; }
+      var btnE = document.getElementById('btn-dedupe-export');
+      if (btnE) { btnE.disabled = true; }
+    });
+  }
+
+  // Al cambiar el checkbox "Conservar también Europa", reiniciar estado
+  var keepEU = document.getElementById('keep_europe');
+  if (keepEU) {
+    keepEU.addEventListener('change', function(){
+      var live = document.getElementById('dedupe-count-result');
+      if (live) { live.textContent = ''; }
+      var btnD = document.getElementById('btn-dedupe');
+      if (btnD) { btnD.disabled = true; }
+      var btnE = document.getElementById('btn-dedupe-export');
+      if (btnE) { btnE.disabled = true; }
+    });
+  }
+
+  // Colapsar/expandir sección Eliminación masiva con persistencia
+  var bulkToggle = document.querySelector('.bulk-delete .toggle-bulk');
+  try {
+    var key = 'bulkDeleteCollapsed'; // global por ahora (un único bloque)
+    var collapsed = localStorage.getItem(key) === '1';
+    function applyState(isCollapsed) {
+      if (!bulkToggle) return;
+      var container = bulkToggle.closest('.bulk-delete');
+      if (!container) return;
+      container.classList.toggle('collapsed', !!isCollapsed);
+      bulkToggle.setAttribute('aria-expanded', String(!isCollapsed));
+      bulkToggle.textContent = isCollapsed ? 'Mostrar sección' : 'Ocultar sección';
+    }
+    applyState(collapsed);
+    if (bulkToggle) {
+      bulkToggle.addEventListener('click', function(){
+        collapsed = !collapsed;
+        localStorage.setItem(key, collapsed ? '1' : '0');
+        applyState(collapsed);
+      });
+    }
+  } catch (e) { /* localStorage no disponible */ }
 });
 
 // Reloj en vivo: actualiza elementos con [data-clock]

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <div class="bulk-delete">
     <h2>Eliminación masiva por filtros</h2>
+    <button type="button" class="toggle-bulk" aria-expanded="true" aria-controls="bulk-delete-form">Ocultar sección</button>
     <?php 
         $bf = $_SESSION['bulk_filters'] ?? [
             'include'=>'','exclude'=>'','include_regions'=>[],'exclude_langs'=>[],
@@ -11,6 +12,8 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         ];
         $selRegions = is_array($bf['include_regions'] ?? null) ? $bf['include_regions'] : [];
         $selLangs = is_array($bf['exclude_langs'] ?? null) ? $bf['exclude_langs'] : [];
+        // Lista de regiones reutilizable
+        $regionsAll = ['Japon','Europa','USA','Asia','Australia','Escandinavia','Corea','China','Hong Kong','Taiwan','Rusia','España','Alemania','Francia','Italia','Paises Bajos','Portugal','Brasil','Mexico','Reino Unido','Norteamerica','Mundo/Internacional','PAL','NTSC'];
     ?>
     <form method="post" class="bulk-delete-form" id="bulk-delete-form">
         <?= campoCSRF() ?>
@@ -28,8 +31,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
                     </div>
                     <div class="ms-options">
                         <?php 
-                            $regions = ['Japon','Europa','USA','Asia','Australia','Escandinavia','Corea','China','Hong Kong','Taiwan','Rusia','España','Alemania','Francia','Italia','Paises Bajos','Portugal','Brasil','Mexico','Reino Unido','Norteamerica','Mundo/Internacional','PAL','NTSC'];
-                            foreach ($regions as $r) {
+                            foreach ($regionsAll as $r) {
                                 $checked = in_array($r, $selRegions, true) ? 'checked' : '';
                                 $id = 'msr_' . md5($r);
                                 echo '<label class="ms-option" for="'.htmlspecialchars($id).'">'
@@ -77,7 +79,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
         
         <!-- Filtros específicos MAME -->
-        <div class="fields mame-filters" style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 15px;">
+        <div class="fields mame-filters">
             <h3>Filtros específicos MAME (opcional)</h3>
             <div class="mame-row">
                 <label>
@@ -120,5 +122,32 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
             • en máquinas (machine): también en año y fabricante.
             Coincidencia insensible a mayúsculas/minúsculas.</p>
         <div id="count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
+    </form>
+
+    <form method="post" class="dedupe-form" id="dedupe-form">
+        <?= campoCSRF() ?>
+        <div class="fields mame-filters">
+            <h3>Eliminar duplicados por región</h3>
+            <p class="hint">Mantendrá solo una entrada por juego, conservando la versión de la región seleccionada (si existe). No afecta a máquinas.</p>
+            <label for="prefer_region">Conservar región:</label>
+            <select name="prefer_region" id="prefer_region" required>
+                <?php foreach ($regionsAll as $r): ?>
+                    <option value="<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($r) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <div class="option-row">
+                <label>
+                    <input type="checkbox" name="keep_europe" id="keep_europe" value="1">
+                    Conservar también Europa
+                </label>
+                <p class="hint">Si se marca, además de la región preferida se conservarán también las variantes de Europa.</p>
+            </div>
+        </div>
+        <div class="actions">
+            <button type="submit" name="action" value="dedupe_region_count" class="secondary">Contar duplicados</button>
+            <button type="submit" name="action" value="dedupe_region_export_csv" class="secondary" id="btn-dedupe-export" disabled>Exportar duplicados (CSV)</button>
+            <button type="submit" name="action" value="dedupe_region" class="danger" id="btn-dedupe" disabled onclick="return confirm('¿Eliminar duplicados y conservar solo la región seleccionada cuando exista?');">Eliminar duplicados</button>
+        </div>
+        <div id="dedupe-count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
     </form>
 </div>
