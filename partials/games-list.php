@@ -1,7 +1,27 @@
 <?php
 declare(strict_types=1);
 ?>
-<?php $entries = $xml->xpath('/datafile/*[self::game or self::machine]') ?: []; ?>
+<?php
+    $entries = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    // Filtro de búsqueda por nombre/descripcion/categoría (GET q)
+    $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+    if ($q !== '') {
+        $terms = array_values(array_filter(preg_split('/\s+/', $q)));
+        $entries = array_values(array_filter($entries, static function($e) use ($terms) {
+            $name = (string)($e['name'] ?? '');
+            $desc = (string)($e->description ?? '');
+            $cat  = (string)($e->category ?? '');
+            $hay  = mb_strtoupper($name.' '.$desc.' '.$cat, 'UTF-8');
+            foreach ($terms as $t) {
+                $t = mb_strtoupper((string)$t, 'UTF-8');
+                if ($t !== '' && mb_strpos($hay, $t, 0, 'UTF-8') !== false) {
+                    return true; // Coincidencia parcial
+                }
+            }
+            return false;
+        }));
+    }
+?>
 <h2>Lista de juegos/máquinas (<?= count($entries) ?>)</h2>
 
 <?php
@@ -16,6 +36,14 @@ declare(strict_types=1);
     $end = min($total - 1, $start + $perPage - 1);
 ?>
 
+<!-- Buscador -->
+<form method="get" class="search-form">
+    <label for="q">Buscar</label>
+    <input id="q" name="q" type="text" value="<?= htmlspecialchars($q) ?>" placeholder="Nombre o descripción (p. ej. Tom o Clancy)">
+    <?php if ($perPage !== 10): ?><input type="hidden" name="per_page" value="<?= $perPage ?>"><?php endif; ?>
+    <button type="submit">Buscar</button>
+</form>
+
 <form method="get" class="per-page-form">
     <label for="per_page">Mostrar</label>
     <select id="per_page" name="per_page" onchange="this.form.submit()">
@@ -26,6 +54,7 @@ declare(strict_types=1);
     </select>
     <noscript><button type="submit">Aplicar</button></noscript>
     <?php if ($page > 1): ?><input type="hidden" name="page" value="<?= $page ?>"><?php endif; ?>
+    <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
 </form>
 <div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
 <div class="game-grid">
@@ -110,16 +139,17 @@ declare(strict_types=1);
 
 <div class="pagination">
     <?php if ($page > 1): ?>
-        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?>">&laquo; Anterior</a>
+        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>">&laquo; Anterior</a>
     <?php endif; ?>
     <span class="page-info">Página <?= $page ?> de <?= $pages ?></span>
     <form method="get" class="page-jump">
         <input type="hidden" name="per_page" value="<?= $perPage ?>">
+        <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
         <label for="goto">Ir a</label>
         <input id="goto" name="page" type="number" min="1" max="<?= $pages ?>" value="<?= $page ?>">
         <button type="submit">Ir</button>
     </form>
     <?php if ($page < $pages): ?>
-        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?>">Siguiente &raquo;</a>
+        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>">Siguiente &raquo;</a>
     <?php endif; ?>
 </div>

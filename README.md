@@ -35,6 +35,8 @@ Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de ca
   - Idiomas a excluir.
   - Búsqueda por: `name`, `description`, `category` (en `game`) y `year`, `manufacturer` (en `machine`).
   - Botón “Contar coincidencias” (AJAX) para previsualizar impacto.
+- **Búsqueda rápida (servidor)**: cuadro de búsqueda por nombre/descr./categoría antes de paginar; preserva el término en la navegación.
+- **Visualización clara de ROMs**: cada atributo (`name`, `size`, `crc`, `md5`, `sha1`) en su propia línea para mejor legibilidad.
 - **Backups automáticos**: antes de guardar, se crea `uploads/current.xml.bak` y se revierte si falla la escritura.
 - **Restaurar desde .bak**: botón para recuperar el XML previo.
 - **Compactar XML**: limpieza de nodos de texto vacíos y guardado con indentación consistente.
@@ -63,6 +65,7 @@ editor_Xml/
 │  └─ editor-xml.js
 ├─ inc/
 │  ├─ acciones.php         # Procesa todas las acciones POST (edit, delete, bulk_delete, compact_xml, etc.)
+│  ├─ csrf-helper.php      # Helpers de CSRF: generar/verificar token y campo oculto
 │  └─ xml-helpers.php      # Helpers: asegurarCarpetaUploads, guardar con backup, limpiar espacios DOM
 ├─ partials/
 │  ├─ header-file.php      # Cabecera de archivo actual y acciones relacionadas
@@ -97,6 +100,7 @@ editor_Xml/
 6) **Guardar / Compactar XML**: tras una eliminación masiva, pulsa el botón para reescritura limpia del XML.
 7) **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
 8) **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
+9) **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
 
 ## Notas técnicas
 
@@ -104,6 +108,7 @@ editor_Xml/
 - Antes de escribir, se hace copia de seguridad `.bak` y, si falla el guardado, se revierte.
 - La edición multi-ROM reemplaza todos los nodos `<rom>` del elemento editado por los nuevos valores validados.
 - La eliminación masiva soporta un conteo previo por AJAX y contempla nodos `<game>` y `<machine>`.
+- Reloj en UI: elementos con `data-clock` muestran la hora actual del navegador, actualizada cada minuto. “Última modificación” en cabecera usa `filemtime` del XML y la zona horaria de PHP.
 
 ## Buenas prácticas seguidas
 
@@ -115,7 +120,9 @@ editor_Xml/
 ## Seguridad (pendiente/mejorable)
 
 - Validaciones más estrictas de entrada (tipos y formatos de `crc`, `md5`, `sha1`).
-- Tokens CSRF en formularios POST.
+- CSRF:
+  - Implementados helpers `generarTokenCSRF()`, `campoCSRF()`, `verificarTokenCSRF()`.
+  - Pendiente incluir/verificar el token en todos los formularios POST críticos.
 - Protección de la carpeta `uploads/` (si aplica en tu entorno) con `.htaccess`.
 
 ## Roadmap

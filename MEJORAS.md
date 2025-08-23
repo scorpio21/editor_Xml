@@ -13,6 +13,7 @@
   -[x] Grid de juegos a **1 elemento por línea** (`.game-grid { grid-template-columns: 1fr; }`).
   -[x] Estilos para `.per-page-form`, `.pagination` y `.page-jump`.
   -[x] Sustitución de `color-mix()` por `rgba(...)` para compatibilidad.
+  -[x] Visualización de ROMs en lista: cada atributo en su propia línea (HTML con `div` + CSS actualizado).
 
 - **Correcciones**
   -[x] Cierre del bloque `if ($xml)` para evitar error "Unexpected EndOfFile" reportado por el linter.
@@ -26,6 +27,7 @@
   -[x] Limpieza automática de nodos de texto vacíos al guardar en acciones de `editar`, `eliminar` y `eliminación masiva` (evita líneas en blanco entre `<game>`).
   -[x] Acción manual “Guardar / Compactar XML” que reescribe el fichero formateado y sin espacios sobrantes.
   -[x] Botón “Guardar / Compactar XML” visible tras una eliminación masiva exitosa (usa la bandera de sesión `pending_save`).
+  -[x] Buscador por nombre/descripcion/categoría (servidor) vía `GET q`, integrado con paginación y "Mostrar N".
 
 - **Soporte de máquinas y edición avanzada**
   -[x] Listado unificado de nodos `<game>` y `<machine>` con paginación.
@@ -50,6 +52,8 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
 
 ## Prioridades (alto impacto primero)
 
+- **CSRF en formularios (PRIORITARIO)**
+  - [ ] Incluir y verificar token CSRF en todos los formularios POST críticos (`edit`, `delete`, `bulk_delete`, `remove_xml`).
 - **Validaciones de entrada (Servidor/Cliente)**
   - [ ] Sanitizar y validar `$_POST` (longitud, tipos, regex para `crc`, `md5`, `sha1`, tamaño numérico).
   - [ ] Responder con mensajes de error claros y no reveladores de detalles internos.
@@ -85,13 +89,15 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
 - **Carpeta de uploads**
   - [ ] Proteger `uploads/` con `.htaccess` (si aplica) para evitar ejecución/descarga no deseada.
 - **Tokens CSRF**
-  - [ ] Añadir token CSRF en formularios POST (`edit`, `delete`, `remove_xml`).
+  - [x] Generación de token CSRF por sesión y helpers (`generarTokenCSRF()`, `campoCSRF()`, `verificarTokenCSRF()`).
+  - [ ] (PRIORITARIO) Incluir el token en todos los formularios POST críticos (`edit`, `delete`, `bulk_delete`, `remove_xml`, etc.) y verificar en servidor.
 
 ## Funcionalidades nuevas
 
 - **Búsqueda y filtrado**
-  - [ ] Filtrar por nombre, categoría, CRC/MD5/SHA1 en cliente (y opcionalmente en servidor para colecciones grandes).
-  - [ ] Añadir “Idiomas a incluir” (multi-select) para consultas del tipo “Región AND Idioma(s)” sin usar el campo de texto.
+  - [x] Filtro por nombre/descripcion/categoría en servidor (GET `q`) antes de paginar; preserva `q` en paginación y formularios.
+  - [ ] Extender búsqueda a campos de ROM (p. ej., `rom/@name`) y hashes (CRC/MD5/SHA1).
+  - [ ] Añadir “Idiomas a incluir” (multi-select) para consultas del tipo “Región AND Idioma(s)”.
 - **Editar cabecera**
   - [ ] Formulario para actualizar `header` (`name`, `description`, `version`, `date`, `author`, `url`, `homepage`).
 - **Alta de entradas**
@@ -132,7 +138,9 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
 - [ ] Edición de cabecera y alta de juegos.
 - [x] Backups automáticos y botón deshacer (restauración desde .bak).
 - [x] Compactación del XML: limpieza de espacios automática y acción manual para reescritura limpia.
-- [ ] Filtros/búsqueda y exportación.
+- [ ] Exportación.
+- [x] Búsqueda básica por nombre/descripcion/categoría (servidor).
+- [ ] Reloj: opción de mostrar segundos en UI y configuración explícita de zona horaria (PHP/JS).
 - [ ] Accesibilidad avanzada e i18n.
 - [ ] Filtros MAME específicos (driver status, cloneof, isbios...).
 - [ ] Tests unitarios y de integración.
