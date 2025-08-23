@@ -129,6 +129,10 @@ editor_Xml/
 
 Revisa [`MEJORAS.md`](./MEJORAS.md) para el roadmap detallado, mejoras planificadas y progreso reciente.
 
+- Milestone v1.0 (issues priorizados): [ver en GitHub](https://github.com/scorpio21/editor_Xml/issues?q=is%3Aissue+milestone%3A%22v1.0%22)
+- Milestone v1.1 (siguientes iteraciones): [ver en GitHub](https://github.com/scorpio21/editor_Xml/issues?q=is%3Aissue+milestone%3A%22v1.1%22)
+- Project "Editor XML Roadmap" (tablero): [ver proyectos](https://github.com/users/scorpio21/projects)
+
 ## Contribuir
 
 1. Crea un fork y una rama feature: `feature/mi-mejora`.
