@@ -14,6 +14,18 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
             <span class="badge">Cargado</span>
             <span>Última modificación: <?= $mod ? htmlspecialchars(date('Y-m-d H:i', (int)$mod)) : 'N/D' ?></span>
         </div>
+        <div class="meta" aria-label="Fecha y hora actuales">
+            Ahora: <span data-clock data-initial="<?= htmlspecialchars(date('c')) ?>"><?= htmlspecialchars(date('Y-m-d H:i:s')) ?></span>
+            <label class="sr-only" for="timezone-select-loaded">Zona horaria</label>
+            <select id="timezone-select-loaded" data-timezone-select>
+                <option value="system">Sistema</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/Madrid">Europe/Madrid</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+            </select>
+        </div>
         <div class="file-actions">
             <button type="button" onclick="openAddModal()">Añadir juego</button>
         </div>
@@ -52,7 +64,18 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         <div class="create-new">
             <button type="button" onclick="openCreateModal()">Crear un XML nuevo</button>
         </div>
-        <div class="meta" aria-label="Fecha y hora actuales">Ahora: <span data-clock data-format="DD/MM/YYYY HH:mm" data-initial="<?= htmlspecialchars(date('c')) ?>"><?= htmlspecialchars(date('d/m/Y H:i')) ?></span></div>
+        <div class="meta" aria-label="Fecha y hora actuales">
+            Ahora: <span data-clock data-initial="<?= htmlspecialchars(date('c')) ?>"><?= htmlspecialchars(date('Y-m-d H:i:s')) ?></span>
+            <label class="sr-only" for="timezone-select-empty">Zona horaria</label>
+            <select id="timezone-select-empty" data-timezone-select>
+                <option value="system">Sistema</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/Madrid">Europe/Madrid</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+            </select>
+        </div>
         <p class="hint"><small>Sube un archivo XML o DAT con la estructura de juegos para comenzar.</small></p>
     </div>
 <?php endif; ?>
