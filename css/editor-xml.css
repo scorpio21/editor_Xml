@@ -134,6 +134,22 @@ button.remove-btn:hover {
   overflow-y: auto;
 }
 
+/* Modal de ayuda: índice y contenido */
+#helpModal nav {
+  margin-bottom: var(--space-l);
+}
+#helpModal nav ol,
+#helpModal nav ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+#helpModal li { margin: 4px 0; }
+#helpModal section { margin: var(--space-m) 0 var(--space-l); }
+#helpModal h3 { margin-top: 0; }
+#helpModal a { color: var(--accent-600); text-decoration: underline; }
+#helpModal a:hover { text-decoration: none; }
+
 .close {
   float: right;
   cursor: pointer;
@@ -252,6 +268,55 @@ textarea:focus {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+/* Estilo profesional para input de archivo */
+.upload-form input[type="file"] {
+  font-size: 14px;
+  color: #111827;
+  border: 1px dashed var(--border);
+  background: #fff;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+.upload-form input[type="file"]:focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.30);
+  outline-offset: 2px;
+}
+.upload-form input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-500);
+  background: var(--accent-500);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, transform .02s ease;
+}
+.upload-form input[type="file"]::file-selector-button:hover {
+  background: var(--accent-600);
+  border-color: var(--accent-600);
+}
+.upload-form input[type="file"]::file-selector-button:active {
+  transform: translateY(1px);
+}
+/* Fallback WebKit */
+.upload-form input[type="file"]::-webkit-file-upload-button {
+  margin-right: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-500);
+  background: var(--accent-500);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, transform .02s ease;
+}
+.upload-form input[type="file"]::-webkit-file-upload-button:hover {
+  background: var(--accent-600);
+  border-color: var(--accent-600);
+}
+.upload-form input[type="file"]::-webkit-file-upload-button:active {
+  transform: translateY(1px);
 }
 
 .upload-form .meta {
@@ -373,6 +438,37 @@ textarea:focus {
 .bulk-delete .hint {
   color: var(--muted);
   margin-top: var(--space-s);
+}
+
+/* Colapsado eliminación masiva */
+.bulk-delete .toggle-bulk {
+  margin: 0 0 10px 0;
+}
+.bulk-delete.collapsed #bulk-delete-form,
+.bulk-delete.collapsed .dedupe-form {
+  display: none;
+}
+
+/* Dedupe form */
+.dedupe-form {
+  margin-top: 16px;
+}
+.dedupe-form .actions {
+  margin-top: 10px;
+}
+
+/* MAME filters: estilos separados (antes inline) */
+.bulk-delete .mame-filters {
+  border-top: 1px solid var(--border);
+  padding-top: 15px;
+  margin-top: 15px;
+}
+.bulk-delete .mame-filters .mame-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
 }
 
 /* Multi-select dropdown */

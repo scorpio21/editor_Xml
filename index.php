@@ -48,26 +48,6 @@ $xml = cargarXmlSiDisponible($xmlFile);
 <?php include __DIR__ . '/partials/header-file.php'; ?>
 
 <?php if ($xml): ?>
-    <h2>Cabecera del fichero</h2>
-    <div class="game">
-        <?php if (isset($xml->header)): ?>
-            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)($xml->header->name ?? '')) ?: 'N/A' ?></div>
-            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)($xml->header->description ?? '')) ?: 'N/A' ?></div>
-            <div class="game-info"><strong>Versión:</strong> <?= htmlspecialchars((string)($xml->header->version ?? '')) ?: 'N/A' ?></div>
-            <div class="game-info"><strong>Fecha:</strong> <?= htmlspecialchars((string)($xml->header->date ?? '')) ?: 'N/A' ?></div>
-            <div class="game-info"><strong>Autor:</strong> <?= htmlspecialchars((string)($xml->header->author ?? '')) ?: 'N/A' ?></div>
-            <div class="game-info"><strong>Web:</strong> 
-                <?php if (!empty((string)($xml->header->url ?? ''))): ?>
-                    <a href="<?= htmlspecialchars((string)($xml->header->url ?? '')) ?>" target="_blank"><?= htmlspecialchars((string)($xml->header->homepage ?? 'Enlace')) ?></a>
-                <?php else: ?>
-                    N/A
-                <?php endif; ?>
-            </div>
-        <?php else: ?>
-            <div class="game-info">No hay información de cabecera disponible</div>
-        <?php endif; ?>
-    </div>
-
     <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
 
     <?php include __DIR__ . '/partials/games-list.php'; ?>

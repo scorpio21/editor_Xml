@@ -1,26 +1,41 @@
 # Editor XML de Juegos y Máquinas
 
-[![Estado](https://img.shields.io/badge/estado-activo-success.svg)](./) [![PHP](https://img.shields.io/badge/PHP-8%2B-777bb3.svg)](https://www.php.net/) [![Licencia](https://img.shields.io/badge/licencia-MIT-blue.svg)](./LICENSE)
+[![Estado](https://img.shields.io/badge/estado-activo-success.svg)](./) [![PHP](https://img.shields.io/badge/PHP-8%2B-777bb3.svg)](https://www.php.net/) [![Licencia](https://img.shields.io/badge/licencia-MIT-blue.svg)](./LICENSE) [![Issues](https://img.shields.io/github/issues/scorpio21/editor_Xml.svg)](https://github.com/scorpio21/editor_Xml/issues) [![Último commit](https://img.shields.io/github/last-commit/scorpio21/editor_Xml.svg)](https://github.com/scorpio21/editor_Xml/commits) [![Stars](https://img.shields.io/github/stars/scorpio21/editor_Xml.svg?style=social)](https://github.com/scorpio21/editor_Xml/stargazers)
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
 ## Tabla de contenidos
 
+- [Características clave](#características-clave)
 - [Características](#características)
+- [Por qué / Para quién](#por-qué--para-quién)
 - [Pila tecnológica](#pila-tecnológica)
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Uso](#uso)
+- [Inicio rápido](#inicio-rápido)
 - [Capturas](#capturas)
 - [Notas técnicas](#notas-técnicas)
 - [Buenas prácticas seguidas](#buenas-prácticas-seguidas)
 - [Seguridad (pendiente/mejorable)](#seguridad-pendientemejorable)
+- [Limitaciones actuales](#limitaciones-actuales)
 - [Roadmap](#roadmap)
+- [Changelog](#changelog)
 - [Contribuir](#contribuir)
+- [Reportar un problema / Solicitar mejora](#reportar-un-problema--solicitar-mejora)
 - [Versionado](#versionado)
 - [Soporte](#soporte)
 - [Licencia](#licencia)
+
+## Características clave
+
+- 🚀 Edición rápida de juegos y máquinas (soporte multi‑ROM)
+- 🔍 Búsqueda y filtros (incluye eliminación masiva con dry‑run)
+- 🧰 Mantenimiento seguro: backups automáticos y restauración desde `.bak`
+- 🧹 Compactación y limpieza automática del XML al guardar
+- 📄 Paginación en servidor para DATS grandes
+- 🔐 Protección CSRF en todas las acciones POST
 
 ## Características
 
@@ -41,6 +56,12 @@ Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de ca
 - **Restaurar desde .bak**: botón para recuperar el XML previo.
 - **Compactar XML**: limpieza de nodos de texto vacíos y guardado con indentación consistente.
 - **Ayuda integrada**: botón “Ayuda” con modal explicativo paso a paso.
+
+## Por qué / Para quién
+
+- Personas que gestionan grandes catálogos XML/DAT (No-Intro, Redump, MAME).
+- Coleccionistas que necesitan filtrar, editar y limpiar entradas con múltiples ROMs.
+- Administradores que requieren backups, restauración y compactación segura del XML.
 
 ## Pila tecnológica
 
@@ -102,6 +123,13 @@ editor_Xml/
 8) **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
 9) **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
 
+## Inicio rápido
+
+1. Abre `http://localhost/editor_Xml/` en tu navegador.
+2. Sube un archivo `.xml` o `.dat` (se guardará como `uploads/current.xml`).
+3. Edita entradas desde la lista o el modal; usa “Contar coincidencias” antes de una eliminación masiva.
+4. Guarda/Compacta y, si es necesario, restaura desde `.bak`.
+
 ## Notas técnicas
 
 - El guardado usa `DOMDocument` con `preserveWhiteSpace = false`, `formatOutput = true` y una limpieza de nodos de texto vacíos.
@@ -120,10 +148,15 @@ editor_Xml/
 ## Seguridad (pendiente/mejorable)
 
 - Validaciones más estrictas de entrada (tipos y formatos de `crc`, `md5`, `sha1`).
-- CSRF:
-  - Implementados helpers `generarTokenCSRF()`, `campoCSRF()`, `verificarTokenCSRF()`.
-  - Pendiente incluir/verificar el token en todos los formularios POST críticos.
+- CSRF: implementado en todos los formularios POST críticos y verificado en servidor. Ver detalle en [`CHANGELOG.md`](./CHANGELOG.md).
 - Protección de la carpeta `uploads/` (si aplica en tu entorno) con `.htaccess`.
+
+## Limitaciones actuales
+
+- Rendimiento: los DATS muy grandes pueden tardar en procesarse en equipos modestos.
+- Validaciones avanzadas de entrada: pueden ampliarse (más mensajes y reglas específicas).
+- i18n: actualmente interfaz en español; multi‑idioma pendiente.
+- Pruebas automáticas: unitarias e integración aún por completar.
 
 ## Roadmap
 
@@ -131,13 +164,22 @@ Revisa [`MEJORAS.md`](./MEJORAS.md) para el roadmap detallado, mejoras planifica
 
 - Milestone v1.0 (issues priorizados): [ver en GitHub](https://github.com/scorpio21/editor_Xml/issues?q=is%3Aissue+milestone%3A%22v1.0%22)
 - Milestone v1.1 (siguientes iteraciones): [ver en GitHub](https://github.com/scorpio21/editor_Xml/issues?q=is%3Aissue+milestone%3A%22v1.1%22)
-- Project "Editor XML Roadmap" (tablero): [ver proyectos](https://github.com/users/scorpio21/projects)
+- Project "Editor XML Roadmap" (tablero): [Project 5](https://github.com/users/scorpio21/projects/5)
+
+## Changelog
+
+Consulta el historial de cambios en [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Contribuir
 
 1. Crea un fork y una rama feature: `feature/mi-mejora`.
 2. Sigue el estilo del proyecto (PHP 8+, funciones en español, CSS/JS separados).
 3. Envía un PR con una descripción clara.
+
+## Reportar un problema / Solicitar mejora
+
+- Abre un issue desde GitHub: [Elegir plantilla](https://github.com/scorpio21/editor_Xml/issues/new/choose)
+- Si no usas plantilla: [Nuevo issue](https://github.com/scorpio21/editor_Xml/issues/new)
 
 ## Licencia
 

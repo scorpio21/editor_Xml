@@ -6,19 +6,29 @@ declare(strict_types=1);
     // Filtro de búsqueda por nombre/descripcion/categoría (GET q)
     $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
     if ($q !== '') {
+        $qUpper = mb_strtoupper($q, 'UTF-8');
         $terms = array_values(array_filter(preg_split('/\s+/', $q)));
-        $entries = array_values(array_filter($entries, static function($e) use ($terms) {
+        $entries = array_values(array_filter($entries, static function($e) use ($terms, $qUpper) {
             $name = (string)($e['name'] ?? '');
-            $desc = (string)($e->description ?? '');
-            $cat  = (string)($e->category ?? '');
-            $hay  = mb_strtoupper($name.' '.$desc.' '.$cat, 'UTF-8');
+            $hayName = mb_strtoupper($name, 'UTF-8');
+            // 1) Si la búsqueda contiene espacios, probar frase completa en NOMBRE
+            if (mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false) {
+                if (mb_strpos($hayName, $qUpper, 0, 'UTF-8') !== false) { return true; }
+                // Si no coincide la frase, probar AND por palabras en NOMBRE
+                $all = true;
+                foreach ($terms as $t) {
+                    $t = mb_strtoupper((string)$t, 'UTF-8');
+                    if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                }
+                return $all;
+            }
+            // 2) Sin espacios: AND por palabras en NOMBRE
+            $all = true;
             foreach ($terms as $t) {
                 $t = mb_strtoupper((string)$t, 'UTF-8');
-                if ($t !== '' && mb_strpos($hay, $t, 0, 'UTF-8') !== false) {
-                    return true; // Coincidencia parcial
-                }
+                if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
             }
-            return false;
+            return $all;
         }));
     }
 ?>
@@ -56,6 +66,28 @@ declare(strict_types=1);
     <?php if ($page > 1): ?><input type="hidden" name="page" value="<?= $page ?>"><?php endif; ?>
     <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
 </form>
+
+<!-- Cabecera del fichero: debajo del buscador -->
+<h2>Cabecera del fichero</h2>
+<div class="game">
+    <?php if (isset($xml->header)): ?>
+        <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)($xml->header->name ?? '')) ?: 'N/A' ?></div>
+        <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)($xml->header->description ?? '')) ?: 'N/A' ?></div>
+        <div class="game-info"><strong>Versión:</strong> <?= htmlspecialchars((string)($xml->header->version ?? '')) ?: 'N/A' ?></div>
+        <div class="game-info"><strong>Fecha:</strong> <?= htmlspecialchars((string)($xml->header->date ?? '')) ?: 'N/A' ?></div>
+        <div class="game-info"><strong>Autor:</strong> <?= htmlspecialchars((string)($xml->header->author ?? '')) ?: 'N/A' ?></div>
+        <div class="game-info"><strong>Web:</strong>
+            <?php if (!empty((string)($xml->header->url ?? ''))): ?>
+                <a href="<?= htmlspecialchars((string)($xml->header->url ?? '')) ?>" target="_blank"><?= htmlspecialchars((string)($xml->header->homepage ?? 'Enlace')) ?></a>
+            <?php else: ?>
+                N/A
+            <?php endif; ?>
+        </div>
+    <?php else: ?>
+        <div class="game-info">No hay información de cabecera disponible</div>
+    <?php endif; ?>
+</div>
+
 <div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
 <div class="game-grid">
     <?php $idx = 0; $gameIdx = 0; $machineIdx = 0; foreach ($entries as $entry): ?>
