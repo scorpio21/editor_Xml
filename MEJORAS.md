@@ -1,4 +1,4 @@
-# Mejora del Editor XML de Juegos
+# Mejora del Editor XML de Juegos y Máquinas
 
 ## Progreso (implementado)
 
@@ -27,12 +27,24 @@
   -[x] Acción manual “Guardar / Compactar XML” que reescribe el fichero formateado y sin espacios sobrantes.
   -[x] Botón “Guardar / Compactar XML” visible tras una eliminación masiva exitosa (usa la bandera de sesión `pending_save`).
 
+- **Soporte de máquinas y edición avanzada**
+  -[x] Listado unificado de nodos `<game>` y `<machine>` con paginación.
+  -[x] Visualización de campos específicos en máquinas: `year` y `manufacturer` en la tarjeta.
+  -[x] Edición multi‑ROM para juegos y máquinas: añadir/eliminar/editar múltiples `<rom>` por entrada.
+  -[x] Validación estricta de ROMs: `size` numérico, `crc` (8 hex), `md5` (32 hex), `sha1` (40 hex).
+  -[x] Cálculo de hashes MD5/SHA1 desde fichero por cada ROM (frontend + backend).
+  -[x] Eliminación individual disponible para juegos y máquinas.
+  -[x] Eliminación masiva extendida para incluir `<machine>` además de `<game>`.
+
 - **Filtros y criterios (actualizado)**
   -[x] Se eliminó el selector de “Regiones/países a excluir”. Ahora el filtrado masivo utiliza únicamente:
   - Regiones/países a incluir
   - Idiomas a excluir
   -[x] Mapeo de región “USA” incluye sinónimos: `USA`, `U.S.A.`, `UNITED STATES`, `AMERICA`.
   -[x] Validado conteo con `uploads/current.xml`: 749 coincidencias para “USA” usando el criterio anterior (botón y script en PowerShell devolvieron el mismo resultado).
+  -[x] En eliminación masiva se buscan campos por tipo:
+    - Juegos: `name`, `description`, `category`.
+    - Máquinas: `name`, `description`, `year`, `manufacturer`.
 
 Este documento propone mejoras alineadas con las Reglas globales de codificación y las necesidades del proyecto.
 
@@ -52,11 +64,13 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
   - [ ] Focus management (enfocar el primer input al abrir y devolver foco al cierre).
 - **Rendimiento front-end**
   - [ ] Delegación de eventos y uso de `documentFragment` al renderizar listas paginadas.
+- **Filtros específicos MAME**
+  - [ ] Añadir filtros opcionales: `driver status`, `cloneof`, `isbios`, etc., cuando el XML sea de tipo MAME.
 
 ## Código y arquitectura
 
 - **Separación de responsabilidades**
-  - [ ] Extraer la lógica de edición/eliminación a funciones PHP (`editarJuego()`, `eliminarJuego()`) o a una clase `EditorXml`.
+  - [ ] Extraer la lógica de edición/eliminación a funciones PHP (por ejemplo, `editarEntrada()`, `eliminarEntrada()`) o a una clase `EditorXml`.
   - [ ] Crear un archivo `helpers.php` con utilidades (escape seguro, validación, manejo de archivos).
 - **Estructura de vistas**
   - [ ] Partials PHP para cabecera, tarjeta de juego y modal (evita duplicación y mejora legibilidad).
@@ -80,8 +94,8 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
   - [ ] Añadir “Idiomas a incluir” (multi-select) para consultas del tipo “Región AND Idioma(s)” sin usar el campo de texto.
 - **Editar cabecera**
   - [ ] Formulario para actualizar `header` (`name`, `description`, `version`, `date`, `author`, `url`, `homepage`).
-- **Añadir juego**
-  - [ ] Botón para crear un `game` nuevo con sus campos y validaciones.
+- **Alta de entradas**
+  - [ ] Botón para crear un `game` nuevo (y soporte futuro para `machine` si aplica), con validaciones y multi‑ROM.
 - **Exportar/descargar**
   - [ ] Botón para descargar el XML actual tras ediciones.
 
@@ -120,3 +134,6 @@ Este documento propone mejoras alineadas con las Reglas globales de codificació
 - [x] Compactación del XML: limpieza de espacios automática y acción manual para reescritura limpia.
 - [ ] Filtros/búsqueda y exportación.
 - [ ] Accesibilidad avanzada e i18n.
+- [ ] Filtros MAME específicos (driver status, cloneof, isbios...).
+- [ ] Tests unitarios y de integración.
+- [ ] Refactor de código y mejora de DX.

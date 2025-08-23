@@ -12,8 +12,8 @@ declare(strict_types=1);
         <li><a href="#h-requisitos">Requisitos</a></li>
         <li><a href="#h-cargar">Cargar un archivo</a></li>
         <li><a href="#h-listado">Explorar y paginar</a></li>
-        <li><a href="#h-editar">Editar un juego</a></li>
-        <li><a href="#h-eliminar">Eliminar un juego</a></li>
+        <li><a href="#h-editar">Editar un juego o máquina</a></li>
+        <li><a href="#h-eliminar">Eliminar un juego o máquina</a></li>
         <li><a href="#h-masivo">Eliminación masiva</a></li>
         <li><a href="#h-compactar">Guardar / Compactar XML</a></li>
         <li><a href="#h-restaurar">Restaurar desde .bak</a></li>
@@ -47,19 +47,22 @@ declare(strict_types=1);
     </section>
 
     <section id="h-editar">
-      <h4>4) Editar un juego</h4>
+      <h4>4) Editar un juego o máquina</h4>
       <ol>
-        <li>Pulsa <strong>Editar</strong> en el juego.</li>
-        <li>Modifica los campos necesarios y pulsa <strong>Guardar cambios</strong>.</li>
+        <li>Pulsa <strong>Editar</strong> en la entrada.</li>
+        <li>Modifica los campos y pulsa <strong>Guardar cambios</strong>.</li>
+        <li>Soporte <strong>multi‑ROM</strong>: añade, elimina o edita varias ROMs por entrada.</li>
+        <li>Validación de ROMs: <code>size</code> numérico, <code>crc</code> (8 hex), <code>md5</code> (32 hex), <code>sha1</code> (40 hex). Puedes calcular MD5/SHA1 desde fichero.</li>
+        <li>En <code>machine</code> verás además <strong>year</strong> y <strong>manufacturer</strong>. El campo <code>category</code> aplica solo a <code>game</code>.</li>
         <li>El XML se reescribe con formato limpio.</li>
       </ol>
     </section>
 
     <section id="h-eliminar">
-      <h4>5) Eliminar un juego</h4>
+      <h4>5) Eliminar un juego o máquina</h4>
       <ol>
-        <li>Pulsa <strong>Eliminar</strong> en el juego.</li>
-        <li>El cambio se guarda y se hace una copia <code>.bak</code> antes de escribir.</li>
+        <li>Pulsa <strong>Eliminar</strong> en la entrada deseada (juego o máquina) y confirma.</li>
+        <li>Se crea copia <code>.bak</code> antes de escribir para poder restaurar si es necesario.</li>
       </ol>
     </section>
 
@@ -67,6 +70,12 @@ declare(strict_types=1);
       <h4>6) Eliminación masiva</h4>
       <ol>
         <li>Define <em>Regiones/países a incluir</em> y <em>Idiomas a excluir</em>.</li>
+        <li>La búsqueda contempla <strong>juegos y máquinas</strong>.
+          <ul>
+            <li>Juegos: <code>name</code>, <code>description</code>, <code>category</code>.</li>
+            <li>Máquinas: <code>name</code>, <code>description</code>, <code>year</code>, <code>manufacturer</code>.</li>
+          </ul>
+        </li>
         <li>Pulsa <strong>Contar coincidencias</strong> para previsualizar el impacto.</li>
         <li>Si estás conforme, pulsa <strong>Eliminar filtrados</strong>.</li>
       </ol>
