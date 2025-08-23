@@ -3,32 +3,78 @@ declare(strict_types=1);
 ?>
 <?php
     $entries = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
-    // Filtro de búsqueda por nombre/descripcion/categoría (GET q)
+    // Filtro de búsqueda por nombre/descripcion/categoría (GET q) y extensiones a ROMs/hashes
     $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+    $qInRoms = isset($_GET['q_in_roms']) && $_GET['q_in_roms'] === '1';
+    $qInHashes = isset($_GET['q_in_hashes']) && $_GET['q_in_hashes'] === '1';
     if ($q !== '') {
         $qUpper = mb_strtoupper($q, 'UTF-8');
         $terms = array_values(array_filter(preg_split('/\s+/', $q)));
-        $entries = array_values(array_filter($entries, static function($e) use ($terms, $qUpper) {
+        $hasSpace = mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false;
+        // Normalización para hashes (quitar separadores comunes)
+        $qHash = strtoupper(str_replace([' ', '-', '_'], '', $q));
+        $entries = array_values(array_filter($entries, static function($e) use ($terms, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
+            // Coincidencia base por nombre (y opcionalmente por descripción/categoría si se amplía en el futuro)
             $name = (string)($e['name'] ?? '');
             $hayName = mb_strtoupper($name, 'UTF-8');
-            // 1) Si la búsqueda contiene espacios, probar frase completa en NOMBRE
-            if (mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false) {
-                if (mb_strpos($hayName, $qUpper, 0, 'UTF-8') !== false) { return true; }
-                // Si no coincide la frase, probar AND por palabras en NOMBRE
+            $matchBase = false;
+            if ($hasSpace) {
+                if (mb_strpos($hayName, $qUpper, 0, 'UTF-8') !== false) { $matchBase = true; }
+                if (!$matchBase) {
+                    $all = true;
+                    foreach ($terms as $t) {
+                        $t = mb_strtoupper((string)$t, 'UTF-8');
+                        if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                    }
+                    $matchBase = $all;
+                }
+            } else {
                 $all = true;
                 foreach ($terms as $t) {
                     $t = mb_strtoupper((string)$t, 'UTF-8');
                     if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
                 }
-                return $all;
+                $matchBase = $all;
             }
-            // 2) Sin espacios: AND por palabras en NOMBRE
-            $all = true;
-            foreach ($terms as $t) {
-                $t = mb_strtoupper((string)$t, 'UTF-8');
-                if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+
+            // Coincidencia en ROMs por nombre
+            $matchRoms = false;
+            if ($qInRoms && isset($e->rom)) {
+                foreach ($e->rom as $rom) {
+                    $romName = (string)($rom['name'] ?? '');
+                    $hayRom = mb_strtoupper($romName, 'UTF-8');
+                    if ($hasSpace) {
+                        if (mb_strpos($hayRom, $qUpper, 0, 'UTF-8') !== false) { $matchRoms = true; break; }
+                        $all = true;
+                        foreach ($terms as $t) {
+                            $t = mb_strtoupper((string)$t, 'UTF-8');
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        }
+                        if ($all) { $matchRoms = true; break; }
+                    } else {
+                        $all = true;
+                        foreach ($terms as $t) {
+                            $t = mb_strtoupper((string)$t, 'UTF-8');
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        }
+                        if ($all) { $matchRoms = true; break; }
+                    }
+                }
             }
-            return $all;
+
+            // Coincidencia en hashes: CRC/MD5/SHA1 (subcadena normalizada)
+            $matchHashes = false;
+            if ($qInHashes && isset($e->rom)) {
+                foreach ($e->rom as $rom) {
+                    $crc  = strtoupper((string)($rom['crc'] ?? ''));
+                    $md5  = strtoupper((string)($rom['md5'] ?? ''));
+                    $sha1 = strtoupper((string)($rom['sha1'] ?? ''));
+                    $hay = str_replace([' ', '-', '_'], '', $crc . $md5 . $sha1);
+                    if ($qHash !== '' && strpos($hay, $qHash) !== false) { $matchHashes = true; break; }
+                }
+            }
+
+            return $matchBase || $matchRoms || $matchHashes;
         }));
     }
 ?>
@@ -49,7 +95,11 @@ declare(strict_types=1);
 <!-- Buscador -->
 <form method="get" class="search-form">
     <label for="q">Buscar</label>
-    <input id="q" name="q" type="text" value="<?= htmlspecialchars($q) ?>" placeholder="Nombre o descripción (p. ej. Tom o Clancy)">
+    <input id="q" name="q" type="text" value="<?= htmlspecialchars($q) ?>" placeholder="Nombre (juego/máquina), ROM o hash">
+    <div class="search-options">
+        <label><input type="checkbox" name="q_in_roms" value="1" <?= $qInRoms ? 'checked' : '' ?>> Buscar en ROMs</label>
+        <label><input type="checkbox" name="q_in_hashes" value="1" <?= $qInHashes ? 'checked' : '' ?>> Buscar en hashes (CRC/MD5/SHA1)</label>
+    </div>
     <?php if ($perPage !== 10): ?><input type="hidden" name="per_page" value="<?= $perPage ?>"><?php endif; ?>
     <button type="submit">Buscar</button>
 </form>
@@ -65,6 +115,8 @@ declare(strict_types=1);
     <noscript><button type="submit">Aplicar</button></noscript>
     <?php if ($page > 1): ?><input type="hidden" name="page" value="<?= $page ?>"><?php endif; ?>
     <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
+    <?php if ($qInRoms): ?><input type="hidden" name="q_in_roms" value="1"><?php endif; ?>
+    <?php if ($qInHashes): ?><input type="hidden" name="q_in_hashes" value="1"><?php endif; ?>
 </form>
 
 <!-- Cabecera del fichero: debajo del buscador -->
