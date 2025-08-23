@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <!-- Modal editar -->
 <div class="modal" id="editModal">
@@ -10,6 +11,7 @@ declare(strict_types=1);
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="index" id="editIndex">
             <input type="hidden" name="node_type" id="editNodeType">
+            <?= campoCSRF() ?>
 
             <label>Nombre:</label>
             <input type="text" name="game_name" id="editGameName" required>

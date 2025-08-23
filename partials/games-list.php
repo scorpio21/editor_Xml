@@ -73,11 +73,11 @@ declare(strict_types=1);
                     <ul>
                         <?php foreach ($entry->rom as $rom): ?>
                             <li>
-                                <span><strong>Nombre:</strong> <?= htmlspecialchars((string)$rom['name']) ?></span>
-                                <span><strong>Tamaño:</strong> <?= htmlspecialchars((string)$rom['size']) ?></span>
-                                <span><strong>CRC:</strong> <?= htmlspecialchars((string)$rom['crc']) ?></span>
-                                <span><strong>MD5:</strong> <?= htmlspecialchars((string)$rom['md5']) ?></span>
-                                <span><strong>SHA1:</strong> <?= htmlspecialchars((string)$rom['sha1']) ?></span>
+                                <div><strong>Nombre:</strong> <?= htmlspecialchars((string)$rom['name']) ?></div>
+                                <div><strong>Tamaño:</strong> <?= htmlspecialchars((string)$rom['size']) ?></div>
+                                <div><strong>CRC:</strong> <?= htmlspecialchars((string)$rom['crc']) ?></div>
+                                <div><strong>MD5:</strong> <?= htmlspecialchars((string)$rom['md5']) ?></div>
+                                <div><strong>SHA1:</strong> <?= htmlspecialchars((string)$rom['sha1']) ?></div>
                             </li>
                         <?php endforeach; ?>
                     </ul>

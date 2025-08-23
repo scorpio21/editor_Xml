@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <div class="top-actions">
     <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
@@ -18,15 +19,18 @@ declare(strict_types=1);
         </div>
         <form method="post">
             <input type="hidden" name="action" value="remove_xml">
+            <?= campoCSRF() ?>
             <button type="submit" class="remove-btn">Eliminar archivo actual</button>
         </form>
         <?php if (!empty($_SESSION['pending_save'])): ?>
         <form method="post" class="inline-form">
+            <?= campoCSRF() ?>
             <button type="submit" name="action" value="compact_xml" class="secondary">Guardar / Compactar XML</button>
         </form>
         <?php endif; ?>
         <?php if (file_exists($xmlFile . '.bak')): ?>
         <form method="post" class="inline-form">
+            <?= campoCSRF() ?>
             <button type="submit" name="action" value="restore_backup" class="secondary">Restaurar desde .bak</button>
         </form>
         <p class="derecha">By scorpio</p>

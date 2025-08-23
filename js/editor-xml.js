@@ -507,6 +507,11 @@ afterLoad(function initMultiSelects() {
     var fd = new FormData(form);
     fd.set('action', 'bulk_count');
     fd.set('ajax', '1');
+    // Asegurar que el token CSRF esté incluido
+    var csrfInput = form.querySelector('input[name="csrf_token"]');
+    if (csrfInput) {
+      fd.set('csrf_token', csrfInput.value);
+    }
     countingAjax = true;
     fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
       .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })

@@ -192,6 +192,53 @@ textarea:focus {
   margin-top: 15px;
 }
 
+/* Estilos para ROMs */
+.game-roms {
+  margin: 12px 0;
+}
+
+.game-roms ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.game-roms li {
+  background: #f8f9fa;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.game-roms li div {
+  display: block;
+  margin: 6px 0;
+  padding: 2px 0;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.game-roms li div strong {
+  display: inline-block;
+  min-width: 80px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* Asegurar que cada campo ROM esté en su propia línea */
+.game-roms li {
+  display: block;
+  width: 100%;
+}
+
+.game-roms li div:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
 .upload-form {
   background: var(--card-bg);
   padding: 20px;

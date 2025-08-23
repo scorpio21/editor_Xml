@@ -577,10 +577,29 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
 
 // Eliminación masiva
 if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
-    $include = isset($_POST['include']) ? trim((string)$_POST['include']) : '';
-    $exclude = isset($_POST['exclude']) ? trim((string)$_POST['exclude']) : '';
+    require_once __DIR__ . '/csrf-helper.php';
+    if (!verificarCSRFParaAccion()) {
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    
+    require_once __DIR__ . '/mame-filters.php';
+    
+    $include = sanitizarTexto($_POST['include'] ?? '');
+    $exclude = sanitizarTexto($_POST['exclude'] ?? '');
     $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
     $excludeLangs = isset($_POST['exclude_langs']) && is_array($_POST['exclude_langs']) ? $_POST['exclude_langs'] : [];
+    
+    // Procesar filtros MAME
+    $mameFilters = procesarFiltrosMame();
+    
+    // Guardar filtros en sesión
+    $_SESSION['bulk_filters'] = [
+        'include' => $include,
+        'exclude' => $exclude,
+        'include_regions' => $includeRegions,
+        'exclude_langs' => $excludeLangs
+    ] + $mameFilters;
     // Construir términos combinados
     $includeTerms = [];
     if ($include !== '') {
@@ -604,52 +623,32 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     crearBackup($xmlFile);
 
     $deleted = 0;
-    // Eliminar juegos
-    for ($i = $games->length - 1; $i >= 0; $i--) {
-        $g = $games->item($i);
-        if (!($g instanceof DOMElement)) { continue; }
-        $name = (string)($g->getAttribute('name') ?? '');
-        $desc = '';
-        $cat = '';
-        $dNode = $xpath->query('./description', $g)->item(0);
-        if ($dNode) { $desc = (string)$dNode->nodeValue; }
-        $cNode = $xpath->query('./category', $g)->item(0);
-        if ($cNode) { $cat = (string)$cNode->nodeValue; }
-        $haystackUpper = strtoupper($name.' '.$desc.' '.$cat);
+    $allFilters = $_SESSION['bulk_filters'];
+    
+    foreach ($games as $g) {
+        $haystack = obtenerTextoParaBusqueda($g, 'game');
+        $haystackUpper = strtoupper($haystack);
         $tokens = tokenizar($haystackUpper);
         if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
         if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
         $g->parentNode->removeChild($g);
         $deleted++;
     }
-    // Eliminar máquinas
-    for ($i = $machines->length - 1; $i >= 0; $i--) {
-        $m = $machines->item($i);
-        if (!($m instanceof DOMElement)) { continue; }
-        $name = (string)($m->getAttribute('name') ?? '');
-        $desc = '';
-        $year = '';
-        $manu = '';
-        $dNode = $xpath->query('./description', $m)->item(0);
-        if ($dNode) { $desc = (string)$dNode->nodeValue; }
-        $yNode = $xpath->query('./year', $m)->item(0);
-        if ($yNode) { $year = (string)$yNode->nodeValue; }
-        $manNode = $xpath->query('./manufacturer', $m)->item(0);
-        if ($manNode) { $manu = (string)$manNode->nodeValue; }
-        $haystackUpper = strtoupper($name.' '.$desc.' '.$year.' '.$manu);
+    foreach ($machines as $m) {
+        $haystack = obtenerTextoParaBusqueda($m, 'machine');
+        $haystackUpper = strtoupper($haystack);
         $tokens = tokenizar($haystackUpper);
         if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
         if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
+        
+        // Aplicar filtros MAME específicos
+        if (!aplicarFiltrosMame($m, $allFilters)) { continue; }
+        
         $m->parentNode->removeChild($m);
         $deleted++;
     }
 
-    $_SESSION['bulk_filters'] = [
-        'include' => $include,
-        'exclude' => $exclude,
-        'include_regions' => $includeRegions,
-        'exclude_langs' => $excludeLangs,
-    ];
+    // Los filtros ya están guardados en sesión arriba
 
     // Formateo limpio del XML al guardar
     $dom->preserveWhiteSpace = false;

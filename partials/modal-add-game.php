@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <div id="addGameModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addGameTitle" style="display:none">
   <div class="modal-content">
@@ -8,8 +9,9 @@ declare(strict_types=1);
       <button type="button" class="close" aria-label="Cerrar" onclick="closeAddModal()">×</button>
     </div>
     <div class="modal-body">
-      <form id="add-game-form" method="post">
+      <form method="post" id="add-game-form">
         <input type="hidden" name="action" value="add_game">
+        <?= campoCSRF() ?>
         <div class="form-row">
           <label>ROMs del juego</label>
           <div id="roms-container">

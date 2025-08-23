@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <div id="createModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createModalTitle" style="display:none">
   <div class="modal-content">
@@ -8,8 +9,9 @@ declare(strict_types=1);
       <button type="button" class="close" aria-label="Cerrar" onclick="closeCreateModal()">×</button>
     </div>
     <div class="modal-body">
-      <form id="create-xml-form" method="post">
-        <input type="hidden" name="action" value="create_xml">
+        <form method="post" id="create-xml-form">
+            <input type="hidden" name="action" value="create_xml">
+            <?= campoCSRF() ?>
         <div class="form-row">
           <label for="cx_name">Nombre del catálogo</label>
           <input type="text" id="cx_name" name="name" required>
