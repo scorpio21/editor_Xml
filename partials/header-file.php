@@ -40,6 +40,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
     <div class="upload-form">
         <h3>Subir fichero XML o DAT</h3>
         <form method="post" enctype="multipart/form-data">
+            <?= campoCSRF() ?>
             <div class="file-row">
                 <input type="file" name="xmlFile" accept=".xml,.dat" required>
                 <button type="submit">Cargar XML/DAT</button>

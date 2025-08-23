@@ -8,13 +8,29 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+// CSRF: helpers y verificación centralizada
+require_once __DIR__ . '/csrf-helper.php';
+/**
+ * Requiere un token CSRF válido o redirige con error.
+ */
+function requireValidCsrf(): void {
+    $token = (string)($_POST['csrf_token'] ?? '');
+    if ($token === '' || !verificarTokenCSRF($token)) {
+        $_SESSION['error'] = 'Sesión no válida o token CSRF incorrecto.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
+
 // (migrado) Acción add_game movida más abajo, después de cargar $xml
 
 // Guardar/Compactar XML manualmente
 if (isset($_POST['action']) && $_POST['action'] === 'compact_xml') {
+    requireValidCsrf();
     if (file_exists($xmlFile)) {
         require_once __DIR__ . '/xml-helpers.php';
         $raw = @file_get_contents($xmlFile);
+
         if ($raw === false) {
             $_SESSION['error'] = 'No se pudo leer el XML para compactar.';
             header('Location: ' . $_SERVER['PHP_SELF']);
@@ -55,6 +71,7 @@ if (!isset($xmlFile)) {
 
 // Crear nuevo XML desde cero
 if (isset($_POST['action']) && $_POST['action'] === 'create_xml') {
+    requireValidCsrf();
     require_once __DIR__ . '/xml-helpers.php';
     $name = trim((string)($_POST['name'] ?? ''));
     $description = trim((string)($_POST['description'] ?? ''));
@@ -103,6 +120,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'create_xml') {
 
 // Restablecer filtros de sesión
 if (isset($_POST['action']) && $_POST['action'] === 'reset_filters') {
+    requireValidCsrf();
     unset($_SESSION['bulk_filters']);
     $_SESSION['message'] = 'Filtros restablecidos.';
     header('Location: ' . $_SERVER['PHP_SELF']);
@@ -132,13 +150,15 @@ function anyTermMatch(array $tokens, string $haystackUpper, array $terms): bool 
     return false;
 }
 
-// Subida de fichero (no depende de action)
+// Subida de fichero (no depende de action) — proteger con CSRF
 if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['xmlFile']['error'] === UPLOAD_ERR_OK) {
+    requireValidCsrf();
     $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
     if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
         move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile);
         $_SESSION['xml_uploaded'] = true;
         $_SESSION['message'] = 'Archivo cargado correctamente.';
+
     } else {
         $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
     }
@@ -146,11 +166,13 @@ if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['
 
 // Restaurar desde copia de seguridad .bak
 if (isset($_POST['action']) && $_POST['action'] === 'restore_backup') {
+    requireValidCsrf();
     $backupFile = $xmlFile . '.bak';
     if (file_exists($backupFile)) {
         if (@copy($backupFile, $xmlFile)) {
             $_SESSION['xml_uploaded'] = true;
             $_SESSION['message'] = 'Restaurado correctamente desde la copia de seguridad (.bak).';
+
         } else {
             $_SESSION['error'] = 'No se pudo restaurar desde la copia de seguridad.';
         }
@@ -169,6 +191,7 @@ if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)) {
 
 // Añadir juego (después de cargar $xml)
 if (isset($_POST['action']) && $_POST['action'] === 'add_game' && $xml) {
+    requireValidCsrf();
     $gameName = trim((string)($_POST['game_name'] ?? ''));
     $desc = trim((string)($_POST['description'] ?? ''));
     $cat = trim((string)($_POST['category'] ?? ''));
@@ -324,6 +347,7 @@ function mapearRegionesIdiomas(array $includeRegions, array $excludeLangs, array
 
 // Simulación: contar coincidencias
 if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
+    requireValidCsrf();
     $include = isset($_POST['include']) ? trim((string)$_POST['include']) : '';
     $exclude = isset($_POST['exclude']) ? trim((string)$_POST['exclude']) : '';
     $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
@@ -420,6 +444,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
 
 // Guardar edición
 if (isset($_POST['action']) && $_POST['action'] === 'edit' && $xml) {
+    requireValidCsrf();
     $index = (int)($_POST['index'] ?? -1);
     $nodeType = (string)($_POST['node_type'] ?? 'game');
     $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
@@ -545,6 +570,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit' && $xml) {
 
 // Eliminar entrada (game o machine)
 if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
+    requireValidCsrf();
     $index = (int)($_POST['index'] ?? -1);
     $nodeType = (string)($_POST['node_type'] ?? 'game');
     $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
@@ -669,6 +695,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
 
 // Eliminar archivo XML actual
 if (isset($_POST['action']) && $_POST['action'] === 'remove_xml') {
+    requireValidCsrf();
     if (file_exists($xmlFile)) { unlink($xmlFile); }
     unset($_SESSION['xml_uploaded']);
     $_SESSION['message'] = 'Archivo eliminado correctamente.';
