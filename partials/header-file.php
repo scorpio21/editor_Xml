@@ -3,6 +3,7 @@ declare(strict_types=1);
 ?>
 <div class="top-actions">
     <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
+    <button type="button" onclick="openCreateModal()">Crear XML</button>
   </div>
 <?php if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)): ?>
     <div class="current-file">
@@ -11,6 +12,9 @@ declare(strict_types=1);
         <div class="file-meta" aria-label="Información del archivo actual">
             <span class="badge">Cargado</span>
             <span>Última modificación: <?= $mod ? htmlspecialchars(date('Y-m-d H:i', (int)$mod)) : 'N/D' ?></span>
+        </div>
+        <div class="file-actions">
+            <button type="button" onclick="openAddModal()">Añadir juego</button>
         </div>
         <form method="post">
             <input type="hidden" name="action" value="remove_xml">
@@ -37,7 +41,14 @@ declare(strict_types=1);
                 <button type="submit">Cargar XML/DAT</button>
             </div>
         </form>
+        <div class="or">
+            <span>o</span>
+        </div>
+        <div class="create-new">
+            <button type="button" onclick="openCreateModal()">Crear un XML nuevo</button>
+        </div>
         <div class="meta" aria-label="Fecha y hora actuales">Ahora: <span data-clock data-format="DD/MM/YYYY HH:mm" data-initial="<?= htmlspecialchars(date('c')) ?>"><?= htmlspecialchars(date('d/m/Y H:i')) ?></span></div>
         <p class="hint"><small>Sube un archivo XML o DAT con la estructura de juegos para comenzar.</small></p>
     </div>
 <?php endif; ?>
+

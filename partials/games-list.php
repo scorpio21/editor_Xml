@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 ?>
-<h2>Lista de juegos (<?= count($xml->game) ?>)</h2>
+<?php $entries = $xml->xpath('/datafile/*[self::game or self::machine]') ?: []; ?>
+<h2>Lista de juegos/máquinas (<?= count($entries) ?>)</h2>
 
 <?php
     // Parámetros de paginación (GET)
-    $total = count($xml->game);
+    $total = count($entries);
     $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 10;
     if (!in_array($perPage, [10, 25, 50, 100], true)) { $perPage = 10; }
     $pages = max(1, (int)ceil($total / $perPage));
@@ -28,38 +29,83 @@ declare(strict_types=1);
 </form>
 <div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
 <div class="game-grid">
-    <?php $idx = 0; foreach ($xml->game as $game): ?>
-        <?php if ($idx < $start) { $idx++; continue; } ?>
+    <?php $idx = 0; $gameIdx = 0; $machineIdx = 0; foreach ($entries as $entry): ?>
+        <?php if ($idx < $start) { $idx++; if ($entry->getName()==='game') { $gameIdx++; } continue; } ?>
         <?php if ($idx > $end) { break; } ?>
-        <div class="game" id="game-<?= $idx ?>"
-             data-name="<?= htmlspecialchars((string)$game['name']) ?>"
-             data-description="<?= htmlspecialchars((string)$game->description) ?>"
-             data-category="<?= htmlspecialchars((string)$game->category) ?>"
-             data-romname="<?= htmlspecialchars((string)($game->rom['name'] ?? '')) ?>"
-             data-size="<?= htmlspecialchars((string)($game->rom['size'] ?? '')) ?>"
-             data-crc="<?= htmlspecialchars((string)($game->rom['crc'] ?? '')) ?>"
-             data-md5="<?= htmlspecialchars((string)($game->rom['md5'] ?? '')) ?>"
-             data-sha1="<?= htmlspecialchars((string)($game->rom['sha1'] ?? '')) ?>">
-            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)$game['name']) ?></div>
-            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)$game->description) ?></div>
-            <div class="game-info"><strong>Categoría:</strong> <?= htmlspecialchars((string)$game->category) ?></div>
-            <div class="game-info"><strong>Rom Name:</strong> <?= htmlspecialchars((string)($game->rom['name'] ?? 'N/A')) ?></div>
-            <div class="game-info"><strong>Tamaño:</strong> <?= htmlspecialchars((string)($game->rom['size'] ?? 'N/A')) ?></div>
-            <div class="game-info"><strong>CRC:</strong> <?= htmlspecialchars((string)($game->rom['crc'] ?? 'N/A')) ?></div>
-            <div class="game-info"><strong>MD5:</strong> <?= htmlspecialchars((string)($game->rom['md5'] ?? 'N/A')) ?></div>
-            <div class="game-info"><strong>SHA1:</strong> <?= htmlspecialchars((string)($game->rom['sha1'] ?? 'N/A')) ?></div>
+        <?php $isMachine = ($entry->getName() === 'machine'); ?>
+        <?php $firstRom = $entry->rom[0] ?? null; ?>
+        <?php
+            // Construir JSON de ROMs para data-roms
+            $romArr = [];
+            foreach ($entry->rom as $r) {
+                $romArr[] = [
+                    'name' => (string)$r['name'],
+                    'size' => (string)$r['size'],
+                    'crc'  => (string)$r['crc'],
+                    'md5'  => (string)$r['md5'],
+                    'sha1' => (string)$r['sha1'],
+                ];
+            }
+            $romsJson = htmlspecialchars(json_encode($romArr, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+        ?>
+        <div class="game" id="<?= $isMachine ? 'machine-'.$machineIdx : 'game-'.$gameIdx ?>"
+             data-name="<?= htmlspecialchars((string)$entry['name']) ?>"
+             data-description="<?= htmlspecialchars((string)$entry->description) ?>"
+             data-category="<?= $isMachine ? '' : htmlspecialchars((string)$entry->category) ?>"
+             data-type="<?= $isMachine ? 'machine' : 'game' ?>"
+             data-roms='<?= $romsJson ?>'
+             data-romname="<?= $firstRom ? htmlspecialchars((string)$firstRom['name']) : '' ?>"
+             data-size="<?= $firstRom ? htmlspecialchars((string)$firstRom['size']) : '' ?>"
+             data-crc="<?= $firstRom ? htmlspecialchars((string)$firstRom['crc']) : '' ?>"
+             data-md5="<?= $firstRom ? htmlspecialchars((string)$firstRom['md5']) : '' ?>"
+             data-sha1="<?= $firstRom ? htmlspecialchars((string)$firstRom['sha1']) : '' ?>">
+            <div class="game-info"><strong>Tipo:</strong> <?= $isMachine ? 'machine' : 'game' ?></div>
+            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)$entry['name']) ?></div>
+            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)$entry->description) ?></div>
+            <?php if ($isMachine): ?>
+                <div class="game-info"><strong>Año:</strong> <?= htmlspecialchars((string)$entry->year) ?></div>
+                <div class="game-info"><strong>Fabricante:</strong> <?= htmlspecialchars((string)$entry->manufacturer) ?></div>
+            <?php endif; ?>
+            <div class="game-info"><strong>Categoría:</strong> <?= $isMachine ? '—' : htmlspecialchars((string)$entry->category) ?></div>
+            <?php if (count($entry->rom) > 0): ?>
+                <div class="game-roms">
+                    <strong>ROMs:</strong>
+                    <ul>
+                        <?php foreach ($entry->rom as $rom): ?>
+                            <li>
+                                <span><strong>Nombre:</strong> <?= htmlspecialchars((string)$rom['name']) ?></span>
+                                <span><strong>Tamaño:</strong> <?= htmlspecialchars((string)$rom['size']) ?></span>
+                                <span><strong>CRC:</strong> <?= htmlspecialchars((string)$rom['crc']) ?></span>
+                                <span><strong>MD5:</strong> <?= htmlspecialchars((string)$rom['md5']) ?></span>
+                                <span><strong>SHA1:</strong> <?= htmlspecialchars((string)$rom['sha1']) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <div class="game-info"><strong>ROMs:</strong> N/A</div>
+            <?php endif; ?>
 
             <div class="game-actions">
-                <button onclick="openEditModal(<?= $idx ?>)">Editar</button>
-
-                <form method="post" class="inline-form">
-                    <input type="hidden" name="action" value="delete">
-                    <input type="hidden" name="index" value="<?= $idx ?>">
-                    <button type="submit" onclick="return confirm('¿Eliminar este juego?')">Eliminar</button>
-                </form>
+                <?php if (!$isMachine): ?>
+                    <button onclick="openEditModal(<?= $gameIdx ?>)">Editar</button>
+                    <form method="post" class="inline-form">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="index" value="<?= $gameIdx ?>">
+                        <button type="submit" onclick="return confirm('¿Eliminar este juego?')">Eliminar</button>
+                    </form>
+                <?php else: ?>
+                    <button onclick="openEditModalMachine(<?= $machineIdx ?>)">Editar</button>
+                    <form method="post" class="inline-form">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="node_type" value="machine">
+                        <input type="hidden" name="index" value="<?= $machineIdx ?>">
+                        <button type="submit" onclick="return confirm('¿Eliminar esta máquina?')">Eliminar</button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
-    <?php $idx++; endforeach; ?>
+    <?php $idx++; if ($isMachine) { $machineIdx++; } else { $gameIdx++; } endforeach; ?>
 </div>
 
 <div class="pagination">

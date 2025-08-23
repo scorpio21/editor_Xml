@@ -1,30 +1,49 @@
 function openEditModal(index) {
-  // Obtener el elemento del juego
-  var gameElement = document.getElementById('game-' + index);
+  var el = document.getElementById('game-' + index);
+  if (!el) return;
+  populateEditModal(el, index, 'game');
+}
 
-  // Obtener los valores de los atributos de datos
-  var gameName = gameElement.getAttribute('data-name');
-  var description = gameElement.getAttribute('data-description');
-  var category = gameElement.getAttribute('data-category');
-  var romName = gameElement.getAttribute('data-romname');
-  var size = gameElement.getAttribute('data-size');
-  var crc = gameElement.getAttribute('data-crc');
-  var md5 = gameElement.getAttribute('data-md5');
-  var sha1 = gameElement.getAttribute('data-sha1');
+function openEditModalMachine(index) {
+  var el = document.getElementById('machine-' + index);
+  if (!el) return;
+  populateEditModal(el, index, 'machine');
+}
 
-  // Llenar el formulario con los valores
-  document.getElementById('editIndex').value = index;
-  document.getElementById('editGameName').value = gameName || '';
-  document.getElementById('editDescription').value = description || '';
-  document.getElementById('editCategory').value = category || '';
-  document.getElementById('editRomName').value = romName || '';
-  document.getElementById('editSize').value = size || '';
-  document.getElementById('editCrc').value = crc || '';
-  document.getElementById('editMd5').value = md5 || '';
-  document.getElementById('editSha1').value = sha1 || '';
+function populateEditModal(entryEl, index, type) {
+  var name = entryEl.getAttribute('data-name') || '';
+  var description = entryEl.getAttribute('data-description') || '';
+  var category = entryEl.getAttribute('data-category') || '';
+  var romsJson = entryEl.getAttribute('data-roms') || '[]';
+  var roms = [];
+  try { roms = JSON.parse(romsJson); } catch (e) { roms = []; }
 
-  // Mostrar el modal
-  document.getElementById('editModal').style.display = 'block';
+  var form = document.getElementById('edit-game-form');
+  if (!form) return;
+  document.getElementById('editIndex').value = String(index);
+  document.getElementById('editNodeType').value = type;
+  document.getElementById('editGameName').value = name;
+  document.getElementById('editDescription').value = description;
+  document.getElementById('editCategory').value = category;
+
+  var container = document.getElementById('edit-roms-container');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!Array.isArray(roms) || roms.length === 0) {
+    container.appendChild(crearFilaEdicion());
+  } else {
+    roms.forEach(function (r) {
+      container.appendChild(crearFilaEdicion(r));
+    });
+  }
+
+  updateRemoveButtonsEdit();
+
+  var modal = document.getElementById('editModal');
+  if (modal) {
+    modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+  }
 }
 
 function closeModal() {
@@ -48,6 +67,45 @@ function closeHelpModal() {
   }
 }
 
+// Modal de creación de XML
+function openCreateModal() {
+  var modal = document.getElementById('createModal');
+  if (modal) {
+    modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+    // Enfocar primer campo
+    var first = modal.querySelector('input, textarea, select, button');
+    if (first && typeof first.focus === 'function') first.focus();
+  }
+}
+
+function closeCreateModal() {
+  var modal = document.getElementById('createModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Modal Añadir juego
+function openAddModal() {
+  var modal = document.getElementById('addGameModal');
+  if (modal) {
+    modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+    var first = modal.querySelector('input, textarea, select, button');
+    if (first && typeof first.focus === 'function') first.focus();
+  }
+}
+
+function closeAddModal() {
+  var modal = document.getElementById('addGameModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
 // Cerrar modal al hacer clic fuera del contenido
 afterLoad(function () {
   window.addEventListener('click', function (event) {
@@ -59,6 +117,14 @@ afterLoad(function () {
     if (event.target === help) {
       closeHelpModal();
     }
+    var create = document.getElementById('createModal');
+    if (event.target === create) {
+      closeCreateModal();
+    }
+    var add = document.getElementById('addGameModal');
+    if (event.target === add) {
+      closeAddModal();
+    }
   });
 
   // Cerrar modal con la tecla ESC
@@ -66,6 +132,8 @@ afterLoad(function () {
     if (event.key === 'Escape') {
       closeModal();
       closeHelpModal();
+      closeCreateModal();
+      closeAddModal();
     }
   });
 
@@ -79,7 +147,242 @@ afterLoad(function () {
         if (p) p.dataset._inited = '1';
       });
     }
-  }, 50);
+  }, 250);
+
+  // Añadir/eliminar filas de ROM y calcular hashes por fila
+  var romsContainer = document.getElementById('roms-container');
+  var addRomBtn = document.getElementById('ag_add_rom_btn');
+
+  function updateRemoveButtons() {
+    if (!romsContainer) return;
+    var rows = romsContainer.querySelectorAll('.rom-row');
+    var show = rows.length > 1;
+    rows.forEach(function(row){
+      var btn = row.querySelector('.ag_remove_btn');
+      if (btn) btn.style.display = show ? 'inline-block' : 'none';
+    });
+  }
+
+  function crearRomRow() {
+    var idx = romsContainer.querySelectorAll('.rom-row').length;
+    var row = document.createElement('div');
+    row.className = 'rom-row';
+    row.dataset.index = String(idx);
+    row.innerHTML = `
+      <div class="rom-file">
+        <input type="file" class="ag_file" accept="*/*">
+        <button type="button" class="ag_calc_btn secondary">Calcular hashes</button>
+      </div>
+      <div class="rom-fields">
+        <input type="text" class="ag_rom" name="rom_name[]" placeholder="Nombre de ROM" required>
+        <input type="text" class="ag_size" name="size[]" placeholder="Tamaño (bytes)" required>
+        <input type="text" class="ag_crc" name="crc[]" placeholder="CRC32 (8 hex)" required>
+        <input type="text" class="ag_md5" name="md5[]" placeholder="MD5 (32 hex)" required>
+        <input type="text" class="ag_sha1" name="sha1[]" placeholder="SHA1 (40 hex)" required>
+        <button type="button" class="ag_remove_btn danger" aria-label="Eliminar esta ROM">Eliminar ROM</button>
+      </div>`;
+    return row;
+  }
+
+  if (addRomBtn && romsContainer) {
+    addRomBtn.addEventListener('click', function(){
+      var row = crearRomRow();
+      romsContainer.appendChild(row);
+      updateRemoveButtons();
+    });
+  }
+
+  if (romsContainer) {
+    romsContainer.addEventListener('click', async function(e){
+      var target = e.target;
+      if (!(target instanceof Element)) return;
+      // Calcular hashes de una fila
+      if (target.classList.contains('ag_calc_btn')) {
+        var row = target.closest('.rom-row');
+        if (!row) return;
+        var fileInput = row.querySelector('.ag_file');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) { alert('Selecciona un archivo primero.'); return; }
+        var file = fileInput.files[0];
+        try {
+          target.disabled = true;
+          target.textContent = 'Calculando…';
+          var res = await window.Hashes.calcularDesdeFile(file);
+          var romName = row.querySelector('.ag_rom');
+          var size = row.querySelector('.ag_size');
+          var crc = row.querySelector('.ag_crc');
+          var md5 = row.querySelector('.ag_md5');
+          var sha1 = row.querySelector('.ag_sha1');
+          if (romName && !romName.value) romName.value = file.name;
+          var gameNameInput = document.getElementById('ag_name');
+          if (gameNameInput && !gameNameInput.value) { gameNameInput.value = file.name.replace(/\.[^/.]+$/, ''); }
+          if (size) size.value = res.size;
+          if (crc) crc.value = res.crc;
+          if (md5) md5.value = res.md5;
+          if (sha1) sha1.value = res.sha1;
+        } catch (err) {
+          console.error(err);
+          alert('No se pudieron calcular los hashes.');
+        } finally {
+          target.disabled = false;
+          target.textContent = 'Calcular hashes';
+        }
+      }
+      // Eliminar fila
+      if (target.classList.contains('ag_remove_btn')) {
+        var rowDel = target.closest('.rom-row');
+        if (rowDel && romsContainer.children.length > 1) {
+          romsContainer.removeChild(rowDel);
+        }
+        updateRemoveButtons();
+      }
+    });
+  }
+
+  // Estado inicial
+  updateRemoveButtons();
+
+  // Validación en submit del formulario Añadir juego (todas las ROMs)
+  var addForm = document.getElementById('add-game-form');
+  if (addForm) {
+    addForm.addEventListener('submit', function(ev){
+      var errors = [];
+      if (!romsContainer) return;
+      var rows = romsContainer.querySelectorAll('.rom-row');
+      if (!rows.length) { errors.push('Debes añadir al menos una ROM.'); }
+      rows.forEach(function(row){
+        var size = (row.querySelector('.ag_size') || {}).value || '';
+        var crc = (row.querySelector('.ag_crc') || {}).value || '';
+        var md5 = (row.querySelector('.ag_md5') || {}).value || '';
+        var sha1 = (row.querySelector('.ag_sha1') || {}).value || '';
+        // Normalizar
+        if (row.querySelector('.ag_crc')) row.querySelector('.ag_crc').value = crc.toUpperCase();
+        if (row.querySelector('.ag_md5')) row.querySelector('.ag_md5').value = md5.toLowerCase();
+        if (row.querySelector('.ag_sha1')) row.querySelector('.ag_sha1').value = sha1.toLowerCase();
+        // Validar
+        if (!/^\d+$/.test(size)) errors.push('El tamaño debe ser un número entero en bytes.');
+        if (!/^[0-9A-Fa-f]{8}$/.test(crc)) errors.push('CRC32 debe tener 8 hex.');
+        if (!/^[0-9a-fA-F]{32}$/.test(md5)) errors.push('MD5 debe tener 32 hex.');
+        if (!/^[0-9a-fA-F]{40}$/.test(sha1)) errors.push('SHA1 debe tener 40 hex.');
+      });
+      if (errors.length) { ev.preventDefault(); alert(errors.join('\n')); }
+    });
+  }
+});
+
+// Edición: crear fila de ROM
+function crearFilaEdicion(data) {
+  var row = document.createElement('div');
+  row.className = 'rom-row';
+  row.innerHTML = `
+    <div class="rom-file">
+      <input type="file" class="eg_file" accept="*/*">
+      <button type="button" class="eg_calc_btn secondary">Calcular hashes</button>
+    </div>
+    <div class="rom-fields">
+      <input type="text" class="eg_rom" name="rom_name[]" placeholder="Nombre de ROM" required>
+      <input type="text" class="eg_size" name="size[]" placeholder="Tamaño (bytes)" required>
+      <input type="text" class="eg_crc" name="crc[]" placeholder="CRC32 (8 hex)" required>
+      <input type="text" class="eg_md5" name="md5[]" placeholder="MD5 (32 hex)" required>
+      <input type="text" class="eg_sha1" name="sha1[]" placeholder="SHA1 (40 hex)" required>
+      <button type="button" class="eg_remove_btn danger" aria-label="Eliminar esta ROM">Eliminar ROM</button>
+    </div>`;
+  if (data) {
+    var r = row.querySelector('.eg_rom'); if (r) r.value = data.name || '';
+    var s = row.querySelector('.eg_size'); if (s) s.value = data.size || '';
+    var c = row.querySelector('.eg_crc'); if (c) c.value = data.crc || '';
+    var m = row.querySelector('.eg_md5'); if (m) m.value = data.md5 || '';
+    var h = row.querySelector('.eg_sha1'); if (h) h.value = data.sha1 || '';
+  }
+  return row;
+}
+
+function updateRemoveButtonsEdit() {
+  var container = document.getElementById('edit-roms-container');
+  if (!container) return;
+  var rows = container.querySelectorAll('.rom-row');
+  var show = rows.length > 1;
+  rows.forEach(function (row) {
+    var btn = row.querySelector('.eg_remove_btn');
+    if (btn) btn.style.display = show ? 'inline-block' : 'none';
+  });
+}
+
+afterLoad(function initEditModal() {
+  var container = document.getElementById('edit-roms-container');
+  var addBtn = document.getElementById('edit_add_rom_btn');
+  if (addBtn && container) {
+    addBtn.addEventListener('click', function(){
+      container.appendChild(crearFilaEdicion());
+      updateRemoveButtonsEdit();
+    });
+  }
+  if (container) {
+    container.addEventListener('click', async function(e){
+      var target = e.target;
+      if (!(target instanceof Element)) return;
+      if (target.classList.contains('eg_calc_btn')) {
+        var row = target.closest('.rom-row');
+        if (!row) return;
+        var fileInput = row.querySelector('.eg_file');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) { alert('Selecciona un archivo primero.'); return; }
+        var file = fileInput.files[0];
+        try {
+          target.disabled = true;
+          target.textContent = 'Calculando…';
+          var res = await window.Hashes.calcularDesdeFile(file);
+          var romName = row.querySelector('.eg_rom');
+          var size = row.querySelector('.eg_size');
+          var crc = row.querySelector('.eg_crc');
+          var md5 = row.querySelector('.eg_md5');
+          var sha1 = row.querySelector('.eg_sha1');
+          if (romName && !romName.value) romName.value = file.name;
+          if (size) size.value = res.size;
+          if (crc) crc.value = res.crc;
+          if (md5) md5.value = res.md5;
+          if (sha1) sha1.value = res.sha1;
+        } catch (err) {
+          console.error(err);
+          alert('No se pudieron calcular los hashes.');
+        } finally {
+          target.disabled = false;
+          target.textContent = 'Calcular hashes';
+        }
+      }
+      if (target.classList.contains('eg_remove_btn')) {
+        var rowDel = target.closest('.rom-row');
+        if (rowDel && container.children.length > 1) {
+          container.removeChild(rowDel);
+        }
+        updateRemoveButtonsEdit();
+      }
+    });
+  }
+
+  var editForm = document.getElementById('edit-game-form');
+  if (editForm) {
+    editForm.addEventListener('submit', function(ev){
+      var errors = [];
+      var rows = container ? container.querySelectorAll('.rom-row') : [];
+      if (!rows || !rows.length) { errors.push('Debes mantener al menos una ROM.'); }
+      Array.prototype.forEach.call(rows, function(row){
+        var size = (row.querySelector('.eg_size') || {}).value || '';
+        var crc = (row.querySelector('.eg_crc') || {}).value || '';
+        var md5 = (row.querySelector('.eg_md5') || {}).value || '';
+        var sha1 = (row.querySelector('.eg_sha1') || {}).value || '';
+        // Normalizar
+        crc = crc.toUpperCase(); md5 = md5.toLowerCase(); sha1 = sha1.toLowerCase();
+        if (row.querySelector('.eg_crc')) row.querySelector('.eg_crc').value = crc;
+        if (row.querySelector('.eg_md5')) row.querySelector('.eg_md5').value = md5;
+        if (row.querySelector('.eg_sha1')) row.querySelector('.eg_sha1').value = sha1;
+        // Validar
+        if (!/^\d+$/.test(size)) errors.push('El tamaño debe ser un número entero en bytes.');
+        if (!/^[0-9A-Fa-f]{8}$/.test(crc)) errors.push('CRC32 debe tener 8 hex.');
+        if (!/^[0-9a-fA-F]{32}$/.test(md5)) errors.push('MD5 debe tener 32 hex.');
+        if (!/^[0-9a-fA-F]{40}$/.test(sha1)) errors.push('SHA1 debe tener 40 hex.');
+      });
+      if (errors.length) { ev.preventDefault(); alert(errors.join('\n')); }
+    });
+  }
 });
 
 // Utilidad para ejecutar cuando el DOM esté listo

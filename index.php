@@ -78,6 +78,11 @@ $xml = cargarXmlSiDisponible($xmlFile);
 
 <?php include __DIR__ . '/partials/modal-help.php'; ?>
 
+<?php include __DIR__ . '/partials/modal-create.php'; ?>
+
+<?php include __DIR__ . '/partials/modal-add-game.php'; ?>
+
+<script src="js/hashes.js"></script>
 <script src="js/editor-xml.js"></script>
 
 </body>

@@ -8,6 +8,8 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+// (migrado) Acción add_game movida más abajo, después de cargar $xml
+
 // Guardar/Compactar XML manualmente
 if (isset($_POST['action']) && $_POST['action'] === 'compact_xml') {
     if (file_exists($xmlFile)) {
@@ -49,6 +51,54 @@ if (!isset($xmlFile)) {
     $xmlFile = $root . '/uploads/current.xml';
     require_once $root . '/inc/xml-helpers.php';
     asegurarCarpetaUploads($root . '/uploads');
+}
+
+// Crear nuevo XML desde cero
+if (isset($_POST['action']) && $_POST['action'] === 'create_xml') {
+    require_once __DIR__ . '/xml-helpers.php';
+    $name = trim((string)($_POST['name'] ?? ''));
+    $description = trim((string)($_POST['description'] ?? ''));
+    $version = trim((string)($_POST['version'] ?? '1.0'));
+    $date = trim((string)($_POST['date'] ?? date('Y-m-d')));
+    $author = trim((string)($_POST['author'] ?? ''));
+    $homepage = trim((string)($_POST['homepage'] ?? ''));
+    $url = trim((string)($_POST['url'] ?? ''));
+
+    if ($name === '' || $description === '' || $version === '' || $date === '' || $author === '') {
+        $_SESSION['error'] = 'Rellena todos los campos obligatorios (nombre, descripción, versión, fecha y autor).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+
+    $datafile = $dom->createElement('datafile');
+    $header = $dom->createElement('header');
+    $header->appendChild($dom->createElement('name', $name));
+    $header->appendChild($dom->createElement('description', $description));
+    $header->appendChild($dom->createElement('version', $version));
+    $header->appendChild($dom->createElement('date', $date));
+    $header->appendChild($dom->createElement('author', $author));
+    if ($homepage !== '') { $header->appendChild($dom->createElement('homepage', $homepage)); }
+    if ($url !== '') { $header->appendChild($dom->createElement('url', $url)); }
+    $datafile->appendChild($header);
+    $dom->appendChild($datafile);
+
+    // Limpieza de espacios y guardado con backup
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+    if (!guardarDomConBackup($dom, $xmlFile)) {
+        $_SESSION['error'] = 'No se pudo crear/guardar el XML.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $_SESSION['xml_uploaded'] = true;
+    unset($_SESSION['pending_save']);
+    $_SESSION['message'] = 'XML creado correctamente.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 // Restablecer filtros de sesión
@@ -115,6 +165,118 @@ if (isset($_POST['action']) && $_POST['action'] === 'restore_backup') {
 $xml = null;
 if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)) {
     $xml = simplexml_load_file($xmlFile);
+}
+
+// Añadir juego (después de cargar $xml)
+if (isset($_POST['action']) && $_POST['action'] === 'add_game' && $xml) {
+    $gameName = trim((string)($_POST['game_name'] ?? ''));
+    $desc = trim((string)($_POST['description'] ?? ''));
+    $cat = trim((string)($_POST['category'] ?? ''));
+    // Campos de ROM como arrays
+    $romNames = isset($_POST['rom_name']) ? (array)$_POST['rom_name'] : [];
+    $sizes = isset($_POST['size']) ? (array)$_POST['size'] : [];
+    $crcs = isset($_POST['crc']) ? (array)$_POST['crc'] : [];
+    $md5s = isset($_POST['md5']) ? (array)$_POST['md5'] : [];
+    $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
+
+    if ($gameName === '' || $desc === '') {
+        $_SESSION['error'] = 'Faltan campos obligatorios del juego (nombre o descripción).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
+    if ($n === 0) {
+        $_SESSION['error'] = 'Debes añadir al menos una ROM.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Normalización y validación básica por ROM
+    $roms = [];
+    for ($i = 0; $i < $n; $i++) {
+        $rname = trim((string)$romNames[$i]);
+        $rsize = trim((string)$sizes[$i]);
+        $rcrc = strtoupper(trim((string)$crcs[$i]));
+        $rmd5 = strtolower(trim((string)$md5s[$i]));
+        $rsha1 = strtolower(trim((string)$sha1s[$i]));
+        if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^\d+$/', $rsize)) {
+            $_SESSION['error'] = 'Tamaño inválido en una ROM (debe ser entero en bytes).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $roms[] = [$rname, $rsize, $rcrc, $rmd5, $rsha1];
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+
+    $df = $xpath->query('/datafile')->item(0);
+    if (!($df instanceof DOMElement)) {
+        $_SESSION['error'] = 'Estructura XML inválida: falta datafile.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    crearBackup($xmlFile);
+
+    // Detectar tipo predominante en el XML actual: machine vs game
+    $hasMachine = $xpath->query('/datafile/machine')->length > 0;
+    $hasGame = $xpath->query('/datafile/game')->length > 0;
+    $nodeName = ($hasMachine && !$hasGame) ? 'machine' : 'game';
+
+    $entry = $dom->createElement($nodeName);
+    $entry->setAttribute('name', $gameName);
+    $entry->appendChild($dom->createElement('description', $desc));
+    // Solo añadir category para <game> para mantener compatibilidad con dats tipo MAME
+    if ($nodeName === 'game' && $cat !== '') { $entry->appendChild($dom->createElement('category', $cat)); }
+
+    foreach ($roms as [$rname, $rsize, $rcrc, $rmd5, $rsha1]) {
+        $rom = $dom->createElement('rom');
+        $rom->setAttribute('name', $rname);
+        $rom->setAttribute('size', $rsize);
+        $rom->setAttribute('crc', $rcrc);
+        $rom->setAttribute('md5', $rmd5);
+        $rom->setAttribute('sha1', $rsha1);
+        $entry->appendChild($rom);
+    }
+
+    $df->appendChild($entry);
+
+    // Formatear y limpiar
+    $dom->formatOutput = true;
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+    if (!guardarDomConBackup($dom, $xmlFile)) {
+        $_SESSION['error'] = 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $_SESSION['message'] = 'Juego añadido correctamente.';
+    $_SESSION['pending_save'] = true;
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 // Helper: construir términos desde selects (regiones a incluir e idiomas a excluir)
@@ -186,8 +348,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
     $dom->loadXML($xml->asXML());
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
+    $machines = $xpath->query('/datafile/machine');
 
     $matches = 0;
+    // Contar juegos
     for ($i = 0; $i < $games->length; $i++) {
         $g = $games->item($i);
         if (!($g instanceof DOMElement)) { continue; }
@@ -199,6 +363,29 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
         $cNode = $xpath->query('./category', $g)->item(0);
         if ($cNode) { $cat = (string)$cNode->nodeValue; }
         $haystackUpper = strtoupper($name.' '.$desc.' '.$cat);
+        $tokens = tokenizar($haystackUpper);
+
+        $matchInclude = anyTermMatch($tokens, $haystackUpper, $includeTerms);
+        if (!$matchInclude) { continue; }
+        $matchExclude = anyTermMatch($tokens, $haystackUpper, $excludeTerms);
+        if ($matchExclude) { continue; }
+        $matches++;
+    }
+    // Contar máquinas
+    for ($i = 0; $i < $machines->length; $i++) {
+        $m = $machines->item($i);
+        if (!($m instanceof DOMElement)) { continue; }
+        $name = (string)($m->getAttribute('name') ?? '');
+        $desc = '';
+        $year = '';
+        $manu = '';
+        $dNode = $xpath->query('./description', $m)->item(0);
+        if ($dNode) { $desc = (string)$dNode->nodeValue; }
+        $yNode = $xpath->query('./year', $m)->item(0);
+        if ($yNode) { $year = (string)$yNode->nodeValue; }
+        $manNode = $xpath->query('./manufacturer', $m)->item(0);
+        if ($manNode) { $manu = (string)$manNode->nodeValue; }
+        $haystackUpper = strtoupper($name.' '.$desc.' '.$year.' '.$manu);
         $tokens = tokenizar($haystackUpper);
 
         $matchInclude = anyTermMatch($tokens, $haystackUpper, $includeTerms);
@@ -234,40 +421,112 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
 // Guardar edición
 if (isset($_POST['action']) && $_POST['action'] === 'edit' && $xml) {
     $index = (int)($_POST['index'] ?? -1);
+    $nodeType = (string)($_POST['node_type'] ?? 'game');
+    $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
+    $newName = trim((string)($_POST['game_name'] ?? ''));
+    $newDesc = trim((string)($_POST['description'] ?? ''));
+    $newCat  = trim((string)($_POST['category'] ?? ''));
+
+    // ROMs como arrays
+    $romNames = isset($_POST['rom_name']) ? (array)$_POST['rom_name'] : [];
+    $sizes = isset($_POST['size']) ? (array)$_POST['size'] : [];
+    $crcs = isset($_POST['crc']) ? (array)$_POST['crc'] : [];
+    $md5s = isset($_POST['md5']) ? (array)$_POST['md5'] : [];
+    $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
+
+    if ($newName === '' || $newDesc === '') {
+        $_SESSION['error'] = 'Faltan campos obligatorios (nombre o descripción).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
+    if ($n === 0) {
+        $_SESSION['error'] = 'Debes mantener al menos una ROM.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $roms = [];
+    for ($i = 0; $i < $n; $i++) {
+        $rname = trim((string)$romNames[$i]);
+        $rsize = trim((string)$sizes[$i]);
+        $rcrc = strtoupper(trim((string)$crcs[$i]));
+        $rmd5 = strtolower(trim((string)$md5s[$i]));
+        $rsha1 = strtolower(trim((string)$sha1s[$i]));
+        if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^\d+$/', $rsize)) {
+            $_SESSION['error'] = 'Tamaño inválido en una ROM (entero en bytes).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $roms[] = [$rname, $rsize, $rcrc, $rmd5, $rsha1];
+    }
+
     $dom = new DOMDocument();
-    // Evitar nodos de texto de solo espacios entre elementos
     $dom->preserveWhiteSpace = false;
     $dom->loadXML($xml->asXML());
     $xpath = new DOMXPath($dom);
-    $games = $xpath->query('/datafile/game');
-    if ($index >= 0 && $index < $games->length) {
-        $gameToEdit = $games->item($index);
-        if ($gameToEdit instanceof DOMElement) {
+    $nodes = $xpath->query('/datafile/' . $nodeType);
+    if ($index >= 0 && $nodes && $index < $nodes->length) {
+        $toEdit = $nodes->item($index);
+        if ($toEdit instanceof DOMElement) {
             crearBackup($xmlFile);
-            $gameToEdit->setAttribute('name', (string)($_POST['game_name'] ?? ''));
-            $description = $xpath->query('./description', $gameToEdit)->item(0);
-            if ($description) { $description->nodeValue = (string)($_POST['description'] ?? ''); }
-            else { $gameToEdit->appendChild($dom->createElement('description', (string)($_POST['description'] ?? ''))); }
-            $category = $xpath->query('./category', $gameToEdit)->item(0);
-            if ($category) { $category->nodeValue = (string)($_POST['category'] ?? ''); }
-            else { $gameToEdit->appendChild($dom->createElement('category', (string)($_POST['category'] ?? ''))); }
-            $rom = $xpath->query('./rom', $gameToEdit)->item(0);
-            if ($rom instanceof DOMElement) {
-                $rom->setAttribute('name', (string)($_POST['rom_name'] ?? ''));
-                $rom->setAttribute('size', (string)($_POST['size'] ?? ''));
-                $rom->setAttribute('crc', (string)($_POST['crc'] ?? ''));
-                $rom->setAttribute('md5', (string)($_POST['md5'] ?? ''));
-                $rom->setAttribute('sha1', (string)($_POST['sha1'] ?? ''));
+            // Actualizar atributos y campos
+            $toEdit->setAttribute('name', $newName);
+            $descNode = $xpath->query('./description', $toEdit)->item(0);
+            if ($descNode) { $descNode->nodeValue = $newDesc; }
+            else { $toEdit->appendChild($dom->createElement('description', $newDesc)); }
+
+            if ($nodeType === 'game') {
+                $catNode = $xpath->query('./category', $toEdit)->item(0);
+                if ($catNode) { $catNode->nodeValue = $newCat; }
+                else if ($newCat !== '') { $toEdit->appendChild($dom->createElement('category', $newCat)); }
             } else {
-                $newRom = $dom->createElement('rom');
-                $newRom->setAttribute('name', (string)($_POST['rom_name'] ?? ''));
-                $newRom->setAttribute('size', (string)($_POST['size'] ?? ''));
-                $newRom->setAttribute('crc', (string)($_POST['crc'] ?? ''));
-                $newRom->setAttribute('md5', (string)($_POST['md5'] ?? ''));
-                $newRom->setAttribute('sha1', (string)($_POST['sha1'] ?? ''));
-                $gameToEdit->appendChild($newRom);
+                // Asegurar que no queden categorías en machines
+                $catNode = $xpath->query('./category', $toEdit)->item(0);
+                if ($catNode && $catNode->parentNode) { $catNode->parentNode->removeChild($catNode); }
             }
-            // Formateo limpio del XML al guardar
+
+            // Reemplazar todas las ROMs
+            $existingRoms = $xpath->query('./rom', $toEdit);
+            if ($existingRoms && $existingRoms->length) {
+                // eliminar desde el final para evitar problemas de índice
+                for ($i = $existingRoms->length - 1; $i >= 0; $i--) {
+                    $n = $existingRoms->item($i);
+                    if ($n && $n->parentNode) { $n->parentNode->removeChild($n); }
+                }
+            }
+            foreach ($roms as [$rname, $rsize, $rcrc, $rmd5, $rsha1]) {
+                $romEl = $dom->createElement('rom');
+                $romEl->setAttribute('name', $rname);
+                $romEl->setAttribute('size', $rsize);
+                $romEl->setAttribute('crc', $rcrc);
+                $romEl->setAttribute('md5', $rmd5);
+                $romEl->setAttribute('sha1', $rsha1);
+                $toEdit->appendChild($romEl);
+            }
+
+            // Guardar
             $dom->preserveWhiteSpace = false;
             $dom->formatOutput = true;
             $dom->normalizeDocument();
@@ -277,26 +536,28 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit' && $xml) {
                 header('Location: ' . $_SERVER['PHP_SELF']);
                 exit;
             }
-            $_SESSION['message'] = 'Juego actualizado correctamente.';
+            $_SESSION['message'] = 'Entrada actualizada correctamente.';
         }
     }
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
 }
 
-// Eliminar juego
+// Eliminar entrada (game o machine)
 if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
     $index = (int)($_POST['index'] ?? -1);
+    $nodeType = (string)($_POST['node_type'] ?? 'game');
+    $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
     $dom->loadXML($xml->asXML());
     $xpath = new DOMXPath($dom);
-    $games = $xpath->query('/datafile/game');
-    if ($index >= 0 && $index < $games->length) {
+    $nodes = $xpath->query('/datafile/' . $nodeType);
+    if ($nodes && $index >= 0 && $index < $nodes->length) {
         crearBackup($xmlFile);
-        $gameToRemove = $games->item($index);
-        if ($gameToRemove instanceof DOMElement) {
-            $gameToRemove->parentNode->removeChild($gameToRemove);
+        $toRemove = $nodes->item($index);
+        if ($toRemove instanceof DOMElement) {
+            $toRemove->parentNode->removeChild($toRemove);
         }
         // Formateo limpio del XML al guardar
         $dom->preserveWhiteSpace = false;
@@ -308,7 +569,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
-        $_SESSION['message'] = 'Juego eliminado correctamente.';
+        $_SESSION['message'] = ($nodeType === 'machine') ? 'Máquina eliminada correctamente.' : 'Juego eliminado correctamente.';
     }
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
@@ -338,10 +599,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     $dom->loadXML($xml->asXML());
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
+    $machines = $xpath->query('/datafile/machine');
 
     crearBackup($xmlFile);
 
     $deleted = 0;
+    // Eliminar juegos
     for ($i = $games->length - 1; $i >= 0; $i--) {
         $g = $games->item($i);
         if (!($g instanceof DOMElement)) { continue; }
@@ -354,11 +617,30 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
         if ($cNode) { $cat = (string)$cNode->nodeValue; }
         $haystackUpper = strtoupper($name.' '.$desc.' '.$cat);
         $tokens = tokenizar($haystackUpper);
-        $matchInclude = anyTermMatch($tokens, $haystackUpper, $includeTerms);
-        if (!$matchInclude) { continue; }
-        $matchExclude = anyTermMatch($tokens, $haystackUpper, $excludeTerms);
-        if ($matchExclude) { continue; }
+        if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
+        if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
         $g->parentNode->removeChild($g);
+        $deleted++;
+    }
+    // Eliminar máquinas
+    for ($i = $machines->length - 1; $i >= 0; $i--) {
+        $m = $machines->item($i);
+        if (!($m instanceof DOMElement)) { continue; }
+        $name = (string)($m->getAttribute('name') ?? '');
+        $desc = '';
+        $year = '';
+        $manu = '';
+        $dNode = $xpath->query('./description', $m)->item(0);
+        if ($dNode) { $desc = (string)$dNode->nodeValue; }
+        $yNode = $xpath->query('./year', $m)->item(0);
+        if ($yNode) { $year = (string)$yNode->nodeValue; }
+        $manNode = $xpath->query('./manufacturer', $m)->item(0);
+        if ($manNode) { $manu = (string)$manNode->nodeValue; }
+        $haystackUpper = strtoupper($name.' '.$desc.' '.$year.' '.$manu);
+        $tokens = tokenizar($haystackUpper);
+        if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
+        if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
+        $m->parentNode->removeChild($m);
         $deleted++;
     }
 

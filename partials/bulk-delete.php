@@ -76,7 +76,10 @@ declare(strict_types=1);
             <button type="submit" name="action" value="bulk_count" class="secondary">Contar coincidencias</button>
             <button type="submit" name="action" value="bulk_delete" class="danger" onclick="return confirm('¿Seguro que deseas eliminar los juegos que coincidan con estos filtros? Esta acción no se puede deshacer.');">Eliminar filtrados</button>
         </div>
-        <p class="hint">Se buscará en nombre, descripción y categoría. Coincidencia insensible a mayúsculas/minúsculas.</p>
+        <p class="hint">Se buscará en nombre y descripción. Además:
+            • en juegos (game): también en categoría.
+            • en máquinas (machine): también en año y fabricante.
+            Coincidencia insensible a mayúsculas/minúsculas.</p>
         <div id="count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
     </form>
 </div>
