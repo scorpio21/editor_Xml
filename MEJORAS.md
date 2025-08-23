@@ -10,3 +10,9 @@ Este documento ahora actúa como índice hacia los Issues y el Project. El plan 
 - Issues de mejora (label enhancement): [ver lista](https://github.com/scorpio21/editor_Xml/issues?q=is%3Aissue+label%3Aenhancement)
 
 Para el historial de cambios, consulta `CHANGELOG.md`. El detalle de tareas y planificación está en GitHub (Issues/Milestones/Project).
+
+## Actualización 2025-08-23
+
+- Documentación actualizada (`README.md`, `CHANGELOG.md`).
+- Se consolidan en docs las funcionalidades implementadas: filtros de eliminación masiva con conteo previo (AJAX), cálculo de hashes MD5/SHA1 desde fichero y protección CSRF.
+- Referencia: ver `CHANGELOG.md` para el detalle. Cierra #15.

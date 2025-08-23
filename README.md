@@ -4,6 +4,8 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
+Actualizado: 2025-08-23 — ver `CHANGELOG.md` (cierra #15).
+
 ## Tabla de contenidos
 
 - [Características clave](#características-clave)
