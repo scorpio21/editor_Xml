@@ -303,7 +303,7 @@
     }
     var editForm = document.getElementById('edit-game-form');
     if (editForm) {
-      editForm.addEventListener('submit', function(ev){
+      editForm.addEventListener('submit', async function(ev){
         var errors = [];
         var rows = container ? container.querySelectorAll('.rom-row') : [];
         if (!rows || !rows.length) { errors.push('Debes mantener al menos una ROM.'); }
@@ -321,8 +321,124 @@
           if (!/^[0-9a-fA-F]{32}$/.test(md5)) errors.push('MD5 debe tener 32 hex.');
           if (!/^[0-9a-fA-F]{40}$/.test(sha1)) errors.push('SHA1 debe tener 40 hex.');
         });
-        if (errors.length) { ev.preventDefault(); alert(errors.join('\n')); }
+        if (errors.length) { ev.preventDefault(); alert(errors.join('\n')); return; }
+
+        // Envío AJAX y actualización en vivo
+        ev.preventDefault();
+        try {
+          var formData = new FormData(editForm);
+          var res = await fetch(window.location.href, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+            credentials: 'same-origin'
+          });
+          var data = null;
+          try { data = await res.json(); } catch (_) { data = null; }
+          if (!res.ok || !data || data.ok !== true) {
+            var msg = (data && data.message) ? data.message : 'No se pudo guardar la edición.';
+            alert(msg);
+            return;
+          }
+          // Actualizar tarjeta correspondiente
+          actualizarTarjetaEditada(data);
+          closeModal();
+        } catch (e) {
+          console.error(e);
+          alert('Error de red al guardar los cambios.');
+        }
       });
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function actualizarTarjetaEditada(resp){
+      var sel = '.game[data-absindex="' + String(resp.index) + '"][data-type="' + String(resp.node_type) + '"]';
+      var card = document.querySelector(sel);
+      if (!card) return;
+      // Actualizar data-attrs
+      card.setAttribute('data-name', resp.name || '');
+      card.setAttribute('data-description', resp.description || '');
+      if (resp.node_type === 'game') { card.setAttribute('data-category', resp.category || ''); }
+      var roms = Array.isArray(resp.roms) ? resp.roms : [];
+      card.setAttribute('data-roms', JSON.stringify(roms));
+      var first = roms[0] || null;
+      card.setAttribute('data-romname', first ? (first.name || '') : '');
+      card.setAttribute('data-size', first ? (first.size || '') : '');
+      card.setAttribute('data-crc', first ? (first.crc || '') : '');
+      card.setAttribute('data-md5', first ? (first.md5 || '') : '');
+      card.setAttribute('data-sha1', first ? (first.sha1 || '') : '');
+
+      // Actualizar campos visibles
+      actualizarLineaInfo(card, 'Nombre:', resp.name || '');
+      actualizarLineaInfo(card, 'Descripción:', resp.description || '');
+      if (card.getAttribute('data-type') === 'game') {
+        actualizarLineaInfo(card, 'Categoría:', resp.category || '');
+      } else {
+        actualizarLineaInfo(card, 'Categoría:', '—');
+      }
+      renderizarRoms(card, roms);
+    }
+
+    function actualizarLineaInfo(card, etiqueta, valor){
+      var infos = card.querySelectorAll('.game-info');
+      infos.forEach(function(div){
+        var s = div.querySelector('strong');
+        if (!s) return;
+        var label = (s.textContent || '').trim();
+        if (label === etiqueta) {
+          div.innerHTML = '<strong>' + escapeHtml(etiqueta) + '</strong> ' + escapeHtml(valor);
+        }
+      });
+    }
+
+    function renderizarRoms(card, roms){
+      var romsBlock = card.querySelector('.game-roms');
+      if (roms && roms.length) {
+        var html = '<strong>ROMs:</strong><ul>' + roms.map(function(r){
+          return '<li>'
+            + '<div><strong>Nombre:</strong> ' + escapeHtml(r.name || '') + '</div>'
+            + '<div><strong>Tamaño:</strong> ' + escapeHtml(r.size || '') + '</div>'
+            + '<div><strong>CRC:</strong> ' + escapeHtml(r.crc || '') + '</div>'
+            + '<div><strong>MD5:</strong> ' + escapeHtml(r.md5 || '') + '</div>'
+            + '<div><strong>SHA1:</strong> ' + escapeHtml(r.sha1 || '') + '</div>'
+            + '</li>';
+        }).join('') + '</ul>';
+        if (!romsBlock) {
+          // Reemplazar el bloque "ROMs: N/A" si existe
+          var noRoms = null;
+          var infos = card.querySelectorAll('.game-info');
+          infos.forEach(function(div){
+            var s = div.querySelector('strong');
+            if (s && (s.textContent || '').trim() === 'ROMs:') { noRoms = div; }
+          });
+          romsBlock = document.createElement('div');
+          romsBlock.className = 'game-roms';
+          if (noRoms && noRoms.parentNode) {
+            noRoms.parentNode.replaceChild(romsBlock, noRoms);
+          } else {
+            card.appendChild(romsBlock);
+          }
+        }
+        romsBlock.innerHTML = html;
+      } else {
+        // Mostrar N/A
+        if (romsBlock && romsBlock.parentNode) {
+          var na = document.createElement('div');
+          na.className = 'game-info';
+          na.innerHTML = '<strong>ROMs:</strong> N/A';
+          romsBlock.parentNode.replaceChild(na, romsBlock);
+        } else {
+          actualizarLineaInfo(card, 'ROMs:', 'N/A');
+        }
+      }
     }
   });
 

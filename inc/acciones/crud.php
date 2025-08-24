@@ -296,6 +296,8 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
 // Guardar edición
 if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
     requireValidCsrf();
+    $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_SERVER['HTTP_ACCEPT']) && strpos((string)$_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
     $index = (int)($_POST['index'] ?? -1);
     $nodeType = (string)($_POST['node_type'] ?? 'game');
     $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
@@ -311,6 +313,11 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
 
     if ($newName === '' || $newDesc === '') {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'Faltan campos obligatorios (nombre o descripción).']);
+            exit;
+        }
         $_SESSION['error'] = 'Faltan campos obligatorios (nombre o descripción).';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -318,6 +325,11 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
 
     $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
     if ($n === 0) {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'Debes mantener al menos una ROM.']);
+            exit;
+        }
         $_SESSION['error'] = 'Debes mantener al menos una ROM.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -331,26 +343,51 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
         $rmd5 = strtolower(trim((string)$md5s[$i]));
         $rsha1 = strtolower(trim((string)$sha1s[$i]));
         if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'Faltan campos obligatorios en alguna ROM.']);
+                exit;
+            }
             $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^\d+$/', $rsize)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'Tamaño inválido en una ROM (entero en bytes).']);
+                exit;
+            }
             $_SESSION['error'] = 'Tamaño inválido en una ROM (entero en bytes).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'CRC32 inválido en una ROM (8 hex).']);
+                exit;
+            }
             $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'MD5 inválido en una ROM (32 hex).']);
+                exit;
+            }
             $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'SHA1 inválido en una ROM (40 hex).']);
+                exit;
+            }
             $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
@@ -407,14 +444,37 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
             $dom->normalizeDocument();
             limpiarEspaciosEnBlancoDom($dom);
             if (!guardarDomConBackup($dom, $xmlFile)) {
+                if ($isAjax) {
+                    header('Content-Type: application/json; charset=UTF-8');
+                    echo json_encode(['ok' => false, 'message' => 'No se pudo guardar el XML. Se revirtió al respaldo.']);
+                    exit;
+                }
                 $_SESSION['error'] = 'No se pudo guardar el XML. Se revirtió al respaldo.';
                 header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
+            }
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'ok' => true,
+                    'node_type' => $nodeType,
+                    'index' => $index,
+                    'name' => $newName,
+                    'description' => $newDesc,
+                    'category' => $nodeType === 'game' ? $newCat : null,
+                    'roms' => array_map(function($r){ return ['name'=>$r[0], 'size'=>$r[1], 'crc'=>$r[2], 'md5'=>$r[3], 'sha1'=>$r[4]]; }, $roms),
+                ]);
                 exit;
             }
             $_SESSION['message'] = 'Entrada actualizada correctamente.';
         }
     }
-    header('Location: ' . $_SERVER['PHP_SELF']);
+    if (!$isAjax) {
+        header('Location: ' . $_SERVER['PHP_SELF']);
+    } else {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['ok' => false, 'message' => 'No se pudo localizar el nodo a editar.']);
+    }
     exit;
 }
 
