@@ -69,7 +69,6 @@ $xml = cargarXmlSiDisponible($xmlFile);
 <script src="js/modales.js"></script>
 <script src="js/bulk.js"></script>
 <script src="js/dedupe.js"></script>
-<script src="js/editor-xml.js"></script>
 
 </body>
 </html>
