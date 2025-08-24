@@ -1,0 +1,18 @@
+# Ignorar archivos generados y carga de datos locales
+# Mantener el repositorio limpio y sin datos pesados o sensibles
+
+# Subidas y copias de seguridad locales
+/uploads/
+
+# Logs de la aplicación
+/logs/
+
+# Archivos temporales del sistema/IDE
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# Entornos/virtualenvs (por si acaso)
+.venv/
+venv/
