@@ -8,7 +8,7 @@ require_once __DIR__ . '/inc/xml-helpers.php';
 asegurarCarpetaUploads(__DIR__ . '/uploads');
 
 // Procesar acciones (pueden redirigir y terminar la petición)
-require_once __DIR__ . '/inc/acciones.php';
+require_once __DIR__ . '/inc/router-acciones.php';
 
 // Cargar XML para render
 $xml = cargarXmlSiDisponible($xmlFile);
@@ -63,6 +63,12 @@ $xml = cargarXmlSiDisponible($xmlFile);
 <?php include __DIR__ . '/partials/modal-add-game.php'; ?>
 
 <script src="js/hashes.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/reloj.js"></script>
+<script src="js/multiselect.js"></script>
+<script src="js/modales.js"></script>
+<script src="js/bulk.js"></script>
+<script src="js/dedupe.js"></script>
 <script src="js/editor-xml.js"></script>
 
 </body>

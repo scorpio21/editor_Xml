@@ -1,0 +1,462 @@
+<?php
+declare(strict_types=1);
+
+// Módulo: acciones CRUD y utilitarias del XML (crear, editar, eliminar, descargar, restaurar, compactar, subir, reset filtros)
+// Requisitos previos: require de common.php, xml-helpers.php y variables $xmlFile, $xml
+
+// Subida de fichero (no depende de action) — proteger con CSRF
+if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['xmlFile']['error'] === UPLOAD_ERR_OK) {
+    requireValidCsrf();
+    $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
+    if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
+        // Guardar nombre original para futuras exportaciones
+        $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
+        move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile);
+        $_SESSION['xml_uploaded'] = true;
+        $_SESSION['message'] = 'Archivo cargado correctamente.';
+    } else {
+        $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
+    }
+}
+
+if (!isset($_POST['action'])) {
+    return; // no hay más que hacer
+}
+
+$action = (string)$_POST['action'];
+
+// Guardar/Compactar XML manualmente
+if ($action === 'compact_xml') {
+    requireValidCsrf();
+    if (file_exists($xmlFile)) {
+        require_once __DIR__ . '/../xml-helpers.php';
+        $raw = @file_get_contents($xmlFile);
+        if ($raw === false) {
+            $_SESSION['error'] = 'No se pudo leer el XML para compactar.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        if (@$dom->loadXML($raw) === false) {
+            $_SESSION['error'] = 'El XML no es válido y no se pudo compactar.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $dom->formatOutput = true;
+        $dom->normalizeDocument();
+        limpiarEspaciosEnBlancoDom($dom);
+        if (!guardarDomConBackup($dom, $xmlFile)) {
+            $_SESSION['error'] = 'No se pudo guardar el XML compactado. Se revirtió al respaldo.';
+        } else {
+            $_SESSION['message'] = 'XML guardado y compactado correctamente.';
+            unset($_SESSION['pending_save']);
+            $_SESSION['xml_uploaded'] = true;
+        }
+    } else {
+        $_SESSION['error'] = 'No hay XML cargado para compactar.';
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Descargar/exportar el XML actual
+if ($action === 'download_xml') {
+    requireValidCsrf();
+    if (file_exists($xmlFile)) {
+        $filesize = @filesize($xmlFile);
+        // Calcular conteo actual (games + machines)
+        $countNow = 0;
+        $sx = @simplexml_load_file($xmlFile);
+        if ($sx instanceof SimpleXMLElement) {
+            $games = $sx->xpath('/datafile/game');
+            $machines = $sx->xpath('/datafile/machine');
+            $countNow = (is_array($games) ? count($games) : 0) + (is_array($machines) ? count($machines) : 0);
+        }
+        // Determinar base del nombre original (si existe)
+        $orig = (string)($_SESSION['original_filename'] ?? 'current.xml');
+        $origNoExt = preg_replace('/\.[^.]+$/', '', $orig) ?? 'current';
+        $base = $origNoExt;
+        // Intentar extraer patrón "Nombre (numero) (fecha)"
+        if (preg_match('/^(.*)\s\(\d+\)\s\([^)]*\)$/', $origNoExt, $m)) {
+            $base = trim($m[1]);
+        }
+        // Sanear base para nombre de archivo en Windows
+        $base = preg_replace('/[\\\\\/:\*\?\"<>\|]/', ' ', $base);
+        $dateStr = date('Y-m-d H-i-s');
+        $filename = sprintf('%s (%d) (%s).xml', $base !== '' ? $base : 'datafile', $countNow, $dateStr);
+        // Cabeceras para descarga
+        header('Content-Type: application/xml; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        if ($filesize !== false) {
+            header('Content-Length: ' . (string)$filesize);
+        }
+        // Enviar contenido y terminar
+        @readfile($xmlFile);
+        exit;
+    } else {
+        $_SESSION['error'] = 'No hay XML disponible para descargar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
+
+// Crear nuevo XML desde cero
+if ($action === 'create_xml') {
+    requireValidCsrf();
+    require_once __DIR__ . '/../xml-helpers.php';
+    $name = trim((string)($_POST['name'] ?? ''));
+    $description = trim((string)($_POST['description'] ?? ''));
+    $version = trim((string)($_POST['version'] ?? '1.0'));
+    $date = trim((string)($_POST['date'] ?? date('Y-m-d')));
+    $author = trim((string)($_POST['author'] ?? ''));
+    $homepage = trim((string)($_POST['homepage'] ?? ''));
+    $url = trim((string)($_POST['url'] ?? ''));
+
+    if ($name === '' || $description === '' || $version === '' || $date === '' || $author === '') {
+        $_SESSION['error'] = 'Rellena todos los campos obligatorios (nombre, descripción, versión, fecha y autor).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+
+    $datafile = $dom->createElement('datafile');
+    $header = $dom->createElement('header');
+    $header->appendChild($dom->createElement('name', $name));
+    $header->appendChild($dom->createElement('description', $description));
+    $header->appendChild($dom->createElement('version', $version));
+    $header->appendChild($dom->createElement('date', $date));
+    $header->appendChild($dom->createElement('author', $author));
+    if ($homepage !== '') { $header->appendChild($dom->createElement('homepage', $homepage)); }
+    if ($url !== '') { $header->appendChild($dom->createElement('url', $url)); }
+    $datafile->appendChild($header);
+    $dom->appendChild($datafile);
+
+    // Limpieza de espacios y guardado con backup
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+    if (!guardarDomConBackup($dom, $xmlFile)) {
+        $_SESSION['error'] = 'No se pudo crear/guardar el XML.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $_SESSION['xml_uploaded'] = true;
+    unset($_SESSION['pending_save']);
+    $_SESSION['message'] = 'XML creado correctamente.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Restablecer filtros de sesión
+if ($action === 'reset_filters') {
+    requireValidCsrf();
+    unset($_SESSION['bulk_filters']);
+    $_SESSION['message'] = 'Filtros restablecidos.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Restaurar desde copia de seguridad .bak
+if ($action === 'restore_backup') {
+    requireValidCsrf();
+    $backupFile = $xmlFile . '.bak';
+    if (file_exists($backupFile)) {
+        if (@copy($backupFile, $xmlFile)) {
+            $_SESSION['xml_uploaded'] = true;
+            $_SESSION['message'] = 'Restaurado correctamente desde la copia de seguridad (.bak).';
+        } else {
+            $_SESSION['error'] = 'No se pudo restaurar desde la copia de seguridad.';
+        }
+    } else {
+        $_SESSION['error'] = 'No existe copia de seguridad disponible.';
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Añadir juego
+if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
+    requireValidCsrf();
+    $gameName = trim((string)($_POST['game_name'] ?? ''));
+    $desc = trim((string)($_POST['description'] ?? ''));
+    $cat = trim((string)($_POST['category'] ?? ''));
+    // Campos de ROM como arrays
+    $romNames = isset($_POST['rom_name']) ? (array)$_POST['rom_name'] : [];
+    $sizes = isset($_POST['size']) ? (array)$_POST['size'] : [];
+    $crcs = isset($_POST['crc']) ? (array)$_POST['crc'] : [];
+    $md5s = isset($_POST['md5']) ? (array)$_POST['md5'] : [];
+    $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
+
+    if ($gameName === '' || $desc === '') {
+        $_SESSION['error'] = 'Faltan campos obligatorios del juego (nombre o descripción).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
+    if ($n === 0) {
+        $_SESSION['error'] = 'Debes añadir al menos una ROM.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Normalización y validación básica por ROM
+    $roms = [];
+    for ($i = 0; $i < $n; $i++) {
+        $rname = trim((string)$romNames[$i]);
+        $rsize = trim((string)$sizes[$i]);
+        $rcrc = strtoupper(trim((string)$crcs[$i]));
+        $rmd5 = strtolower(trim((string)$md5s[$i]));
+        $rsha1 = strtolower(trim((string)$sha1s[$i]));
+        if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^\d+$/', $rsize)) {
+            $_SESSION['error'] = 'Tamaño inválido en una ROM (debe ser entero en bytes).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $roms[] = [$rname, $rsize, $rcrc, $rmd5, $rsha1];
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+
+    $df = $xpath->query('/datafile')->item(0);
+    if (!($df instanceof DOMElement)) {
+        $_SESSION['error'] = 'Estructura XML inválida: falta datafile.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    crearBackup($xmlFile);
+
+    // Detectar tipo predominante en el XML actual: machine vs game
+    $hasMachine = $xpath->query('/datafile/machine')->length > 0;
+    $hasGame = $xpath->query('/datafile/game')->length > 0;
+    $nodeName = ($hasMachine && !$hasGame) ? 'machine' : 'game';
+
+    $entry = $dom->createElement($nodeName);
+    $entry->setAttribute('name', $gameName);
+    $entry->appendChild($dom->createElement('description', $desc));
+    // Solo añadir category para <game> para mantener compatibilidad con dats tipo MAME
+    if ($nodeName === 'game' && $cat !== '') { $entry->appendChild($dom->createElement('category', $cat)); }
+
+    foreach ($roms as [$rname, $rsize, $rcrc, $rmd5, $rsha1]) {
+        $rom = $dom->createElement('rom');
+        $rom->setAttribute('name', $rname);
+        $rom->setAttribute('size', $rsize);
+        $rom->setAttribute('crc', $rcrc);
+        $rom->setAttribute('md5', $rmd5);
+        $rom->setAttribute('sha1', $rsha1);
+        $entry->appendChild($rom);
+    }
+
+    $df->appendChild($entry);
+
+    // Formatear y limpiar
+    $dom->formatOutput = true;
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+    if (!guardarDomConBackup($dom, $xmlFile)) {
+        $_SESSION['error'] = 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    $_SESSION['message'] = 'Juego añadido correctamente.';
+    $_SESSION['pending_save'] = true;
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Guardar edición
+if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
+    requireValidCsrf();
+    $index = (int)($_POST['index'] ?? -1);
+    $nodeType = (string)($_POST['node_type'] ?? 'game');
+    $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
+    $newName = trim((string)($_POST['game_name'] ?? ''));
+    $newDesc = trim((string)($_POST['description'] ?? ''));
+    $newCat  = trim((string)($_POST['category'] ?? ''));
+
+    // ROMs como arrays
+    $romNames = isset($_POST['rom_name']) ? (array)$_POST['rom_name'] : [];
+    $sizes = isset($_POST['size']) ? (array)$_POST['size'] : [];
+    $crcs = isset($_POST['crc']) ? (array)$_POST['crc'] : [];
+    $md5s = isset($_POST['md5']) ? (array)$_POST['md5'] : [];
+    $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
+
+    if ($newName === '' || $newDesc === '') {
+        $_SESSION['error'] = 'Faltan campos obligatorios (nombre o descripción).';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
+    if ($n === 0) {
+        $_SESSION['error'] = 'Debes mantener al menos una ROM.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $roms = [];
+    for ($i = 0; $i < $n; $i++) {
+        $rname = trim((string)$romNames[$i]);
+        $rsize = trim((string)$sizes[$i]);
+        $rcrc = strtoupper(trim((string)$crcs[$i]));
+        $rmd5 = strtolower(trim((string)$md5s[$i]));
+        $rsha1 = strtolower(trim((string)$sha1s[$i]));
+        if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^\d+$/', $rsize)) {
+            $_SESSION['error'] = 'Tamaño inválido en una ROM (entero en bytes).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $roms[] = [$rname, $rsize, $rcrc, $rmd5, $rsha1];
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+    $nodes = $xpath->query('/datafile/' . $nodeType);
+    if ($index >= 0 && $nodes && $index < $nodes->length) {
+        $toEdit = $nodes->item($index);
+        if ($toEdit instanceof DOMElement) {
+            crearBackup($xmlFile);
+            // Actualizar atributos y campos
+            $toEdit->setAttribute('name', $newName);
+            $descNode = $xpath->query('./description', $toEdit)->item(0);
+            if ($descNode) { $descNode->nodeValue = $newDesc; }
+            else { $toEdit->appendChild($dom->createElement('description', $newDesc)); }
+
+            if ($nodeType === 'game') {
+                $catNode = $xpath->query('./category', $toEdit)->item(0);
+                if ($catNode) { $catNode->nodeValue = $newCat; }
+                else if ($newCat !== '') { $toEdit->appendChild($dom->createElement('category', $newCat)); }
+            } else {
+                // Asegurar que no queden categorías en machines
+                $catNode = $xpath->query('./category', $toEdit)->item(0);
+                if ($catNode && $catNode->parentNode) { $catNode->parentNode->removeChild($catNode); }
+            }
+
+            // Reemplazar todas las ROMs
+            $existingRoms = $xpath->query('./rom', $toEdit);
+            if ($existingRoms && $existingRoms->length) {
+                for ($i = $existingRoms->length - 1; $i >= 0; $i--) {
+                    $n = $existingRoms->item($i);
+                    if ($n && $n->parentNode) { $n->parentNode->removeChild($n); }
+                }
+            }
+            foreach ($roms as [$rname, $rsize, $rcrc, $rmd5, $rsha1]) {
+                $romEl = $dom->createElement('rom');
+                $romEl->setAttribute('name', $rname);
+                $romEl->setAttribute('size', $rsize);
+                $romEl->setAttribute('crc', $rcrc);
+                $romEl->setAttribute('md5', $rmd5);
+                $romEl->setAttribute('sha1', $rsha1);
+                $toEdit->appendChild($romEl);
+            }
+
+            // Guardar
+            $dom->preserveWhiteSpace = false;
+            $dom->formatOutput = true;
+            $dom->normalizeDocument();
+            limpiarEspaciosEnBlancoDom($dom);
+            if (!guardarDomConBackup($dom, $xmlFile)) {
+                $_SESSION['error'] = 'No se pudo guardar el XML. Se revirtió al respaldo.';
+                header('Location: ' . $_SERVER['PHP_SELF']);
+                exit;
+            }
+            $_SESSION['message'] = 'Entrada actualizada correctamente.';
+        }
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Eliminar entrada (game o machine)
+if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
+    requireValidCsrf();
+    $index = (int)($_POST['index'] ?? -1);
+    $nodeType = (string)($_POST['node_type'] ?? 'game');
+    $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->loadXML($xml->asXML());
+    $xpath = new DOMXPath($dom);
+    $nodes = $xpath->query('/datafile/' . $nodeType);
+    if ($nodes && $index >= 0 && $index < $nodes->length) {
+        crearBackup($xmlFile);
+        $toRemove = $nodes->item($index);
+        if ($toRemove instanceof DOMElement) {
+            $toRemove->parentNode->removeChild($toRemove);
+        }
+        // Formateo limpio del XML al guardar
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->normalizeDocument();
+        limpiarEspaciosEnBlancoDom($dom);
+        if (!guardarDomConBackup($dom, $xmlFile)) {
+            $_SESSION['error'] = 'No se pudo guardar el XML tras eliminar. Se revirtió al respaldo.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+        $_SESSION['message'] = ($nodeType === 'machine') ? 'Máquina eliminada correctamente.' : 'Juego eliminado correctamente.';
+    }
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Eliminar archivo XML actual
+if ($action === 'remove_xml') {
+    requireValidCsrf();
+    if (file_exists($xmlFile)) { unlink($xmlFile); }
+    unset($_SESSION['xml_uploaded']);
+    $_SESSION['message'] = 'Archivo eliminado correctamente.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}

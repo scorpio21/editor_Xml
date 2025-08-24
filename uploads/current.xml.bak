@@ -1,12 +1,273 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<datafile>
-  <header>
-    <name>Dreamcast</name>
-    <description>Dreamcast - Discs  (1) (2025-08-17 01:51)</description>
-    <version>1.0</version>
-    <date>2025-08-17</date>
-    <author>scorpio</author>
-    <homepage>vimm.ne</homepage>
-    <url>https://vimm.ne</url>
-  </header>
+<?xml version="1.0"?>
+<datafile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://datomatic.no-intro.org/stuff https://datomatic.no-intro.org/stuff/schema_nointro_datfile_v3.xsd">
+	<header>
+		<id>49</id>
+		<name>Nintendo - Super Nintendo Entertainment System</name>
+		<description>Nintendo - Super Nintendo Entertainment System</description>
+		<version>20240601-212334</version>
+		<author>aci68, alcoatjez, Arctic Circle System, BigFred, bikerspade, Blank, C. V. Reynolds, chillerecke, coraz, DarkMatterCore, DeadSkullzJr, DeriLoko3, einstein95, Flashfire42, Gefflon, Hiccup, Jack, jimmsu, kazumi213, Madeline, MeguCocoa, Money_114, NESBrew12, nnssxx, norkmetnoil577, NovaAurora, omonim2007, Powerpuff, PPLToast, Psychofox11, psykopat, rarenight, relax, Rifu, sCZther, SonGoku, Special T, Tauwasser, TeamEurope, togemet2, Vigi, xuom2</author>
+		<homepage>No-Intro</homepage>
+		<url>https://www.no-intro.org</url>
+		<clrmamepro forcenodump="required"/>
+	</header>
+	<game name="Adventures of Dr. Franken, The (Europe) (En,Fr,De,Es,It,Nl,Sv)" id="0044">
+		<category>Games</category>
+		<description>Adventures of Dr. Franken, The (Europe) (En,Fr,De,Es,It,Nl,Sv)</description>
+		<rom name="Adventures of Dr. Franken, The (Europe) (En,Fr,De,Es,It,Nl,Sv).sfc" size="1048576" crc="e4925f15" md5="2a1e41a27c859e9dcbaea55a6611ffab" sha1="715223e622579f9e94fe00b0e3bdd6d9ce3ca9f9" sha256="38e050ac3ffec01031c6dd8ead20676aacec78ebf8d890a3a00d1badaaba3d3b" status="verified"/>
+	</game>
+	<game name="Aladdin (Spain)" id="0076" cloneofid="0072">
+		<category>Games</category>
+		<description>Aladdin (Spain)</description>
+		<rom name="Aladdin (Spain).sfc" size="1310720" crc="90ee8c61" md5="6b09f8c51e5c989d950f9510f1f73224" sha1="db4c5ae21420aa79f4519b542b03962a9293464d" sha256="8ff83840c8ba78db48c50153337b4d38912d2886343ca36f991e6bd3790817c4" status="verified"/>
+	</game>
+	<game name="Asterix (Europe) (En,Fr,De,Es)" id="0143">
+		<category>Games</category>
+		<description>Asterix (Europe) (En,Fr,De,Es)</description>
+		<rom name="Asterix (Europe) (En,Fr,De,Es).sfc" size="524288" crc="5ddedc28" md5="b4fc60315646bfb9280d7edc4e59b5cc" sha1="d684958da04b909661371d7d5b657a6beb213629" sha256="d54d2703e474d7f469766d2d095ffcbbcab893e3fe58bbbcc57e24082a44bb40" status="verified"/>
+	</game>
+	<game name="Asterix (Europe) (En,Fr,De,Es) (Beta) (1993-03-11)" id="4094" cloneofid="0143">
+		<category>Games</category>
+		<description>Asterix (Europe) (En,Fr,De,Es) (Beta) (1993-03-11)</description>
+		<rom name="Asterix (Europe) (En,Fr,De,Es) (Beta) (1993-03-11).sfc" size="524288" crc="766dc9d9" md5="58129a1863363a139ddcec9c4d052726" sha1="bf53366b70de01f4d99b068a0eaf7495fbeaa273"/>
+	</game>
+	<game name="Asterix &amp; Obelix (Europe) (En,Fr,De,Es)" id="0142">
+		<category>Games</category>
+		<description>Asterix &amp; Obelix (Europe) (En,Fr,De,Es)</description>
+		<rom name="Asterix &amp; Obelix (Europe) (En,Fr,De,Es).sfc" size="1572864" crc="83af6152" md5="77bf37a9a6779a1d7e109bc1a707ecd1" sha1="bfea708ee5e733640d1ae1a5f72ca1f0bda95ded" sha256="d9127808fb02c47dd74fd22f39582c69f19936a794a8efc153cc0e51a0d4d782" status="verified"/>
+	</game>
+	<game name="Champions - World Class Soccer (Europe) (En,Fr,De,Es)" id="0403">
+		<category>Games</category>
+		<description>Champions - World Class Soccer (Europe) (En,Fr,De,Es)</description>
+		<rom name="Champions - World Class Soccer (Europe) (En,Fr,De,Es).sfc" size="1048576" crc="d89c8156" md5="8e76a5e840d694c29b239f6483b646b0" sha1="7cb016ae25d4377f9aabc1825ab5ecab05bf28e3" sha256="0d8f8b64ebf8f2f991e52a9361de904c13ce7ce1df56ad33d194865f2f500a4a" status="verified"/>
+	</game>
+	<game name="Dragon's Lair (Europe) (En,Fr,De,Es,It,Nl,Sv)" id="0658">
+		<category>Games</category>
+		<description>Dragon's Lair (Europe) (En,Fr,De,Es,It,Nl,Sv)</description>
+		<rom name="Dragon's Lair (Europe) (En,Fr,De,Es,It,Nl,Sv).sfc" size="524288" crc="304fdb92" md5="a656351f50713512a40a1d7868234090" sha1="1095c8435cc858e6a9bae3544afe5f04074c492d" sha256="984107f2dbccbcaec1f7e74b62af82785918438144221bd0228fa36419a11ed8" status="verified"/>
+	</game>
+	<game name="Exertainment Mountain Bike Rally + Speed Racer (Europe) (En,Fr,De,Es,Nl)" id="0733" cloneofid="0734">
+		<category>Games</category>
+		<description>Exertainment Mountain Bike Rally + Speed Racer (Europe) (En,Fr,De,Es,Nl)</description>
+		<rom name="Exertainment Mountain Bike Rally + Speed Racer (Europe) (En,Fr,De,Es,Nl).sfc" size="4194304" crc="811475b0" md5="8618fe6cded4580b438887de8e3e4407" sha1="c8df95cdf8d8941adb5775efde3a9489711eceee" sha256="59e56500726164fd00dfcd3f7e9e31b5a0942784f5396b7537e60726ffb8ebd2"/>
+	</game>
+	<game name="Fever Pitch Soccer (Europe) (En,Fr,De,Es,It)" id="0778">
+		<category>Games</category>
+		<description>Fever Pitch Soccer (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Fever Pitch Soccer (Europe) (En,Fr,De,Es,It).sfc" size="2097152" crc="9b1ea779" md5="c2a0a1f3c9687e8c08e531986a8b2cb8" sha1="92f1a0e583b0dc39e2d6b8d27862167c3f36b916" sha256="20af141280d75c29a0981c6a4decfa1835c3613a47636a4ae0967948a7878f7c" status="verified"/>
+	</game>
+	<game name="FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FP)" id="3961" cloneofid="0780">
+		<category>Games</category>
+		<description>FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FP)</description>
+		<rom name="FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FP).sfc" size="2097152" crc="0cc77af7" md5="29b3e4be108867b5742aacdb7f554956" sha1="322adb46b7600b0c5512a416a83b4ca43ef30894" sha256="823556f6bdd379d1f72a45ac51fec02749745d73a5279185612cabee903215ed" serial="A8FP"/>
+	</game>
+	<game name="FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FE)" id="0780">
+		<category>Games</category>
+		<description>FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FE)</description>
+		<rom name="FIFA - Road to World Cup 98 (Europe) (En,Fr,De,Es,It,Sv) (A8FE).sfc" size="2097152" crc="5e4f4856" md5="ca3d4c3e4c3d4716b82b3b91aefd16b0" sha1="a9287c363595e81a7fb83e667651b0fb70f4e607" sha256="067a3e51acbc477aaa40540009280f7e0c21ca2e769dd5201f897e3eab94ac12" status="verified" serial="A8FE"/>
+	</game>
+	<game name="FIFA 97 (Europe) (En,Fr,De,Es,It,Sv)" id="0779">
+		<category>Games</category>
+		<description>FIFA 97 (Europe) (En,Fr,De,Es,It,Sv)</description>
+		<rom name="FIFA 97 (Europe) (En,Fr,De,Es,It,Sv).sfc" size="2097152" crc="470eabe5" md5="3f872aa5efba54cd7d27f99e035784fa" sha1="685cf7781356a0e354b3dd10fabba898885ba81b" status="verified"/>
+	</game>
+	<game name="FIFA Soccer 96 (Europe) (En,Fr,De,Es,It,Sv)" id="0784">
+		<category>Games</category>
+		<description>FIFA Soccer 96 (Europe) (En,Fr,De,Es,It,Sv)</description>
+		<rom name="FIFA Soccer 96 (Europe) (En,Fr,De,Es,It,Sv).sfc" size="1572864" crc="8faf17e5" md5="ee9652bef0f7930ba02ec06028dd5bd2" sha1="b184c03ac65b21ea99d72933383d7a87f2f10c1f" sha256="8d02716cc5d50cd66c661ff3516093e8a1787b91699dc8b802b7ddd2c1a3bb17" status="verified"/>
+	</game>
+	<game name="Flintstones, The (Europe) (En,Fr,De,Es,It)" id="0845">
+		<category>Games</category>
+		<description>Flintstones, The (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Flintstones, The (Europe) (En,Fr,De,Es,It).sfc" size="2097152" crc="85a8b156" md5="5bff107357bede12a3d2d4d2ca9b7488" sha1="9eacc69d9656ebc16cb88597fd09bd62f9a5f5a0" sha256="7d423c7d5ac4fef6ae608ae87e77608294ef7e51a6f0afff1042ed66a1c639fe" status="verified"/>
+	</game>
+	<game name="Flintstones, The (Europe) (En,Fr,De,Es,It) (Beta)" id="0846" cloneofid="0845">
+		<category>Games</category>
+		<description>Flintstones, The (Europe) (En,Fr,De,Es,It) (Beta)</description>
+		<rom name="Flintstones, The (Europe) (En,Fr,De,Es,It) (Beta).sfc" size="2097152" crc="15143605" md5="3865edfc31b72c287dc202a404b381c0" sha1="cfb0fde9f158e2831c6d3bd7b3c67b3d9c7a0e58" sha256="06a88ad84421d37314b94a1d84f436b564174c990c25f15489c9f235e6ffbfc7"/>
+	</game>
+	<game name="Illusion of Time (Spain)" id="1128" cloneofid="1124">
+		<category>Games</category>
+		<description>Illusion of Time (Spain)</description>
+		<rom name="Illusion of Time (Spain).sfc" size="2097152" crc="7c305dc8" md5="faf4d7c79daf445d2ca286d8b2f81cab" sha1="f236e4a5ffaa7431540dbaeb98716b3e84cfa455" sha256="7b98fd832f3012d902f7c312ca542f84385c6f0e883b04205cbecd769cf3e4b1"/>
+	</game>
+	<game name="Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl)" id="1240">
+		<category>Games</category>
+		<description>Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl)</description>
+		<rom name="Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl).sfc" size="1048576" crc="a423a9d8" md5="dca9b3fcc00e3f7b1868c4207dabec7b" sha1="1b9ce057fd686db93cba24403d728a8dfb9f3eb6" sha256="74c55ea3c9733bf263628a260df7492fc840d7de1c3fceebb7bcf6d99a8c81d6" status="verified"/>
+	</game>
+	<game name="Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl) (Beta)" id="1241" cloneofid="1240">
+		<category>Games</category>
+		<description>Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl) (Beta)</description>
+		<rom name="Joe &amp; Mac - Caveman Ninja (Europe) (En,Fr,De,Es,It,Nl) (Beta).sfc" size="1048576" crc="db8447eb" md5="ffc2b7ad2127e8cd84a9b732e877626f" sha1="0e2f55c1560b732b5a3595452415143cbe5d2f83" sha256="af33e1c7c49bbe24daaf02f886aed0fb1685e901bf17b6766c642add5c4f5848"/>
+	</game>
+	<game name="Jurassic Park (Spain)" id="1278" cloneofid="1272">
+		<category>Games</category>
+		<description>Jurassic Park (Spain)</description>
+		<rom name="Jurassic Park (Spain).sfc" size="2097152" crc="3dee6fd9" md5="961167da14c524d1f5d0458745028017" sha1="0748801306572e7ebcdd8a9176c633dc98ec2945" sha256="929e15c8439b3beea249730e598e72cb192a3a70af0624ab7f91300f8f786a13"/>
+	</game>
+	<game name="Kick Off 3 - European Challenge (Europe) (En,Fr,De,Es,It)" id="1326">
+		<category>Games</category>
+		<description>Kick Off 3 - European Challenge (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Kick Off 3 - European Challenge (Europe) (En,Fr,De,Es,It).sfc" size="1048576" crc="1ac7f523" md5="211e9589db9c1c007771e25bab81198c" sha1="7ab7898b0d00fa91e75365a060bd36ddba232f6a" sha256="038299aa0a636769d5e4f553039c710031ae73113867aad8f9f96b642bac2f25" status="verified"/>
+	</game>
+	<game name="Lost Vikings, The (Spain)" id="1491" cloneofid="1488">
+		<category>Games</category>
+		<description>Lost Vikings, The (Spain)</description>
+		<rom name="Lost Vikings, The (Spain).sfc" size="1048576" crc="6e8a1081" md5="67e4617fc9c17572b7b27386a3f7e766" sha1="6c4b1326755230c870a407df7a30e1f849eacf6c" sha256="bd7e98db82d6b52307be1f3e1fd171e1e7204dc1f8810a95ee2cc64757087e4a"/>
+	</game>
+	<game name="Lucky Luke (Europe) (En,Fr,De,Es)" id="1496">
+		<category>Games</category>
+		<description>Lucky Luke (Europe) (En,Fr,De,Es)</description>
+		<rom name="Lucky Luke (Europe) (En,Fr,De,Es).sfc" size="1572864" crc="7e2c7143" md5="466940840196f36a855668fcf84fb94b" sha1="82cef93f124906e49c4e9ec6f58e23ef7e9f77f9" sha256="8510491f99400115ccf33570269bc4e484fb56370f7ac36f12e73eec19d342da" status="verified"/>
+	</game>
+	<game name="Lucky Luke (Europe) (En,Fr,De,Es) (Beta)" id="3847" cloneofid="1496">
+		<category>Games</category>
+		<description>Lucky Luke (Europe) (En,Fr,De,Es) (Beta)</description>
+		<rom name="Lucky Luke (Europe) (En,Fr,De,Es) (Beta).sfc" size="1572864" crc="9c9f7061" md5="c783d867a5c2d91cec4884429b5c606e" sha1="e26d01965545d1c7f10437de513ad5f9147da343" sha256="09fccea0af15ed37add684c1fb7b7b8c3f040d0ad28cf7a9494e5ee991c315d2"/>
+	</game>
+	<game name="Lufia (Spain)" id="1501" cloneofid="1498">
+		<category>Games</category>
+		<description>Lufia (Spain)</description>
+		<rom name="Lufia (Spain).sfc" size="3145728" crc="d93c0dd4" md5="35505a978cf25e99c38806b634ff4bd0" sha1="eaf67e123573ca50d7fb8828c59e4f7a1df23fa2" sha256="6eecabd46305ac95d9cf3a17e1392c24a1b68a7a313173ef0c5b5a3a24cf3353"/>
+	</game>
+	<game name="Marko's Magic Football (Europe) (En,Fr,De,Es)" id="1571">
+		<category>Games</category>
+		<description>Marko's Magic Football (Europe) (En,Fr,De,Es)</description>
+		<rom name="Marko's Magic Football (Europe) (En,Fr,De,Es).sfc" size="2097152" crc="4824a630" md5="3982f2846969f59f19b02cb1238713f3" sha1="a3e6d7711dc62a3092e96b5d9ea636a8ab6dee36" sha256="bf0d2739c2bd1aeba9cc979928e0702341cb290023dbc39bd25f18c1412fe674" status="verified"/>
+	</game>
+	<game name="MechWarrior (Spain)" id="1598" cloneofid="1595">
+		<category>Games</category>
+		<description>MechWarrior (Spain)</description>
+		<rom name="MechWarrior (Spain).sfc" size="1048576" crc="d713a74f" md5="ae1525bf00efecc378c86048d2fdba4f" sha1="48d6f2e0c8f673d79c2394bf9d7fc7b1218b0e6f" sha256="d70bc7916ed5132c3b0053f2adbb5004d78ccb986210c9440fedf642cac68554"/>
+	</game>
+	<game name="Mr. Tuff (Europe) (En,Fr,De,Es,It) (Proto) (1994-12-05)" id="1708">
+		<category>Games</category>
+		<description>Mr. Tuff (Europe) (En,Fr,De,Es,It) (Proto) (1994-12-05)</description>
+		<rom name="Mr. Tuff (Europe) (En,Fr,De,Es,It) (Proto) (1994-12-05).sfc" size="1572864" crc="83f87bb7" md5="5f83cdc179b9d0220dc2867b8e7fdaa7" sha1="17efa7bf116a462abedd3ea2cb59ddd1b8f9c327" sha256="88043ab29e4187a79b7e094aea89f3cc9bdf28490ad214d8cddbcbb099227691"/>
+	</game>
+	<game name="Power Drive (Europe) (En,Fr,De,Es,Pt)" id="2034">
+		<category>Games</category>
+		<description>Power Drive (Europe) (En,Fr,De,Es,Pt)</description>
+		<rom name="Power Drive (Europe) (En,Fr,De,Es,Pt).sfc" size="1048576" crc="0bfdca70" md5="710893291c4848eacc054b020aadb8ef" sha1="9eb647e4cba65f9cebf1188d0c4bcfc67cc698aa" sha256="31994f61d637ed9d0ff01cba6f173862f02ae6bb4913ba4f4229b808393d18ec" status="verified"/>
+	</game>
+	<game name="Prehistorik Man (Europe) (En,Fr,De,Es) (Beta)" id="4104" cloneofid="2049">
+		<category>Games</category>
+		<description>Prehistorik Man (Europe) (En,Fr,De,Es) (Beta)</description>
+		<rom name="Prehistorik Man (Europe) (En,Fr,De,Es) (Beta).sfc" size="1048576" crc="6c0174a3" md5="d7236afcd606c88ad93914078958605b" sha1="cb3aba215747d83f32cf0031dd78aa6735f7335d"/>
+	</game>
+	<game name="Push-Over (Europe) (En,Fr,De,Es)" id="2082">
+		<category>Games</category>
+		<description>Push-Over (Europe) (En,Fr,De,Es)</description>
+		<rom name="Push-Over (Europe) (En,Fr,De,Es).sfc" size="524288" crc="6a4347ff" md5="4b873c78dd98352f98ca31820d0b56cc" sha1="cd949f174e8fdd9d6d7d20064aef2022b13d00b6" sha256="b6f1e0052d2d523d9388432f54d0a3f402aa767409c291c6cbadd8662d4be043" status="verified"/>
+	</game>
+	<game name="Push-Over (Europe) (En,Fr,De,Es) (Beta) (1992-06-29)" id="2084" cloneofid="2082">
+		<category>Games</category>
+		<description>Push-Over (Europe) (En,Fr,De,Es) (Beta) (1992-06-29)</description>
+		<rom name="Push-Over (Europe) (En,Fr,De,Es) (Beta) (1992-06-29).sfc" size="1048576" crc="c34465a3" md5="79efd9eeb94ff391589a75cf7668381d" sha1="254435ec8d24f5de5e780857dd1be4c0f17617eb" sha256="49157455cf2bc1d3eb5503bc34dd259ceb9871af4604ab0d3574e2da386303d6"/>
+	</game>
+	<game name="Secret of Evermore (Spain) (Rev 1)" id="2261" cloneofid="2258">
+		<category>Games</category>
+		<description>Secret of Evermore (Spain) (Rev 1)</description>
+		<rom name="Secret of Evermore (Spain) (Rev 1).sfc" size="3145728" crc="7bfe934f" md5="f6516a3b18c262ec00cd4348921c3897" sha1="4363ce4b19e76261f9325ac9a0cce27d97490df2" sha256="3c7e2101b6fc8d63fa5e6341629eef4a5d8f69c99a8826a90bc5417c5bb48bf1"/>
+	</game>
+	<game name="Secret of Evermore (Spain) (Rev 2)" id="3786" cloneofid="2258">
+		<category>Games</category>
+		<description>Secret of Evermore (Spain) (Rev 2)</description>
+		<rom name="Secret of Evermore (Spain) (Rev 2).sfc" size="3145728" crc="ca5935d0" md5="4051abab6ca98f5047d5b1a149e62ff6" sha1="c29fe997740bd9b54a07fba7b2b5442a49245aac" sha256="72ee4d0db3ddc8da2dbd4afe6b24b41902451771aa798401e201f8e8dd6b3fbb"/>
+	</game>
+	<game name="Smurfs Travel the World, The (Europe) (En,Fr,De,Es)" id="2390">
+		<category>Games</category>
+		<description>Smurfs Travel the World, The (Europe) (En,Fr,De,Es)</description>
+		<rom name="Smurfs Travel the World, The (Europe) (En,Fr,De,Es).sfc" size="1310720" crc="22947169" md5="5e2c747b0b106df325e3d5904db66615" sha1="6432f7e6f98417f78d30cf31252f4acff9089622" sha256="c3634a9485ae82c82e9606719dcb407581f1973afe729b9918b937cd4ab04bd0" status="verified"/>
+	</game>
+	<game name="Smurfs, The (Europe) (En,Fr,De,Es,It)" id="2391">
+		<category>Games</category>
+		<description>Smurfs, The (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Smurfs, The (Europe) (En,Fr,De,Es,It).sfc" size="1048576" crc="2ae148d6" md5="425d5643e470836b3ef0919811655813" sha1="371b0e8329eb48eba1caeb8b8a051fea240282bd" sha256="d19489134179fda83714614ce1fa21c81ae0f8dca77cad4d28cbecbae794af6f" status="verified"/>
+	</game>
+	<game name="Soccer Kid (Europe) (En,Fr,De,Es,It)" id="2394">
+		<category>Games</category>
+		<description>Soccer Kid (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Soccer Kid (Europe) (En,Fr,De,Es,It).sfc" size="1310720" crc="2a9966c0" md5="5f0b2eb58fbda7f2ed56e9de5d3d7d64" sha1="1560651300a09b2724365b0b558d13ba320099f9" sha256="0d2dd0eab06ac20caf627e92ceecb4b4b28138dd28b40780f342b0ee1fe70b8d" status="verified"/>
+	</game>
+	<game name="Spirou (Europe) (En,Fr,De,Es)" id="2467">
+		<category>Games</category>
+		<description>Spirou (Europe) (En,Fr,De,Es)</description>
+		<rom name="Spirou (Europe) (En,Fr,De,Es).sfc" size="1310720" crc="797e2e82" md5="af9a48fc80b600539cc0f60ea6cdd1c5" sha1="2fc0170173455250cb421dcd380cb933091b9591" sha256="e0196201e432fa33d46a2681f84fe6a0b5f952ba43f8e4dc325f892bb4a0b39b" status="verified"/>
+	</game>
+	<game name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv)" id="2529">
+		<category>Games</category>
+		<description>Striker (Europe) (En,Fr,De,Es,It,Nl,Sv)</description>
+		<rom name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv).sfc" size="524288" crc="60b2d4a8" md5="0008d2a79fa3d7382800f3528afdd59e" sha1="580746916e3963c9867c8b9b2fa951279ba9d573" sha256="df43b3a4f511401a4d162ee6e7e3b08485533600dc44a29ee0a829b937b144d4" status="verified"/>
+	</game>
+	<game name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 2)" id="2530" cloneofid="2529">
+		<category>Games</category>
+		<description>Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 2)</description>
+		<rom name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 2).sfc" size="524288" crc="89ac1eaa" md5="0984c905ea77d86e716ec90c692ad161" sha1="cc8e8d77a03aaf266863ac16af55601e4b274629" sha256="578ff73b55044034b37b86601d7df6587ac826247171c4e981c69c535071a031"/>
+	</game>
+	<game name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 1)" id="3778" cloneofid="2529">
+		<category>Games</category>
+		<description>Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 1)</description>
+		<rom name="Striker (Europe) (En,Fr,De,Es,It,Nl,Sv) (Beta 1).sfc" size="524288" crc="fce4da63" md5="6cb73a9b84514a8fe6181c7647a62388" sha1="92ad4372b7e3fe648e21031f3be60cb156494802" sha256="f1fc72eaafe464f6406adae8dad1801f2a9da127616df8847d09b66ed43618f7" serial="none"/>
+	</game>
+	<game name="Super Battletank 2 (Spain)" id="2574" cloneofid="2572">
+		<category>Games</category>
+		<description>Super Battletank 2 (Spain)</description>
+		<rom name="Super Battletank 2 (Spain).sfc" size="2097152" crc="d3802a47" md5="1f174967bc26c977e33dd2ab8648c3b9" sha1="04faa0072a039d5d1698da013b1db0d22c2f5604" sha256="a20d346da18ddabf70dc43f5095c4189c4a646ca8e6d4ed6c68c20e380f50332"/>
+	</game>
+	<game name="Super Solitaire (Europe) (En,Fr,De,Es,It) (Proto)" id="2863" cloneofid="2864">
+		<category>Games</category>
+		<description>Super Solitaire (Europe) (En,Fr,De,Es,It) (Proto)</description>
+		<rom name="Super Solitaire (Europe) (En,Fr,De,Es,It) (Proto).sfc" size="524288" crc="933228f3" md5="0edf50a2fc6957b29291030b002762c3" sha1="d653fa6ddc880cce73fdee588214bfbedc32d83e" sha256="f7b5fe7623f007c7d90c4ea9abde5206a30622eb4f1a374abc862bae98f8ab73"/>
+	</game>
+	<game name="Super Strike Eagle (Europe) (En,Fr,De,Es,It)" id="2887">
+		<category>Games</category>
+		<description>Super Strike Eagle (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Super Strike Eagle (Europe) (En,Fr,De,Es,It).sfc" size="1048576" crc="3abab85b" md5="29e13cc64a8a5ce0306715fc13f06310" sha1="c9eb8f4627b3b2a090ffb7dafaf255536b52c6d1" sha256="e7038d3632f2251e5e19a7e078027040ef88f1db2aa7657b3d9ceff7ab25fdae"/>
+	</game>
+	<game name="Terranigma (Spain)" id="3037" cloneofid="3033">
+		<category>Games</category>
+		<description>Terranigma (Spain)</description>
+		<rom name="Terranigma (Spain).sfc" size="4194304" crc="00e61534" md5="5223853d5edc9856f2bf8a9f04d01d3a" sha1="1e1a85cf28bcb69cb34fc71f48347279d7cfea7e" sha256="7f731f4bb620e682132660da39641dda5762211dca4732f8192dd2411211b822"/>
+	</game>
+	<game name="Tintin - Prisoners of the Sun (Europe) (En,Fr,De,Es)" id="0049">
+		<category>Games</category>
+		<description>Tintin - Prisoners of the Sun (Europe) (En,Fr,De,Es)</description>
+		<rom name="Tintin - Prisoners of the Sun (Europe) (En,Fr,De,Es).sfc" size="2097152" crc="a94a47be" md5="beb9fd851586af3ad5172d07ae1a9103" sha1="c5a18d06aa1e411c73cd97572716f8d712bccb8a" sha256="71de4dec6a8e8be685627b6e929317f7cefb836997059bbd3b438ccc07a60044" status="verified"/>
+	</game>
+	<game name="Tintin in Tibet (Europe) (En,Es,Sv)" id="3758" cloneofid="3072">
+		<category>Games</category>
+		<description>Tintin in Tibet (Europe) (En,Es,Sv)</description>
+		<rom name="Tintin in Tibet (Europe) (En,Es,Sv).sfc" size="1572864" crc="caed3fe4" md5="e406f7225927ddce1b25aa0f1ab6e043" sha1="00507f4bfb70ca4519dd3f44da69d0ea83eeec01" sha256="687c4f9a14cc16605f5e92aa0fe33bf083fe8e39ba781676259fadf932480890" status="verified"/>
+	</game>
+	<game name="Tiny Toon Adventures - Buster Busts Loose! (Spain)" id="3076" cloneofid="3075">
+		<category>Games</category>
+		<description>Tiny Toon Adventures - Buster Busts Loose! (Spain)</description>
+		<rom name="Tiny Toon Adventures - Buster Busts Loose! (Spain).sfc" size="1048576" crc="eeb4180c" md5="c8ebc624d2bccbf3eb3f46c434a24cb8" sha1="7e8b79ea0e23aaa6e8212dad9082d7a16fe2c67b" sha256="981128c93f0753dec7af29ec084f13e704cc5d02414be55bb477fc4b2fef5e58"/>
+	</game>
+	<game name="Turn and Burn - No-Fly Zone (Spain)" id="3151" cloneofid="3150">
+		<category>Games</category>
+		<description>Turn and Burn - No-Fly Zone (Spain)</description>
+		<rom name="Turn and Burn - No-Fly Zone (Spain).sfc" size="2097152" crc="e9e676c2" md5="9fff57f3b20c518e456fe79ad5e46d1d" sha1="81fcf88a24c80189f90ffc00243992c0d58d0692" sha256="ce2445ecd0a43f6025dc80857d91dae7c46d33f7821bf98232c2894ca1959da2"/>
+	</game>
+	<game name="Vortex (Europe) (En,Es)" id="3224">
+		<category>Games</category>
+		<description>Vortex (Europe) (En,Es)</description>
+		<rom name="Vortex (Europe) (En,Es).sfc" size="524288" crc="c6867604" md5="142e09e60a279244e99fdef1ae9e7dc4" sha1="92daba15d422654c29c01457b572c07f06a2c1bc" sha256="150073c04e9c0e8b283a8eb237acea8fda3268c722f922ee42642009e17dc729" status="verified"/>
+	</game>
+	<game name="Where in the World Is Carmen Sandiego (Europe) (En,Fr,De,Es,It)" id="3259">
+		<category>Games</category>
+		<description>Where in the World Is Carmen Sandiego (Europe) (En,Fr,De,Es,It)</description>
+		<rom name="Where in the World Is Carmen Sandiego (Europe) (En,Fr,De,Es,It).sfc" size="1048576" crc="b7a66353" md5="0f8be220e192be92be08fe0a6cffabc7" sha1="2a1877df758372edd5673491fada6f29ab527bde" sha256="a7d4cbab01a04965cefa5568669e131e609393181ef5e484c4a5f8684e56ac1f" status="verified"/>
+	</game>
+	<game name="Winter Olympics - Lillehammer '94 (Europe) (En,Fr,De,Es,It,Pt,Sv,No)" id="3288">
+		<category>Games</category>
+		<description>Winter Olympics - Lillehammer '94 (Europe) (En,Fr,De,Es,It,Pt,Sv,No)</description>
+		<rom name="Winter Olympics - Lillehammer '94 (Europe) (En,Fr,De,Es,It,Pt,Sv,No).sfc" size="2097152" crc="fcb1c794" md5="f99d2871eb40f06c6c62139bcc926775" sha1="dde7484aac121c94fbe5e840077aa73b1cf7df13" sha256="8315596b4fe517b970d004336c86ed2bc74e167692ffaa51c529a41e2197519e" status="verified"/>
+	</game>
+	<game name="World Cup USA 94 (Europe) (En,Fr,De,Es,It,Nl,Pt,Sv)" id="3321">
+		<category>Games</category>
+		<description>World Cup USA 94 (Europe) (En,Fr,De,Es,It,Nl,Pt,Sv)</description>
+		<rom name="World Cup USA 94 (Europe) (En,Fr,De,Es,It,Nl,Pt,Sv).sfc" size="1572864" crc="5eb18063" md5="dea7e63ae1bc6f016fc636555729db28" sha1="ac748a67f63450732503a24148a1478e2f4ebe2a" sha256="ffcdce24171d9dc225a8a8b52e7d24a7832873f85135767359952537a8b9f8f1" status="verified"/>
+	</game>
 </datafile>

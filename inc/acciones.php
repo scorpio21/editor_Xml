@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// Shim de compatibilidad: delega toda la lógica al nuevo enrutador modular y termina.
+require_once __DIR__ . '/router-acciones.php';
+return;
+
 // Este archivo procesa todas las acciones POST y subidas.
 // Debe ejecutarse al inicio del request. Redirige y exit() cuando corresponde.
 
@@ -22,6 +26,15 @@ function requireValidCsrf(): void {
             'uri' => $_SERVER['REQUEST_URI'] ?? null,
             'action' => $_POST['action'] ?? null,
         ]);
+        // Si es una petición AJAX, devolver JSON estandarizado
+        if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Sesión no válida o token CSRF incorrecto.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Sesión no válida o token CSRF incorrecto.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -414,6 +427,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
     mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
 
     if (count($includeTerms) === 0) {
+        // Respuesta uniforme si es AJAX
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Debes seleccionar al menos una región o indicar algún término a incluir.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Debes seleccionar al menos una región o indicar algún término a incluir.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -683,6 +705,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     // Mapear regiones a incluir e idiomas a excluir (sin regiones a excluir)
     mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
     if (count($includeTerms) === 0) {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Debes seleccionar al menos una región o indicar algún término a incluir.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Debes seleccionar al menos una región o indicar algún término a incluir.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -730,8 +760,26 @@ if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     $dom->normalizeDocument();
     limpiarEspaciosEnBlancoDom($dom);
     if (!guardarDomConBackup($dom, $xmlFile)) {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'No se pudo guardar tras la eliminación masiva. Se revirtió al respaldo.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'No se pudo guardar tras la eliminación masiva. Se revirtió al respaldo.';
     } else {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => true,
+                'deleted' => $deleted,
+                'pending_save' => true,
+                'message' => 'Eliminación masiva completada. Registros eliminados: ' . $deleted . '.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['message'] = 'Eliminación masiva completada. Registros eliminados: ' . $deleted . '.';
         // Mostrar botón para guardar/compactar explícitamente a petición del usuario
         $_SESSION['pending_save'] = true;
@@ -747,6 +795,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region_count' && $xm
     $prefer = trim((string)($_POST['prefer_region'] ?? ''));
     $keepEU = isset($_POST['keep_europe']) && (string)$_POST['keep_europe'] === '1';
     if ($prefer === '') {
+        // Respuesta uniforme si es AJAX
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Debes seleccionar una región a conservar.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Debes seleccionar una región a conservar.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -828,6 +885,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region' && $xml) {
     $prefer = trim((string)($_POST['prefer_region'] ?? ''));
     $keepEU = isset($_POST['keep_europe']) && (string)$_POST['keep_europe'] === '1';
     if ($prefer === '') {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'Debes seleccionar una región a conservar.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Debes seleccionar una región a conservar.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -888,8 +953,26 @@ if (isset($_POST['action']) && $_POST['action'] === 'dedupe_region' && $xml) {
     $dom->normalizeDocument();
     limpiarEspaciosEnBlancoDom($dom);
     if (!guardarDomConBackup($dom, $xmlFile)) {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => false,
+                'message' => 'No se pudo guardar el XML tras eliminar duplicados. Se revirtió al respaldo.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'No se pudo guardar el XML tras eliminar duplicados. Se revirtió al respaldo.';
     } else {
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'ok' => true,
+                'deleted' => $deleted,
+                'pending_save' => true,
+                'message' => 'Eliminación de duplicados completada. Registros eliminados: ' . $deleted . '.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['message'] = 'Eliminación de duplicados completada. Registros eliminados: ' . $deleted . '.';
         $_SESSION['pending_save'] = true;
     }

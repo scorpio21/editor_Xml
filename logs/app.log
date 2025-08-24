@@ -1,0 +1,6 @@
+2025-08-24 15:58:43 [INFO] xml-helpers.php:cargarXmlSiDisponible :: XML cargado correctamente {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
+2025-08-24 15:59:02 [INFO] xml-helpers.php:guardarDomConBackup :: Creando copia de seguridad previa {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
+2025-08-24 15:59:02 [INFO] xml-helpers.php:guardarDomConBackup :: Guardando DOM en disco {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
+2025-08-24 15:59:02 [INFO] xml-helpers.php:guardarDomConBackup :: XML guardado correctamente {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
+2025-08-24 15:59:02 [INFO] xml-helpers.php:cargarXmlSiDisponible :: XML cargado correctamente {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
+2025-08-24 16:00:20 [INFO] xml-helpers.php:cargarXmlSiDisponible :: XML cargado correctamente {"xmlFile":"D:\\xampp\\htdocs\\editor_Xml\/uploads\/current.xml"}
