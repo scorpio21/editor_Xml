@@ -29,6 +29,10 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         <div class="file-actions">
             <button type="button" onclick="openAddModal()">Añadir juego</button>
         </div>
+        <form method="post" class="inline-form">
+            <?= campoCSRF() ?>
+            <button type="submit" name="action" value="download_xml" class="secondary">Descargar XML</button>
+        </form>
         <form method="post">
             <input type="hidden" name="action" value="remove_xml">
             <?= campoCSRF() ?>

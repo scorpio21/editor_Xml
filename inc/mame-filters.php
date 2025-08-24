@@ -92,9 +92,27 @@ function verificarCSRFParaAccion(): bool
  */
 function obtenerTextoParaBusqueda($element, string $type): string
 {
+    // Soporta DOMElement y SimpleXMLElement
+    if ($element instanceof DOMElement) {
+        $name = (string)$element->getAttribute('name');
+        $descNode = $element->getElementsByTagName('description')->item(0);
+        $desc = $descNode ? (string)$descNode->nodeValue : '';
+
+        if ($type === 'game') {
+            $catNode = $element->getElementsByTagName('category')->item(0);
+            $category = $catNode ? (string)$catNode->nodeValue : '';
+            return $name . ' ' . $desc . ' ' . $category;
+        } elseif ($type === 'machine') {
+            $year = (string)$element->getAttribute('year');
+            $manufacturer = (string)$element->getAttribute('manufacturer');
+            return $name . ' ' . $desc . ' ' . $year . ' ' . $manufacturer;
+        }
+        return $name . ' ' . $desc;
+    }
+
+    // Fallback: tratar como SimpleXMLElement
     $name = (string)$element['name'];
     $desc = (string)$element->description;
-    
     if ($type === 'game') {
         $category = (string)$element->category;
         return $name . ' ' . $desc . ' ' . $category;
@@ -103,7 +121,6 @@ function obtenerTextoParaBusqueda($element, string $type): string
         $manufacturer = (string)$element['manufacturer'];
         return $name . ' ' . $desc . ' ' . $year . ' ' . $manufacturer;
     }
-    
     return $name . ' ' . $desc;
 }
 

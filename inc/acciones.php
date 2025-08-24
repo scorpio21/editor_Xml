@@ -69,6 +69,50 @@ if (!isset($xmlFile)) {
     asegurarCarpetaUploads($root . '/uploads');
 }
 
+// Descargar/exportar el XML actual
+if (isset($_POST['action']) && $_POST['action'] === 'download_xml') {
+    requireValidCsrf();
+    if (file_exists($xmlFile)) {
+        $filesize = @filesize($xmlFile);
+        // Calcular conteo actual (games + machines)
+        $countNow = 0;
+        $sx = @simplexml_load_file($xmlFile);
+        if ($sx instanceof SimpleXMLElement) {
+            $games = $sx->xpath('/datafile/game');
+            $machines = $sx->xpath('/datafile/machine');
+            $countNow = (is_array($games) ? count($games) : 0) + (is_array($machines) ? count($machines) : 0);
+        }
+        // Determinar base del nombre original (si existe)
+        $orig = (string)($_SESSION['original_filename'] ?? 'current.xml');
+        $origNoExt = preg_replace('/\.[^.]+$/', '', $orig) ?? 'current';
+        $base = $origNoExt;
+        // Intentar extraer patrón "Nombre (numero) (fecha)"
+        if (preg_match('/^(.*)\s\(\d+\)\s\([^)]*\)$/', $origNoExt, $m)) {
+            $base = trim($m[1]);
+        }
+        // Sanear base para nombre de archivo en Windows
+        $base = preg_replace('/[\\\\\/:\*\?\"<>\|]/', ' ', $base);
+        $dateStr = date('Y-m-d H-i-s');
+        $filename = sprintf('%s (%d) (%s).xml', $base !== '' ? $base : 'datafile', $countNow, $dateStr);
+        // Cabeceras para descarga
+        header('Content-Type: application/xml; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        if ($filesize !== false) {
+            header('Content-Length: ' . (string)$filesize);
+        }
+        // Enviar contenido y terminar
+        @readfile($xmlFile);
+        exit;
+    } else {
+        $_SESSION['error'] = 'No hay XML disponible para descargar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
+
 // Crear nuevo XML desde cero
 if (isset($_POST['action']) && $_POST['action'] === 'create_xml') {
     requireValidCsrf();
@@ -155,6 +199,8 @@ if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['
     requireValidCsrf();
     $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
     if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
+        // Guardar nombre original para futuras exportaciones
+        $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
         move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile);
         $_SESSION['xml_uploaded'] = true;
         $_SESSION['message'] = 'Archivo cargado correctamente.';
@@ -603,11 +649,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
 
 // Eliminación masiva
 if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
-    require_once __DIR__ . '/csrf-helper.php';
-    if (!verificarCSRFParaAccion()) {
-        header('Location: ' . $_SERVER['PHP_SELF']);
-        exit;
-    }
+    requireValidCsrf();
     
     require_once __DIR__ . '/mame-filters.php';
     
