@@ -10,12 +10,18 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 // CSRF: helpers y verificación centralizada
 require_once __DIR__ . '/csrf-helper.php';
+require_once __DIR__ . '/logger.php';
 /**
  * Requiere un token CSRF válido o redirige con error.
  */
 function requireValidCsrf(): void {
     $token = (string)($_POST['csrf_token'] ?? '');
     if ($token === '' || !verificarTokenCSRF($token)) {
+        registrarAdvertencia('acciones.php:requireValidCsrf', 'Token CSRF inválido o ausente', [
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'uri' => $_SERVER['REQUEST_URI'] ?? null,
+            'action' => $_POST['action'] ?? null,
+        ]);
         $_SESSION['error'] = 'Sesión no válida o token CSRF incorrecto.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
