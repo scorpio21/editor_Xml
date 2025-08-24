@@ -16,3 +16,10 @@ Para el historial de cambios, consulta `CHANGELOG.md`. El detalle de tareas y pl
 - Documentación actualizada (`README.md`, `CHANGELOG.md`).
 - Se consolidan en docs las funcionalidades implementadas: filtros de eliminación masiva con conteo previo (AJAX), cálculo de hashes MD5/SHA1 desde fichero y protección CSRF.
 - Referencia: ver `CHANGELOG.md` para el detalle. Cierra #15.
+
+## Actualización 2025-08-24
+
+- Fase 1 completada: corrección de borrado con índices absolutos y ajuste del modal de edición (`data-absindex`).
+- Logging de borrado simplificado y condicionado por `APP_ENV`.
+- Añadido `.gitignore` para excluir `/uploads` y `/logs`.
+- Ver `CHANGELOG.md` para el detalle y commits asociados.

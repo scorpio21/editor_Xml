@@ -4,8 +4,16 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 
 ## 2025-08-24
 
-- Validación estricta de entrada verificada en creación y edición: CRC32 (8 hex), MD5 (32 hex), SHA1 (40 hex) y tamaño numérico (bytes). Mensajes de error claros y sin efectos secundarios cuando la entrada es inválida.
-- Protección CSRF ya aplicada a todas las acciones POST críticas.
+// Fase 1
+
+- Corrección de borrado bajo filtros/paginación usando índice absoluto por tipo.
+- Modal de edición ahora usa `data-absindex` para enviar el índice correcto al servidor.
+- Logging de borrado simplificado y condicionado por entorno (`APP_ENV`).
+- Añadido `.gitignore` para excluir `uploads/` y `logs/` del repositorio.
+
+Notas:
+
+- Ver detalles técnicos en `README.md` y commits asociados.
 
 Notas:
 
