@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
-<div id="addGameModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addGameTitle" style="display:none">
+<div id="addGameModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addGameTitle" aria-hidden="true">
   <div class="modal-content">
     <div class="modal-header">
       <h3 id="addGameTitle">Añadir juego</h3>

@@ -1,0 +1,62 @@
+/* Estilos de pestañas accesibles (ARIA) */
+:root {
+  --tabs-accent: var(--accent-500, #3498db);
+  --tabs-accent-hover: var(--accent-600, #2980b9);
+}
+
+.tabs {
+  margin-top: 12px;
+}
+
+.tabs [role="tablist"] {
+  display: flex;
+  gap: 6px;
+  border-bottom: 2px solid var(--border, #e5e7eb);
+}
+
+.tabs [role="tab"] {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #374151;
+  border-bottom: 3px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.tabs [role="tab"][aria-selected="true"] {
+  color: var(--tabs-accent);
+  border-color: var(--tabs-accent);
+  font-weight: 600;
+}
+
+.tabs [role="tab"]:hover {
+  color: var(--tabs-accent-hover);
+}
+
+.tabs [role="tabpanel"] {
+  padding: 16px 0;
+}
+
+/* Accesibilidad de enfoque */
+.tabs [role="tab"]:focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.35);
+  outline-offset: 2px;
+}
+
+/* Utilidades */
+.hidden { display: none !important; }
+
+/* Iconos en solapas */
+.tabs .tab-ico {
+  width: 1.25em;
+  height: 1.25em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit; /* los SVG con fill=currentColor heredarán el color del tab */
+}

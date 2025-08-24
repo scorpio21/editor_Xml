@@ -6,6 +6,69 @@
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', cb); } else { cb(); }
   };
 
+  // --- Accesibilidad: utilidades para modales (gestión de foco y ARIA) ---
+  function getFocusableIn(modal) {
+    if (!modal) return [];
+    var selectors = [
+      'a[href]', 'button:not([disabled])', 'input:not([disabled])', 'select:not([disabled])',
+      'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])'
+    ];
+    var nodes = modal.querySelectorAll(selectors.join(','));
+    return Array.prototype.filter.call(nodes, function(el){
+      // visible y dentro del modal
+      return el && typeof el.focus === 'function' && el.offsetParent !== null;
+    });
+  }
+  function a11yOpenModal(modal) {
+    if (!modal) return;
+    // Recordar disparador para devolver el foco al cerrar
+    modal.__lastTrigger = (document.activeElement && document.activeElement instanceof HTMLElement)
+      ? document.activeElement : null;
+    // ARIA
+    if (!modal.getAttribute('role')) modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-hidden', 'false');
+    // Mostrar
+    modal.style.display = 'block';
+    // Foco inicial
+    var focusables = getFocusableIn(modal);
+    if (focusables.length) {
+      try { focusables[0].focus(); } catch (e) {}
+    } else {
+      // Garantizar foco para lectores de pantalla
+      if (!modal.hasAttribute('tabindex')) modal.setAttribute('tabindex', '-1');
+      try { modal.focus(); } catch (e) {}
+    }
+    // Trampa de foco con Tab dentro del modal
+    modal.__trapHandler = function(e){
+      if (e.key !== 'Tab') return;
+      var list = getFocusableIn(modal);
+      if (!list.length) { e.preventDefault(); return; }
+      var first = list[0];
+      var last = list[list.length - 1];
+      var active = document.activeElement;
+      if (e.shiftKey) {
+        if (active === first || !modal.contains(active)) { e.preventDefault(); try { last.focus(); } catch(_){} }
+      } else {
+        if (active === last || !modal.contains(active)) { e.preventDefault(); try { first.focus(); } catch(_){} }
+      }
+    };
+    modal.addEventListener('keydown', modal.__trapHandler);
+  }
+  function a11yCloseModal(modal) {
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    if (modal.__trapHandler) {
+      modal.removeEventListener('keydown', modal.__trapHandler);
+      modal.__trapHandler = null;
+    }
+    // Devolver foco al disparador
+    if (modal.__lastTrigger && typeof modal.__lastTrigger.focus === 'function') {
+      try { modal.__lastTrigger.focus(); } catch (e) {}
+    }
+  }
+
   // --- Modal editar ---
   function openEditModal(index) {
     var el = document.getElementById('game-' + index);
@@ -71,64 +134,47 @@
     updateRemoveButtonsEdit();
 
     var modal = document.getElementById('editModal');
-    if (modal) { modal.style.display = 'block'; modal.setAttribute('aria-hidden', 'false'); }
+    if (modal) { a11yOpenModal(modal); }
   }
   function closeModal() {
     var m = document.getElementById('editModal');
-    if (m) m.style.display = 'none';
+    if (m) a11yCloseModal(m);
   }
 
   // --- Modal ayuda ---
-  var lastHelpTrigger = null;
   function openHelpModal() {
     var modal = document.getElementById('helpModal');
     if (!modal) return;
-    lastHelpTrigger = (document.activeElement && document.activeElement instanceof HTMLElement) ? document.activeElement : null;
-    modal.style.display = 'block';
-    modal.setAttribute('aria-hidden', 'false');
-    var firstLink = modal.querySelector('nav a, nav button, a, button');
-    if (firstLink && typeof firstLink.focus === 'function') firstLink.focus();
+    a11yOpenModal(modal);
   }
   function closeHelpModal() {
     var modal = document.getElementById('helpModal');
     if (!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    if (lastHelpTrigger && typeof lastHelpTrigger.focus === 'function') {
-      try { lastHelpTrigger.focus(); } catch (e) {}
-    }
+    a11yCloseModal(modal);
   }
 
   // --- Modal crear XML ---
   function openCreateModal() {
     var modal = document.getElementById('createModal');
     if (!modal) return;
-    modal.style.display = 'block';
-    modal.setAttribute('aria-hidden', 'false');
-    var first = modal.querySelector('input, textarea, select, button');
-    if (first && typeof first.focus === 'function') first.focus();
+    a11yOpenModal(modal);
   }
   function closeCreateModal() {
     var modal = document.getElementById('createModal');
     if (!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
+    a11yCloseModal(modal);
   }
 
   // --- Modal añadir juego ---
   function openAddModal() {
     var modal = document.getElementById('addGameModal');
     if (!modal) return;
-    modal.style.display = 'block';
-    modal.setAttribute('aria-hidden', 'false');
-    var first = modal.querySelector('input, textarea, select, button');
-    if (first && typeof first.focus === 'function') first.focus();
+    a11yOpenModal(modal);
   }
   function closeAddModal() {
     var modal = document.getElementById('addGameModal');
     if (!modal) return;
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
+    a11yCloseModal(modal);
   }
 
   // Eventos globales para cerrar modales con clic fuera o ESC

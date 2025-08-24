@@ -79,36 +79,8 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
         
         <!-- Filtros específicos MAME -->
-        <div class="fields mame-filters">
-            <h3>Filtros específicos MAME (opcional)</h3>
-            <div class="mame-row">
-                <label>
-                    <input type="checkbox" name="mame_filter_bios" value="1" <?= in_array('bios', $bf['mame_filters'] ?? [], true) ? 'checked' : '' ?>>
-                    Excluir BIOS (isbios="yes")
-                </label>
-                <label>
-                    <input type="checkbox" name="mame_filter_device" value="1" <?= in_array('device', $bf['mame_filters'] ?? [], true) ? 'checked' : '' ?>>
-                    Excluir dispositivos (isdevice="yes")
-                </label>
-            </div>
-            <div class="mame-row">
-                <label>Estado del driver:</label>
-                <select name="mame_driver_status">
-                    <option value="">Cualquiera</option>
-                    <option value="good" <?= ($bf['mame_driver_status'] ?? '') === 'good' ? 'selected' : '' ?>>Bueno</option>
-                    <option value="imperfect" <?= ($bf['mame_driver_status'] ?? '') === 'imperfect' ? 'selected' : '' ?>>Imperfecto</option>
-                    <option value="preliminary" <?= ($bf['mame_driver_status'] ?? '') === 'preliminary' ? 'selected' : '' ?>>Preliminar</option>
-                </select>
-            </div>
-            <div class="mame-row">
-                <label>Filtrar por cloneof:</label>
-                <select name="mame_clone_filter">
-                    <option value="">Cualquiera</option>
-                    <option value="parent_only" <?= ($bf['mame_clone_filter'] ?? '') === 'parent_only' ? 'selected' : '' ?>>Solo padres (sin cloneof)</option>
-                    <option value="clone_only" <?= ($bf['mame_clone_filter'] ?? '') === 'clone_only' ? 'selected' : '' ?>>Solo clones (con cloneof)</option>
-                </select>
-            </div>
-            <p class="hint">Estos filtros solo se aplican a nodos &lt;machine&gt; con atributos MAME.</p>
+        <div id="mame-filters">
+            <?php include __DIR__ . '/sections/mame-filters.php'; ?>
         </div>
         
         <div class="actions">
@@ -124,30 +96,5 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         <div id="count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
     </form>
 
-    <form method="post" class="dedupe-form" id="dedupe-form">
-        <?= campoCSRF() ?>
-        <div class="fields mame-filters">
-            <h3>Eliminar duplicados por región</h3>
-            <p class="hint">Mantendrá solo una entrada por juego, conservando la versión de la región seleccionada (si existe). No afecta a máquinas.</p>
-            <label for="prefer_region">Conservar región:</label>
-            <select name="prefer_region" id="prefer_region" required>
-                <?php foreach ($regionsAll as $r): ?>
-                    <option value="<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($r) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <div class="option-row">
-                <label>
-                    <input type="checkbox" name="keep_europe" id="keep_europe" value="1">
-                    Conservar también Europa
-                </label>
-                <p class="hint">Si se marca, además de la región preferida se conservarán también las variantes de Europa.</p>
-            </div>
-        </div>
-        <div class="actions">
-            <button type="submit" name="action" value="dedupe_region_count" class="secondary">Contar duplicados</button>
-            <button type="submit" name="action" value="dedupe_region_export_csv" class="secondary" id="btn-dedupe-export" disabled>Exportar duplicados (CSV)</button>
-            <button type="submit" name="action" value="dedupe_region" class="danger" id="btn-dedupe" disabled onclick="return confirm('¿Eliminar duplicados y conservar solo la región seleccionada cuando exista?');">Eliminar duplicados</button>
-        </div>
-        <div id="dedupe-count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
-    </form>
+    <div class="hint" aria-live="polite">La herramienta de <strong>eliminación de duplicados por región</strong> se ha movido a la pestaña "Eliminar duplicados".</div>
 </div>

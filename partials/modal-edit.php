@@ -3,10 +3,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <!-- Modal editar -->
-<div class="modal" id="editModal">
+<div class="modal" id="editModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="editTitle" aria-describedby="editRomsLegend">
     <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h3>Editar entrada</h3>
+        <button type="button" class="close" aria-label="Cerrar" onclick="closeModal()">&times;</button>
+        <h3 id="editTitle">Editar entrada</h3>
         <form method="post" id="edit-game-form">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="index" id="editIndex">
@@ -23,7 +23,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
             <input type="text" name="category" id="editCategory" placeholder="(para 'machine' se ignora)">
 
             <fieldset>
-                <legend>ROMs</legend>
+                <legend id="editRomsLegend">ROMs</legend>
                 <div id="edit-roms-container" class="roms-container">
                     <!-- filas dinámicas -->
                 </div>

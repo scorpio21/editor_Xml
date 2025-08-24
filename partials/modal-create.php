@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
-<div id="createModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createModalTitle" style="display:none">
+<div id="createModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createModalTitle" aria-hidden="true">
   <div class="modal-content">
     <div class="modal-header">
       <h3 id="createModalTitle">Crear nuevo XML</h3>

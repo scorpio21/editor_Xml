@@ -9,9 +9,9 @@
   afterLoad(function(){
     var dedupeAjax = false;
     function handleDedupeCount(ev) {
-      var countBtn = ev.target && ev.target.closest('form#dedupe-form button[name="action"][value="dedupe_region_count"]');
+      var countBtn = ev.target && ev.target.closest('form#dedupe-region-form button[name="action"][value="dedupe_region_count"]');
       if (!countBtn) return;
-      var form = document.getElementById('dedupe-form');
+      var form = document.getElementById('dedupe-region-form');
       if (!form) return;
       ev.preventDefault();
       ev.stopPropagation();
@@ -77,7 +77,7 @@
     function handleDedupeRun(ev) {
       var btn = ev.target && ev.target.closest('button[name="action"][value="dedupe_region"]');
       if (!btn) return;
-      var form = document.getElementById('dedupe-form');
+      var form = document.getElementById('dedupe-region-form');
       if (!form) return;
       if (!window.confirm('¿Eliminar duplicados y conservar solo la región seleccionada cuando exista?')) { return; }
       ev.preventDefault();

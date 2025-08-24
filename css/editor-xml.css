@@ -122,6 +122,10 @@ button.remove-btn:hover {
   z-index: 1000;
 }
 
+/* Visibilidad basada en ARIA: el JS alterna aria-hidden */
+.modal[aria-hidden="true"] { display: none; }
+.modal[aria-hidden="false"] { display: block; }
+
 .modal-content {
   background: #fff;
   padding: 25px;
@@ -132,6 +136,16 @@ button.remove-btn:hover {
   box-shadow: var(--shadow-md);
   max-height: 80vh;
   overflow-y: auto;
+}
+
+/* Mejora de enfoque dentro de modales */
+.modal :focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.35);
+  outline-offset: 2px;
+}
+.modal [tabindex="-1"]:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.35);
+  outline-offset: 2px;
 }
 
 /* Modal de ayuda: índice y contenido */

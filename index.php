@@ -12,6 +12,8 @@ require_once __DIR__ . '/inc/router-acciones.php';
 
 // Cargar XML para render
 $xml = cargarXmlSiDisponible($xmlFile);
+// Modo UI por pestañas por defecto. Para ver la UI clásica, usar ?ui=classic
+$uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -19,6 +21,9 @@ $xml = cargarXmlSiDisponible($xmlFile);
     <meta charset="UTF-8">
     <title>Editor XML Juegos</title>
     <link rel="stylesheet" href="css/editor-xml.css">
+    <?php if ($uiTabs): ?>
+      <link rel="stylesheet" href="css/tabs.css">
+    <?php endif; ?>
 </head>
 <body>
 
@@ -45,13 +50,77 @@ $xml = cargarXmlSiDisponible($xmlFile);
     </div>
 <?php endif; ?>
 
-<?php include __DIR__ . '/partials/header-file.php'; ?>
+<?php if ($uiTabs): ?>
+  <div class="tabs" id="app-tabs">
+    <div role="tablist" aria-label="Secciones del editor">
+      <button role="tab" id="tab-btn-1" aria-selected="true" aria-controls="tab-panel-1">
+        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text">Bienvenida</span>
+      </button>
+      <button role="tab" id="tab-btn-2" aria-selected="false" aria-controls="tab-panel-2">
+        <img class="tab-ico" src="img/ico-upload.svg" alt="" aria-hidden="true"><span class="tab-text">Cargar y buscar</span>
+      </button>
+      <button role="tab" id="tab-btn-3" aria-selected="false" aria-controls="tab-panel-3">
+        <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminación masiva</span>
+      </button>
+      <button role="tab" id="tab-btn-4" aria-selected="false" aria-controls="tab-panel-4">
+        <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text">Filtros MAME (opcional)</span>
+      </button>
+      <button role="tab" id="tab-btn-5" aria-selected="false" aria-controls="tab-panel-5">
+        <img class="tab-ico" src="img/ico-dedupe.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminar duplicados</span>
+      </button>
+    </div>
 
-<?php if ($xml): ?>
-    <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
+    <section role="tabpanel" id="tab-panel-1" aria-labelledby="tab-btn-1">
+      <h2>Bienvenido al editor de XML/DAT</h2>
+      <p>Esta herramienta te permite cargar, explorar, editar y mantener tu catálogo XML/DAT de juegos y máquinas.</p>
+      <p>Usa las pestañas para navegar entre secciones. Puedes abrir la ayuda en cualquier momento.</p>
+      <p>
+        <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
+      </p>
+    </section>
 
-    <?php include __DIR__ . '/partials/games-list.php'; ?>
+    <section role="tabpanel" id="tab-panel-2" aria-labelledby="tab-btn-2" hidden>
+      <?php include __DIR__ . '/partials/header-file.php'; ?>
+      <?php if ($xml): ?>
+        <?php include __DIR__ . '/partials/games-list.php'; ?>
+      <?php endif; ?>
+    </section>
 
+    <section role="tabpanel" id="tab-panel-3" aria-labelledby="tab-btn-3" hidden>
+      <?php if ($xml): ?>
+        <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
+      <?php else: ?>
+        <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar".</p>
+      <?php endif; ?>
+    </section>
+
+    <section role="tabpanel" id="tab-panel-4" aria-labelledby="tab-btn-4" hidden>
+      <h3>Filtros específicos MAME</h3>
+      <p class="hint">Estos filtros se aplican al realizar acciones en "Eliminación masiva". Ajusta aquí y luego ejecuta desde la pestaña correspondiente.</p>
+      <?php include __DIR__ . '/partials/sections/mame-filters.php'; ?>
+      <p>
+        <button type="button" class="secondary" data-goto-tab="#tab-btn-3" data-goto-target="#mame-filters">Ir a ejecutar en Eliminación masiva</button>
+      </p>
+    </section>
+
+    <section role="tabpanel" id="tab-panel-5" aria-labelledby="tab-btn-5" hidden>
+      <h3>Eliminar duplicados por región</h3>
+      <?php if ($xml): ?>
+        <?php include __DIR__ . '/partials/sections/dedupe-region.php'; ?>
+      <?php else: ?>
+        <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar" para usar esta herramienta.</p>
+      <?php endif; ?>
+    </section>
+  </div>
+<?php else: ?>
+  <?php include __DIR__ . '/partials/header-file.php'; ?>
+
+  <?php if ($xml): ?>
+      <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
+
+      <?php include __DIR__ . '/partials/games-list.php'; ?>
+
+  <?php endif; ?>
 <?php endif; ?>
 
 <?php include __DIR__ . '/partials/modal-edit.php'; ?>
@@ -66,6 +135,9 @@ $xml = cargarXmlSiDisponible($xmlFile);
 <script src="js/utils.js"></script>
 <script src="js/reloj.js"></script>
 <script src="js/multiselect.js"></script>
+<?php if ($uiTabs): ?>
+<script src="js/tabs.js"></script>
+<?php endif; ?>
 <script src="js/modales.js"></script>
 <script src="js/bulk.js"></script>
 <script src="js/dedupe.js"></script>
