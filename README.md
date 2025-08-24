@@ -4,7 +4,7 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
-Actualizado: 2025-08-24 — ver `CHANGELOG.md` (Fase 1: índices absolutos en borrado/edición y logging más discreto).
+Actualizado: 2025-08-25 — ver `CHANGELOG.md` (Tabs accesibles por defecto, iconos SVG y persistencia de estado).
 
 ## Tabla de contenidos
 
@@ -16,6 +16,7 @@ Actualizado: 2025-08-24 — ver `CHANGELOG.md` (Fase 1: índices absolutos en bo
 - [Instalación](#instalación)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Uso](#uso)
+- [Interfaz por pestañas](#interfaz-por-pestañas)
 - [Inicio rápido](#inicio-rápido)
 - [Capturas](#capturas)
 - [Notas técnicas](#notas-técnicas)
@@ -34,6 +35,8 @@ Actualizado: 2025-08-24 — ver `CHANGELOG.md` (Fase 1: índices absolutos en bo
 
 - 🚀 Edición rápida de juegos y máquinas (soporte multi‑ROM)
 - 🔍 Búsqueda y filtros (incluye eliminación masiva con dry‑run)
+- 🧭 Interfaz por pestañas accesible (por defecto) con navegación por teclado y ARIA
+- 💾 Persistencia de pestaña activa y posición de scroll por panel (sessionStorage)
 - 🧰 Mantenimiento seguro: backups automáticos y restauración desde `.bak`
 - 🧹 Compactación y limpieza automática del XML al guardar
 - 📄 Paginación en servidor para DATS grandes
@@ -83,9 +86,12 @@ Actualizado: 2025-08-24 — ver `CHANGELOG.md` (Fase 1: índices absolutos en bo
 ```text
 editor_Xml/
 ├─ css/
-│  └─ editor-xml.css
+│  ├─ editor-xml.css
+│  └─ tabs.css                 # Estilos de la UI por pestañas
 ├─ js/
-│  └─ editor-xml.js
+│  ├─ editor-xml.js
+│  ├─ tabs.js                  # Componente de pestañas accesibles (ARIA + teclado)
+│  └─ dedupe.js                # Lógica AJAX para eliminar duplicados
 ├─ inc/
 │  ├─ acciones.php         # Procesa todas las acciones POST (edit, delete, bulk_delete, compact_xml, etc.)
 │  ├─ csrf-helper.php      # Helpers de CSRF: generar/verificar token y campo oculto
@@ -95,7 +101,12 @@ editor_Xml/
 │  ├─ games-list.php       # Render de la lista unificada de juegos y máquinas (paginada)
 │  ├─ bulk-delete.php      # Formulario y controles de eliminación masiva (juegos y máquinas)
 │  ├─ modal-edit.php       # Modal para editar juego/máquina con soporte multi-ROM
-│  └─ modal-help.php       # Modal de ayuda (uso de la app)
+│  ├─ modal-help.php       # Modal de ayuda (uso de la app)
+│  └─ sections/
+│     ├─ mame-filters.php      # Controles de filtros específicos MAME (reutilizable)
+│     └─ dedupe-region.php     # Formulario de eliminación de duplicados por región
+├─ img/
+│  ├─ ico-home.svg, ico-upload.svg, ico-bulk.svg, ico-mame.svg, ico-dedupe.svg
 ├─ uploads/
 │  ├─ current.xml          # Fichero XML activo (se crea tras subir)
 │  └─ current.xml.bak      # Copia de seguridad
@@ -124,6 +135,14 @@ editor_Xml/
 7) **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
 8) **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
 9) **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
+
+## Interfaz por pestañas
+
+- Por defecto, la aplicación muestra una UI por pestañas accesible.
+- Navegación por teclado: Flechas Izq/Der, Home/End para moverse; Enter/Espacio para activar.
+- Accesibilidad: roles ARIA (`tablist`, `tab`, `tabpanel`) y atributos gestionados por `js/tabs.js`.
+- Persistencia: pestaña activa y scroll por panel se recuerdan durante la sesión (sessionStorage).
+- UI clásica: si necesitas la interfaz anterior, añade `?ui=classic` a la URL.
 
 ## Inicio rápido
 

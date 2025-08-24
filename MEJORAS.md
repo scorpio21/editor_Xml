@@ -23,3 +23,18 @@ Para el historial de cambios, consulta `CHANGELOG.md`. El detalle de tareas y pl
 - Logging de borrado simplificado y condicionado por `APP_ENV`.
 - Añadido `.gitignore` para excluir `/uploads` y `/logs`.
 - Ver `CHANGELOG.md` para el detalle y commits asociados.
+
+## Actualización 2025-08-25
+
+- UI por pestañas accesible pasa a ser el modo por defecto (`index.php`).
+- Añadidos iconos SVG para pestañas (`img/ico-*.svg`).
+- Persistencia de pestaña activa y scroll por panel (sessionStorage) en `js/tabs.js`.
+- Parciales reutilizables: `partials/sections/mame-filters.php` y `partials/sections/dedupe-region.php`.
+
+Siguientes líneas de trabajo sugeridas:
+
+- Accesibilidad avanzada: revisión con lector de pantalla, roles/atributos, `:focus-visible` y contraste AA.
+- Tests de teclado: flechas, Home/End, Enter/Espacio, restauración de foco.
+- Deep-link opcional `?tab=<n>` y restauración entre sesiones (localStorage) si se requiere.
+- Tema oscuro y variables de color (`--accent-*`).
+- E2E de navegación por pestañas y flujos de eliminación masiva/duplicados.
