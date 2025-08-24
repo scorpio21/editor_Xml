@@ -43,6 +43,8 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
             <?= campoCSRF() ?>
             <button type="submit" name="action" value="compact_xml" class="secondary">Guardar / Compactar XML</button>
         </form>
+        <?php else: ?>
+        <p class="hint"><small>No hay cambios pendientes.</small></p>
         <?php endif; ?>
         <?php if (file_exists($xmlFile . '.bak')): ?>
         <form method="post" class="inline-form">

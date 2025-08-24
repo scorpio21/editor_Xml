@@ -140,6 +140,40 @@ editor_Xml/
 - La eliminación masiva soporta un conteo previo por AJAX y contempla nodos `<game>` y `<machine>`.
 - Reloj en UI: elementos con `data-clock` muestran la hora actual del navegador, actualizada cada minuto. “Última modificación” en cabecera usa `filemtime` del XML y la zona horaria de PHP.
 
+## Logs y errores
+
+- Los logs se escriben mediante `inc/logger.php` con niveles (`DEBUG`, `INFO`, `WARNING`, `ERROR`).
+- Variables de entorno:
+  - `APP_ENV`: `production` o `development`.
+    - En producción se minimiza la verbosidad y los extras en logs.
+  - `LOG_LEVEL_MIN`: nivel mínimo a registrar (`DEBUG`/`INFO`/`WARNING`/`ERROR`).
+  - `LOG_DIR`: carpeta de logs. Recomendado fuera del docroot (ej.: `D:/xampp/logs/editor_Xml`).
+- Rotación simple: el logger hace rotación básica cuando supera tamaño umbral (ver implementación).
+- Seguridad: no se registran datos sensibles; los mensajes se sanitizan.
+
+Ejemplos de configuración:
+
+Apache (VirtualHost o httpd.conf):
+
+```apache
+SetEnv APP_ENV "production"
+SetEnv LOG_LEVEL_MIN "INFO"
+SetEnv LOG_DIR "D:/xampp/logs/editor_Xml"
+```
+
+Windows (Variables del sistema):
+
+```cmd
+APP_ENV=production
+LOG_LEVEL_MIN=INFO
+LOG_DIR=D:\\xampp\\logs\\editor_Xml
+```
+
+Ubicación de archivos:
+
+- Por defecto: `logs/` dentro del proyecto.
+- Si `LOG_DIR` está definido y existe, se usa ese directorio.
+
 ## Buenas prácticas seguidas
 
 - Código y textos en **español**.
