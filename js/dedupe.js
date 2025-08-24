@@ -7,10 +7,14 @@
   var parse = (window.AppUtils && window.AppUtils.parseAjaxJson) ? window.AppUtils.parseAjaxJson : function(t){ try{return JSON.parse(t);}catch(e){return {ok:false,message:'Operación completada.'};} };
 
   afterLoad(function(){
+    function dbgEnabled(){ try { return (new URLSearchParams(window.location.search)).get('debug') === 'assets'; } catch(_) { return false; } }
+    function dbgLog(){ if (!dbgEnabled()) return; try { console.log.apply(console, arguments); } catch(_) {} }
+    dbgLog('[dedupe] init');
     var dedupeAjax = false;
     function handleDedupeCount(ev) {
       var countBtn = ev.target && ev.target.closest('form#dedupe-region-form button[name="action"][value="dedupe_region_count"]');
       if (!countBtn) return;
+      dbgLog('[dedupe] click count');
       var form = document.getElementById('dedupe-region-form');
       if (!form) return;
       ev.preventDefault();
@@ -28,13 +32,16 @@
       var csrfInput = form.querySelector('input[name="csrf_token"]');
       if (csrfInput) { fd.set('csrf_token', csrfInput.value); }
       dedupeAjax = true;
+      dbgLog('[dedupe] fetch POST inc/acciones.php action=dedupe_region_count');
       fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
         .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
         .then(function (resp) {
+          dbgLog('[dedupe] resp status=%d len=%d', resp.status, resp.text.length);
           var data = parse(resp.text) || { ok:true, message: 'Operación completada.' };
           var msg = data.message || 'Operación completada.';
           var duplicates = (typeof data.duplicates === 'number') ? data.duplicates : 0;
           if (data && data.ok === false) { msg = 'Error: ' + msg; }
+          dbgLog('[dedupe] parsed ok=%s message=%s duplicates=%d', String(data && data.ok !== false), msg, duplicates);
           if (live) { live.textContent = msg; }
           var has = duplicates > 0;
           if (btnDedupe) { btnDedupe.disabled = !has; }
@@ -77,6 +84,7 @@
     function handleDedupeRun(ev) {
       var btn = ev.target && ev.target.closest('button[name="action"][value="dedupe_region"]');
       if (!btn) return;
+      dbgLog('[dedupe] click run');
       var form = document.getElementById('dedupe-region-form');
       if (!form) return;
       if (!window.confirm('¿Eliminar duplicados y conservar solo la región seleccionada cuando exista?')) { return; }
@@ -90,12 +98,15 @@
       fd.set('ajax', '1');
       var csrfInput = form.querySelector('input[name="csrf_token"]');
       if (csrfInput) { fd.set('csrf_token', csrfInput.value); }
+      dbgLog('[dedupe] fetch POST inc/acciones.php action=dedupe_region');
       fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
         .then(function (r) { return r.text().then(function (t) { return { status: r.status, text: t }; }); })
         .then(function (resp) {
+          dbgLog('[dedupe] resp status=%d len=%d', resp.status, resp.text.length);
           var data = parse(resp.text) || { ok:true, message: 'Operación completada.' };
           var msg = data.message || 'Operación completada.';
           if (data && data.ok === false) { msg = 'Error: ' + msg; }
+          dbgLog('[dedupe] parsed ok=%s message=%s', String(data && data.ok !== false), msg);
           if (live) { live.textContent = msg; } else { alert(msg); }
           var btnDedupe = document.getElementById('btn-dedupe');
           var btnExport = document.getElementById('btn-dedupe-export');

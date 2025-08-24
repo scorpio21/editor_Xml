@@ -38,3 +38,4 @@ Siguientes líneas de trabajo sugeridas:
 - Deep-link opcional `?tab=<n>` y restauración entre sesiones (localStorage) si se requiere.
 - Tema oscuro y variables de color (`--accent-*`).
 - E2E de navegación por pestañas y flujos de eliminación masiva/duplicados.
+-. Proteger el diagnóstico `?debug=assets` por entorno (`APP_ENV=development`) o bandera de build.

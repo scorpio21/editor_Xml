@@ -20,6 +20,12 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 
 - La navegación por defecto cambia a la UI por pestañas. La antigua UI se mantiene únicamente con `?ui=classic`.
 
+### Debug
+
+- Instrumentación opcional con `?debug=assets` para diagnóstico de carga de assets y cambios de pestañas.
+- Archivos: `js/utils.js`, `js/tabs.js`, `js/bulk.js`, `js/dedupe.js`.
+- No afecta al comportamiento en producción.
+
 ## 2025-08-24
 
 // Fase 1

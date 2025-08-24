@@ -144,6 +144,12 @@ editor_Xml/
 - Persistencia: pestaña activa y scroll por panel se recuerdan durante la sesión (sessionStorage).
 - UI clásica: si necesitas la interfaz anterior, añade `?ui=classic` a la URL.
 
+### Diagnóstico opcional
+
+- Para inspeccionar qué assets se cargan y el estado de las pestañas/paneles, añade `?debug=assets` a la URL.
+- Esto activa trazas en consola desde `js/utils.js`, `js/tabs.js`, `js/bulk.js` y `js/dedupe.js`.
+- No afecta al comportamiento de la aplicación. Pensado para verificación en desarrollo.
+
 ## Inicio rápido
 
 1. Abre `http://localhost/editor_Xml/` en tu navegador.

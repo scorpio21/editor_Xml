@@ -17,6 +17,11 @@
     function scrollKey(i){ return storageKey + ':scroll:' + i; }
 
     var currentIdx = -1;
+    function dbgEnabled(){
+      try { return (new URLSearchParams(window.location.search)).get('debug') === 'assets'; } catch(_) { return false; }
+    }
+    function dbgLog(){ if (!dbgEnabled()) return; try { console.log.apply(console, arguments); } catch(_) {} }
+
     function selectTab(idx, focus){
       // Guardar scroll del panel actual antes de cambiar
       if (currentIdx >= 0 && panels[currentIdx]) {
@@ -33,6 +38,7 @@
       });
       try { sessionStorage.setItem(storageKey, String(idx)); } catch (_) {}
       currentIdx = idx;
+      dbgLog('[tabs] selectTab -> idx=%d id=%s panel=%s focus=%s', idx, tabs[idx] && tabs[idx].id, panels[idx] && panels[idx].id, !!focus);
       if (focus && tabs[idx]) tabs[idx].focus();
       // Restaurar scroll del panel seleccionado
       var targetPanel = panels[idx];
@@ -49,15 +55,15 @@
 
     // Activar con click/enter/space
     tabs.forEach(function(tab, i){
-      tab.addEventListener('click', function(){ selectTab(i, false); });
+      tab.addEventListener('click', function(){ dbgLog('[tabs] click -> idx=%d id=%s', i, tab.id); selectTab(i, false); });
       tab.addEventListener('keydown', function(e){
         switch (e.key) {
           case 'Enter':
-          case ' ': e.preventDefault(); selectTab(i, false); break;
-          case 'ArrowRight': e.preventDefault(); selectTab((i+1)%tabs.length, true); break;
-          case 'ArrowLeft': e.preventDefault(); selectTab((i-1+tabs.length)%tabs.length, true); break;
-          case 'Home': e.preventDefault(); selectTab(0, true); break;
-          case 'End': e.preventDefault(); selectTab(tabs.length-1, true); break;
+          case ' ': e.preventDefault(); dbgLog('[tabs] key %s -> idx=%d', e.key, i); selectTab(i, false); break;
+          case 'ArrowRight': e.preventDefault(); dbgLog('[tabs] key %s -> next from %d', e.key, i); selectTab((i+1)%tabs.length, true); break;
+          case 'ArrowLeft': e.preventDefault(); dbgLog('[tabs] key %s -> prev from %d', e.key, i); selectTab((i-1+tabs.length)%tabs.length, true); break;
+          case 'Home': e.preventDefault(); dbgLog('[tabs] key Home'); selectTab(0, true); break;
+          case 'End': e.preventDefault(); dbgLog('[tabs] key End'); selectTab(tabs.length-1, true); break;
         }
       });
     });
@@ -73,6 +79,7 @@
       if (!tabEl) return;
       var idx = tabs.indexOf(tabEl);
       if (idx < 0) return;
+      dbgLog('[tabs] data-goto-tab -> selector=%s idx=%d', tabSelector, idx);
       selectTab(idx, true);
       if (targetSelector) {
         var target = panels[idx] && panels[idx].querySelector(targetSelector);
@@ -97,6 +104,7 @@
     } catch (_) {}
     currentIdx = initialIdx;
     selectTab(initialIdx, false);
+    dbgLog('[tabs] init -> initialIdx=%d id=%s', initialIdx, tabs[initialIdx] && tabs[initialIdx].id);
   }
 
   afterLoad(function(){
