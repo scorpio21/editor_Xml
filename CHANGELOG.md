@@ -15,6 +15,13 @@ Notas:
 
 - Ver detalles técnicos en `README.md` y commits asociados.
 
+// Fase 2 (UX)
+
+- Edición por AJAX con actualización en vivo de tarjetas en el listado (sin recargar).
+- `inc/acciones/crud.php`: respuestas JSON para acción `edit` (éxito y validaciones).
+- `js/modales.js`: intercepta envío, hace `fetch`, actualiza `.game[data-absindex][data-type]` (nombre, descripción, categoría y ROMs).
+- Se mantiene redirección para envíos no-AJAX.
+
 Notas:
 
 - Cierra #17.
