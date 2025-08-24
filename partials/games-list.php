@@ -2,19 +2,33 @@
 declare(strict_types=1);
 ?>
 <?php
-    $entries = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    // Construir lista completa con índice absoluto por tipo en una sola pasada
+    $children = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    $all = [];
+    $absGame = 0; $absMachine = 0;
+    foreach ($children as $node) {
+        $isMachine = ($node->getName() === 'machine');
+        $all[] = [
+            'el' => $node,
+            'type' => $isMachine ? 'machine' : 'game',
+            'absIndex' => $isMachine ? $absMachine++ : $absGame++,
+        ];
+    }
+
     // Filtro de búsqueda por nombre/descripcion/categoría (GET q) y extensiones a ROMs/hashes
     $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
     $qInRoms = isset($_GET['q_in_roms']) && $_GET['q_in_roms'] === '1';
     $qInHashes = isset($_GET['q_in_hashes']) && $_GET['q_in_hashes'] === '1';
+    $entries = $all;
     if ($q !== '') {
         $qUpper = mb_strtoupper($q, 'UTF-8');
         $terms = array_values(array_filter(preg_split('/\s+/', $q)));
         $hasSpace = mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false;
         // Normalización para hashes (quitar separadores comunes)
         $qHash = strtoupper(str_replace([' ', '-', '_'], '', $q));
-        $entries = array_values(array_filter($entries, static function($e) use ($terms, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
-            // Coincidencia base por nombre (y opcionalmente por descripción/categoría si se amplía en el futuro)
+        $entries = array_values(array_filter($all, static function($item) use ($terms, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
+            $e = $item['el'];
+            // Coincidencia base por nombre
             $name = (string)($e['name'] ?? '');
             $hayName = mb_strtoupper($name, 'UTF-8');
             $matchBase = false;
@@ -77,6 +91,15 @@ declare(strict_types=1);
             return $matchBase || $matchRoms || $matchHashes;
         }));
     }
+?>
+<?php
+    // Mapear índices absolutos por tipo (game/machine) para operaciones que requieren índice del XML completo
+    $allGames = $xml->xpath('/datafile/game') ?: [];
+    $allMachines = $xml->xpath('/datafile/machine') ?: [];
+    $mapGame = [];
+    foreach ($allGames as $i => $g) { $mapGame[spl_object_id($g)] = $i; }
+    $mapMachine = [];
+    foreach ($allMachines as $i => $m) { $mapMachine[spl_object_id($m)] = $i; }
 ?>
 <h2>Lista de juegos/máquinas (<?= count($entries) ?>)</h2>
 
@@ -143,14 +166,14 @@ declare(strict_types=1);
 <div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
 <div class="game-grid">
     <?php $idx = 0; $gameIdx = 0; $machineIdx = 0; foreach ($entries as $entry): ?>
-        <?php if ($idx < $start) { $idx++; if ($entry->getName()==='game') { $gameIdx++; } continue; } ?>
+        <?php $node = $entry['el']; $isMachine = ($entry['type'] === 'machine'); ?>
+        <?php if ($idx < $start) { $idx++; if (!$isMachine) { $gameIdx++; } else { $machineIdx++; } continue; } ?>
         <?php if ($idx > $end) { break; } ?>
-        <?php $isMachine = ($entry->getName() === 'machine'); ?>
-        <?php $firstRom = $entry->rom[0] ?? null; ?>
+        <?php $firstRom = $node->rom[0] ?? null; ?>
         <?php
             // Construir JSON de ROMs para data-roms
             $romArr = [];
-            foreach ($entry->rom as $r) {
+            foreach ($node->rom as $r) {
                 $romArr[] = [
                     'name' => (string)$r['name'],
                     'size' => (string)$r['size'],
@@ -161,11 +184,13 @@ declare(strict_types=1);
             }
             $romsJson = htmlspecialchars(json_encode($romArr, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
         ?>
+        <?php $absIndex = (int)$entry['absIndex']; ?>
         <div class="game" id="<?= $isMachine ? 'machine-'.$machineIdx : 'game-'.$gameIdx ?>"
-             data-name="<?= htmlspecialchars((string)$entry['name']) ?>"
-             data-description="<?= htmlspecialchars((string)$entry->description) ?>"
-             data-category="<?= $isMachine ? '' : htmlspecialchars((string)$entry->category) ?>"
+             data-name="<?= htmlspecialchars((string)$node['name']) ?>"
+             data-description="<?= htmlspecialchars((string)$node->description) ?>"
+             data-category="<?= $isMachine ? '' : htmlspecialchars((string)$node->category) ?>"
              data-type="<?= $isMachine ? 'machine' : 'game' ?>"
+             data-absindex="<?= $absIndex ?>"
              data-roms='<?= $romsJson ?>'
              data-romname="<?= $firstRom ? htmlspecialchars((string)$firstRom['name']) : '' ?>"
              data-size="<?= $firstRom ? htmlspecialchars((string)$firstRom['size']) : '' ?>"
@@ -173,18 +198,18 @@ declare(strict_types=1);
              data-md5="<?= $firstRom ? htmlspecialchars((string)$firstRom['md5']) : '' ?>"
              data-sha1="<?= $firstRom ? htmlspecialchars((string)$firstRom['sha1']) : '' ?>">
             <div class="game-info"><strong>Tipo:</strong> <?= $isMachine ? 'machine' : 'game' ?></div>
-            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)$entry['name']) ?></div>
-            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)$entry->description) ?></div>
+            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)$node['name']) ?></div>
+            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)$node->description) ?></div>
             <?php if ($isMachine): ?>
-                <div class="game-info"><strong>Año:</strong> <?= htmlspecialchars((string)$entry->year) ?></div>
-                <div class="game-info"><strong>Fabricante:</strong> <?= htmlspecialchars((string)$entry->manufacturer) ?></div>
+                <div class="game-info"><strong>Año:</strong> <?= htmlspecialchars((string)$node->year) ?></div>
+                <div class="game-info"><strong>Fabricante:</strong> <?= htmlspecialchars((string)$node->manufacturer) ?></div>
             <?php endif; ?>
-            <div class="game-info"><strong>Categoría:</strong> <?= $isMachine ? '—' : htmlspecialchars((string)$entry->category) ?></div>
-            <?php if (count($entry->rom) > 0): ?>
+            <div class="game-info"><strong>Categoría:</strong> <?= $isMachine ? '—' : htmlspecialchars((string)$node->category) ?></div>
+            <?php if (count($node->rom) > 0): ?>
                 <div class="game-roms">
                     <strong>ROMs:</strong>
                     <ul>
-                        <?php foreach ($entry->rom as $rom): ?>
+                        <?php foreach ($node->rom as $rom): ?>
                             <li>
                                 <div><strong>Nombre:</strong> <?= htmlspecialchars((string)$rom['name']) ?></div>
                                 <div><strong>Tamaño:</strong> <?= htmlspecialchars((string)$rom['size']) ?></div>
@@ -204,7 +229,8 @@ declare(strict_types=1);
                     <button onclick="openEditModal(<?= $gameIdx ?>)">Editar</button>
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="index" value="<?= $gameIdx ?>">
+                        <input type="hidden" name="index" value="<?= $absIndex ?>">
+                        <?= campoCSRF() ?>
                         <button type="submit" onclick="return confirm('¿Eliminar este juego?')">Eliminar</button>
                     </form>
                 <?php else: ?>
@@ -212,7 +238,8 @@ declare(strict_types=1);
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="node_type" value="machine">
-                        <input type="hidden" name="index" value="<?= $machineIdx ?>">
+                        <input type="hidden" name="index" value="<?= $absIndex ?>">
+                        <?= campoCSRF() ?>
                         <button type="submit" onclick="return confirm('¿Eliminar esta máquina?')">Eliminar</button>
                     </form>
                 <?php endif; ?>

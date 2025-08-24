@@ -10,12 +10,16 @@
   function openEditModal(index) {
     var el = document.getElementById('game-' + index);
     if (!el) return;
-    populateEditModal(el, index, 'game');
+    var absIdx = el.getAttribute('data-absindex');
+    var idxToUse = (absIdx != null && absIdx !== '') ? parseInt(absIdx, 10) : index;
+    populateEditModal(el, idxToUse, 'game');
   }
   function openEditModalMachine(index) {
     var el = document.getElementById('machine-' + index);
     if (!el) return;
-    populateEditModal(el, index, 'machine');
+    var absIdx = el.getAttribute('data-absindex');
+    var idxToUse = (absIdx != null && absIdx !== '') ? parseInt(absIdx, 10) : index;
+    populateEditModal(el, idxToUse, 'machine');
   }
   function crearFilaEdicion(data) {
     var row = document.createElement('div');

@@ -433,6 +433,7 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
         crearBackup($xmlFile);
         $toRemove = $nodes->item($index);
         if ($toRemove instanceof DOMElement) {
+            $deletedName = $toRemove->getAttribute('name');
             $toRemove->parentNode->removeChild($toRemove);
         }
         // Formateo limpio del XML al guardar
@@ -445,6 +446,11 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
+        $extra = [ 'node_type' => $nodeType, 'index' => $index ];
+        if (defined('APP_ENV') && APP_ENV !== 'production') {
+            $extra['name'] = isset($deletedName) ? $deletedName : null;
+        }
+        registrarInfo('crud.php:delete', 'Elemento eliminado', $extra);
         $_SESSION['message'] = ($nodeType === 'machine') ? 'Máquina eliminada correctamente.' : 'Juego eliminado correctamente.';
     }
     header('Location: ' . $_SERVER['PHP_SELF']);
