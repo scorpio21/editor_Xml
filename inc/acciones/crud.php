@@ -11,9 +11,17 @@ if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['
     if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
         // Guardar nombre original para futuras exportaciones
         $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
-        move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile);
-        $_SESSION['xml_uploaded'] = true;
-        $_SESSION['message'] = 'Archivo cargado correctamente.';
+        if (!@move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile)) {
+            registrarError('crud.php:upload', 'No se pudo mover el archivo subido al destino.', [
+                'dest' => $xmlFile,
+                'size' => $_FILES['xmlFile']['size'] ?? null,
+                'name' => $_FILES['xmlFile']['name'] ?? null,
+            ]);
+            $_SESSION['error'] = 'No se pudo mover el archivo subido.';
+        } else {
+            $_SESSION['xml_uploaded'] = true;
+            $_SESSION['message'] = 'Archivo cargado correctamente.';
+        }
     } else {
         $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
     }
@@ -32,6 +40,7 @@ if ($action === 'compact_xml') {
         require_once __DIR__ . '/../xml-helpers.php';
         $raw = @file_get_contents($xmlFile);
         if ($raw === false) {
+            registrarError('crud.php:compact_xml', 'No se pudo leer el XML para compactar.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo leer el XML para compactar.';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
@@ -39,6 +48,7 @@ if ($action === 'compact_xml') {
         $dom = new DOMDocument();
         $dom->preserveWhiteSpace = false;
         if (@$dom->loadXML($raw) === false) {
+            registrarError('crud.php:compact_xml', 'XML inválido. Falló loadXML al compactar.', []);
             $_SESSION['error'] = 'El XML no es válido y no se pudo compactar.';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
@@ -47,6 +57,7 @@ if ($action === 'compact_xml') {
         $dom->normalizeDocument();
         limpiarEspaciosEnBlancoDom($dom);
         if (!guardarDomConBackup($dom, $xmlFile)) {
+            registrarError('crud.php:compact_xml', 'Fallo al guardar XML compactado. Revertido al respaldo.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo guardar el XML compactado. Se revirtió al respaldo.';
         } else {
             $_SESSION['message'] = 'XML guardado y compactado correctamente.';
@@ -95,7 +106,9 @@ if ($action === 'download_xml') {
             header('Content-Length: ' . (string)$filesize);
         }
         // Enviar contenido y terminar
-        @readfile($xmlFile);
+        if (@readfile($xmlFile) === false) {
+            registrarError('crud.php:download_xml', 'Fallo al enviar el fichero para descarga.', [ 'file' => $xmlFile ]);
+        }
         exit;
     } else {
         $_SESSION['error'] = 'No hay XML disponible para descargar.';
@@ -142,6 +155,7 @@ if ($action === 'create_xml') {
     $dom->normalizeDocument();
     limpiarEspaciosEnBlancoDom($dom);
     if (!guardarDomConBackup($dom, $xmlFile)) {
+        registrarError('crud.php:create_xml', 'No se pudo crear/guardar el XML.', [ 'file' => $xmlFile ]);
         $_SESSION['error'] = 'No se pudo crear/guardar el XML.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -171,6 +185,10 @@ if ($action === 'restore_backup') {
             $_SESSION['xml_uploaded'] = true;
             $_SESSION['message'] = 'Restaurado correctamente desde la copia de seguridad (.bak).';
         } else {
+            registrarError('crud.php:restore_backup', 'No se pudo restaurar desde la copia de seguridad.', [
+                'backup' => $backupFile,
+                'dest' => $xmlFile,
+            ]);
             $_SESSION['error'] = 'No se pudo restaurar desde la copia de seguridad.';
         }
     } else {
@@ -243,7 +261,12 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    if (@$dom->loadXML($xml->asXML()) === false) {
+        registrarError('crud.php:add_game', 'Falló loadXML al preparar DOM para añadir juego.', []);
+        $_SESSION['error'] = 'No se pudo cargar el XML en memoria.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
     $xpath = new DOMXPath($dom);
 
     $df = $xpath->query('/datafile')->item(0);
@@ -283,6 +306,7 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $dom->normalizeDocument();
     limpiarEspaciosEnBlancoDom($dom);
     if (!guardarDomConBackup($dom, $xmlFile)) {
+        registrarError('crud.php:add_game', 'No se pudo guardar el nuevo juego. Revertido al respaldo.', [ 'file' => $xmlFile ]);
         $_SESSION['error'] = 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -444,6 +468,7 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
             $dom->normalizeDocument();
             limpiarEspaciosEnBlancoDom($dom);
             if (!guardarDomConBackup($dom, $xmlFile)) {
+                registrarError('crud.php:edit', 'No se pudo guardar el XML tras editar. Revertido al respaldo.', [ 'file' => $xmlFile ]);
                 if ($isAjax) {
                     header('Content-Type: application/json; charset=UTF-8');
                     echo json_encode(['ok' => false, 'message' => 'No se pudo guardar el XML. Se revirtió al respaldo.']);
@@ -472,6 +497,7 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
     if (!$isAjax) {
         header('Location: ' . $_SERVER['PHP_SELF']);
     } else {
+        registrarAdvertencia('crud.php:edit', 'No se pudo localizar el nodo a editar.', [ 'index' => $index, 'type' => $nodeType ]);
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['ok' => false, 'message' => 'No se pudo localizar el nodo a editar.']);
     }
@@ -502,6 +528,7 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
         $dom->normalizeDocument();
         limpiarEspaciosEnBlancoDom($dom);
         if (!guardarDomConBackup($dom, $xmlFile)) {
+            registrarError('crud.php:delete', 'No se pudo guardar el XML tras eliminar. Revertido al respaldo.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo guardar el XML tras eliminar. Se revirtió al respaldo.';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
@@ -520,7 +547,14 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
 // Eliminar archivo XML actual
 if ($action === 'remove_xml') {
     requireValidCsrf();
-    if (file_exists($xmlFile)) { unlink($xmlFile); }
+    if (file_exists($xmlFile)) {
+        if (!@unlink($xmlFile)) {
+            registrarError('crud.php:remove_xml', 'No se pudo eliminar el archivo XML actual.', [ 'file' => $xmlFile ]);
+            $_SESSION['error'] = 'No se pudo eliminar el archivo XML.';
+            header('Location: ' . $_SERVER['PHP_SELF']);
+            exit;
+        }
+    }
     unset($_SESSION['xml_uploaded']);
     $_SESSION['message'] = 'Archivo eliminado correctamente.';
     header('Location: ' . $_SERVER['PHP_SELF']);
