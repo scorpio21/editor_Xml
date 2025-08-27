@@ -497,8 +497,8 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     // Formatear y limpiar
     $dom->formatOutput = true;
     $dom->normalizeDocument();
-    limpiarEspaciosEnBlancoDom($dom);
-    if (!guardarDomConBackup($dom, $xmlFile)) {
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
+    if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
         registrarError('crud.php:add_game', 'No se pudo guardar el nuevo juego. Revertido al respaldo.', [ 'file' => $xmlFile ]);
         $_SESSION['error'] = 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.';
         header('Location: ' . $_SERVER['PHP_SELF']);
@@ -620,7 +620,7 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
     if ($index >= 0 && $nodes && $index < $nodes->length) {
         $toEdit = $nodes->item($index);
         if ($toEdit instanceof DOMElement) {
-            crearBackup($xmlFile);
+            EditorXml::crearBackup($xmlFile);
             // Actualizar atributos y campos
             $toEdit->setAttribute('name', $newName);
             $descNode = $xpath->query('./description', $toEdit)->item(0);
