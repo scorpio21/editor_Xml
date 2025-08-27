@@ -64,7 +64,12 @@ function limpiarEspaciosEnBlancoDom(DOMDocument $dom): void {
  */
 function crearBackup(string $xmlFile): void {
     if (file_exists($xmlFile)) {
-        @copy($xmlFile, $xmlFile . '.bak');
+        $ok = @copy($xmlFile, $xmlFile . '.bak');
+        if ($ok) {
+            registrarInfo('xml-helpers.php:crearBackup', 'Backup creado correctamente', [ 'xmlFile' => $xmlFile, 'backup' => $xmlFile . '.bak' ]);
+        } else {
+            registrarAdvertencia('xml-helpers.php:crearBackup', 'No se pudo crear el backup', [ 'xmlFile' => $xmlFile, 'backup' => $xmlFile . '.bak' ]);
+        }
     }
 }
 
@@ -75,8 +80,11 @@ function crearBackup(string $xmlFile): void {
 function guardarDomConBackup(DOMDocument $dom, string $xmlFile): bool {
     $backup = $xmlFile . '.bak';
     if (file_exists($xmlFile)) {
-        registrarInfo('xml-helpers.php:guardarDomConBackup', 'Creando copia de seguridad previa', [ 'xmlFile' => $xmlFile ]);
-        @copy($xmlFile, $backup);
+        registrarInfo('xml-helpers.php:guardarDomConBackup', 'Creando copia de seguridad previa', [ 'xmlFile' => $xmlFile, 'backup' => $backup ]);
+        $copied = @copy($xmlFile, $backup);
+        if (!$copied) {
+            registrarAdvertencia('xml-helpers.php:guardarDomConBackup', 'No se pudo crear la copia previa. Se continuará con el guardado.', [ 'xmlFile' => $xmlFile, 'backup' => $backup ]);
+        }
     }
     registrarInfo('xml-helpers.php:guardarDomConBackup', 'Guardando DOM en disco', [ 'xmlFile' => $xmlFile ]);
     $saved = @$dom->save($xmlFile);
@@ -87,7 +95,7 @@ function guardarDomConBackup(DOMDocument $dom, string $xmlFile): bool {
         }
         return false;
     }
-    registrarInfo('xml-helpers.php:guardarDomConBackup', 'XML guardado correctamente', [ 'xmlFile' => $xmlFile ]);
+    registrarInfo('xml-helpers.php:guardarDomConBackup', 'XML guardado correctamente', [ 'xmlFile' => $xmlFile, 'bytes' => $saved ]);
     return true;
 }
 
