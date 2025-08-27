@@ -35,6 +35,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 
 - 🚀 Edición rápida de juegos y máquinas (soporte multi‑ROM)
 - 🔍 Búsqueda y filtros (incluye eliminación masiva con dry‑run)
+- 🕹️ MAME: pestaña <strong>MAME (buscar)</strong> solo para búsqueda; eliminación individual y masiva deshabilitadas
 - 🧭 Interfaz por pestañas accesible (por defecto) con navegación por teclado y ARIA
 - 💾 Persistencia de pestaña activa y posición de scroll por panel (sessionStorage)
 - 🧰 Mantenimiento seguro: backups automáticos y restauración desde `.bak`
@@ -82,6 +83,13 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 
 - PHP 8.0 o superior.
 - Servidor web (XAMPP recomendado). Probado en Windows.
+- Extensiones PHP: DOM (activada por defecto en XAMPP 8+).
+- Configuración recomendada (php.ini):
+  - file_uploads = On
+  - upload_max_filesize = 32M (o superior según tamaño de tus DATS)
+  - post_max_size = 32M (≥ upload_max_filesize)
+  - max_execution_time = 60 (ajústalo si trabajas con ficheros muy grandes)
+- Carpeta `uploads/` con permisos de escritura por Apache.
 
 ## Estructura del proyecto
 
@@ -119,9 +127,13 @@ editor_Xml/
 
 ## Instalación
 
-1. Copia la carpeta `editor_Xml` a `xampp/htdocs/`.
-2. Asegúrate de que la carpeta `uploads/` existe (se crea automáticamente si falta).
-3. Abre en el navegador: `http://localhost/editor_Xml/`.
+1. Descarga o clona este repositorio.
+2. Copia la carpeta `editor_Xml` dentro de `D:/xampp/htdocs/` (o la ruta de tu XAMPP).
+3. Inicia Apache desde el panel de control de XAMPP.
+4. Verifica que PHP 8+ está activo y la extensión DOM habilitada (phpinfo()).
+5. Asegúrate de que la carpeta `uploads/` existe y es escribible (se crea automáticamente si falta).
+6. Abre en el navegador: `http://localhost/editor_Xml/`.
+7. Opcional (VirtualHost): configura un host como `http://editor.local/` apuntando a esta carpeta.
 
 ## Uso
 
@@ -132,11 +144,13 @@ editor_Xml/
    - Valida `size`, `crc` (8 hex), `md5` (32 hex) y `sha1` (40 hex). Puedes calcular hashes desde fichero.
    - En `machine` no aplica `category`.
 1. **Eliminar**: usa “Eliminar” en un juego o una máquina, o la **Eliminación masiva** con filtros.
+   - Nota MAME: en ficheros MAME la eliminación (individual y masiva) está deshabilitada.
 1. **Contar coincidencias**: en masivo, usa el botón “Contar coincidencias” para ver el impacto antes de borrar.
 1. **Guardar / Compactar XML**: tras una eliminación masiva, pulsa el botón para reescritura limpia del XML.
 1. **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
 1. **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
 1. **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
+   - Nota MAME: aparece la pestaña **MAME (buscar)** con buscador por nombre, ROM y hash; sin eliminación.
 
 1. **Exportar resultados (XML)**:
 
