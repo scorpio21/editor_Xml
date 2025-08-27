@@ -19,6 +19,26 @@
   --space-xl: 24px;
 }
 
+/* Banderas de idioma (header) */
+.lang-flags {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.lang-flags a {
+  display: inline-flex;
+}
+.lang-flags img {
+  display: block;
+  width: 24px;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+.lang-flags a:hover img { filter: saturate(1.1); box-shadow: var(--shadow-sm); }
+.lang-flags a:focus-visible img { outline: 3px solid rgba(52, 152, 219, 0.35); outline-offset: 2px; }
+
 /* Acciones superiores (botones visibles al inicio) */
 .top-actions {
   margin-bottom: var(--space-l);
@@ -31,6 +51,7 @@
   align-items: center;
   gap: var(--space-l);
   margin-bottom: var(--space-xl);
+  flex-wrap: wrap; /* mejor ajuste en pantallas estrechas */
 }
 
 .app-header h2 {

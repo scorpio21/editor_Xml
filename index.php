@@ -5,7 +5,11 @@ session_start();
 $xmlFile = __DIR__ . '/uploads/current.xml';
 
 require_once __DIR__ . '/inc/xml-helpers.php';
+require_once __DIR__ . '/inc/i18n.php';
 asegurarCarpetaUploads(__DIR__ . '/uploads');
+
+// Inicializar i18n (idioma desde ?lang=es|en y sesión)
+i18n_init();
 
 // Procesar acciones (pueden redirigir y terminar la petición)
 require_once __DIR__ . '/inc/router-acciones.php';
@@ -22,10 +26,10 @@ if ($xml) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<?= htmlspecialchars(lang()) ?>">
 <head>
     <meta charset="UTF-8">
-    <title>Editor XML Juegos</title>
+    <title><?= htmlspecialchars(t('app.title')) ?></title>
     <link rel="stylesheet" href="css/editor-xml.css">
     <?php if ($uiTabs): ?>
       <link rel="stylesheet" href="css/tabs.css">
@@ -35,11 +39,19 @@ if ($xml) {
 <body>
 
 <div class="app-header">
-    <h2>Editor de Catálogo de Juegos XML</h2>
+    <h2><?= htmlspecialchars(t('header.title')) ?></h2>
     <div class="app-meta" aria-label="Fecha y hora actuales">
         <span data-clock data-format="DD/MM/YYYY HH:mm" data-initial="<?= htmlspecialchars(date('c')) ?>">
             <?= htmlspecialchars(date('d/m/Y H:i')) ?>
         </span>
+    </div>
+    <div class="lang-flags" role="group" aria-label="<?= htmlspecialchars(t('lang.label')) ?>">
+        <a href="?lang=es" title="<?= htmlspecialchars(t('lang.es')) ?>" aria-label="<?= htmlspecialchars(t('lang.es')) ?>">
+            <img src="img/flags/es.svg" alt="<?= htmlspecialchars(t('lang.es')) ?>" width="20" height="14">
+        </a>
+        <a href="?lang=en" title="<?= htmlspecialchars(t('lang.en')) ?>" aria-label="<?= htmlspecialchars(t('lang.en')) ?>">
+            <img src="img/flags/gb.svg" alt="<?= htmlspecialchars(t('lang.en')) ?>" width="20" height="14">
+        </a>
     </div>
     </div>
 
@@ -61,35 +73,35 @@ if ($xml) {
   <div class="tabs" id="app-tabs">
     <div role="tablist" aria-label="Secciones del editor">
       <button role="tab" id="tab-btn-1" aria-selected="true" aria-controls="tab-panel-1">
-        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text">Bienvenida</span>
+        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.welcome')) ?></span>
       </button>
       <button role="tab" id="tab-btn-2" aria-selected="false" aria-controls="tab-panel-2">
-        <img class="tab-ico" src="img/ico-upload.svg" alt="" aria-hidden="true"><span class="tab-text">Cargar y buscar</span>
+        <img class="tab-ico" src="img/ico-upload.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.upload_search')) ?></span>
       </button>
       <?php if (!$isMame): ?>
       <button role="tab" id="tab-btn-3" aria-selected="false" aria-controls="tab-panel-3">
-        <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminación masiva</span>
+        <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.bulk_delete')) ?></span>
       </button>
       <?php endif; ?>
       <?php if ($isMame): ?>
       <button role="tab" id="tab-btn-4" aria-selected="false" aria-controls="tab-panel-4">
-        <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text">MAME (buscar)</span>
+        <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.mame_search')) ?></span>
       </button>
       <?php endif; ?>
       <button role="tab" id="tab-btn-5" aria-selected="false" aria-controls="tab-panel-5">
-        <img class="tab-ico" src="img/ico-dedupe.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminar duplicados</span>
+        <img class="tab-ico" src="img/ico-dedupe.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.dedupe_region')) ?></span>
       </button>
       <button role="tab" id="tab-btn-6" aria-selected="false" aria-controls="tab-panel-6">
-        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text">Buscar juego</span>
+        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.search_external')) ?></span>
       </button>
     </div>
 
     <section role="tabpanel" id="tab-panel-1" aria-labelledby="tab-btn-1">
-      <h2>Bienvenido al editor de XML/DAT</h2>
-      <p>Esta herramienta te permite cargar, explorar, editar y mantener tu catálogo XML/DAT de juegos y máquinas.</p>
-      <p>Usa las pestañas para navegar entre secciones. Puedes abrir la ayuda en cualquier momento.</p>
+      <h2><?= htmlspecialchars(t('welcome.h2')) ?></h2>
+      <p><?= htmlspecialchars(t('welcome.p1')) ?></p>
+      <p><?= htmlspecialchars(t('welcome.p2')) ?></p>
       <p>
-        <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
+        <button type="button" class="secondary" onclick="openHelpModal()"><?= htmlspecialchars(t('welcome.help_btn')) ?></button>
       </p>
     </section>
 
@@ -105,39 +117,39 @@ if ($xml) {
       <?php if ($xml): ?>
         <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
       <?php else: ?>
-        <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar".</p>
+        <p class="hint"><?= htmlspecialchars(t('hint.load_first')) ?></p>
       <?php endif; ?>
     </section>
     <?php endif; ?>
 
     <?php if ($isMame): ?>
     <section role="tabpanel" id="tab-panel-4" aria-labelledby="tab-btn-4" hidden>
-      <h3>Búsqueda en ficheros MAME</h3>
-      <p class="hint">Para ficheros MAME, esta sección permite buscar máquinas por nombre, ROM o hash. La eliminación masiva está deshabilitada.</p>
+      <h3><?= htmlspecialchars(t('mame.h3')) ?></h3>
+      <p class="hint"><?= htmlspecialchars(t('mame.hint')) ?></p>
       <form method="get" class="search-form">
-        <label for="q_mame">Buscar</label>
-        <input id="q_mame" name="q" type="text" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" placeholder="Nombre de máquina, ROM o hash">
+        <label for="q_mame"><?= htmlspecialchars(t('mame.search_label')) ?></label>
+        <input id="q_mame" name="q" type="text" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" placeholder="<?= htmlspecialchars(t('mame.input_placeholder')) ?>">
         <div class="search-options">
-          <label><input type="checkbox" name="q_in_roms" value="1" <?= !empty($_GET['q_in_roms']) && $_GET['q_in_roms'] === '1' ? 'checked' : '' ?>> Buscar en ROMs</label>
-          <label><input type="checkbox" name="q_in_hashes" value="1" <?= !empty($_GET['q_in_hashes']) && $_GET['q_in_hashes'] === '1' ? 'checked' : '' ?>> Buscar en hashes (CRC/MD5/SHA1)</label>
+          <label><input type="checkbox" name="q_in_roms" value="1" <?= !empty($_GET['q_in_roms']) && $_GET['q_in_roms'] === '1' ? 'checked' : '' ?>> <?= htmlspecialchars(t('mame.chk_roms')) ?></label>
+          <label><input type="checkbox" name="q_in_hashes" value="1" <?= !empty($_GET['q_in_hashes']) && $_GET['q_in_hashes'] === '1' ? 'checked' : '' ?>> <?= htmlspecialchars(t('mame.chk_hashes')) ?></label>
         </div>
-        <button type="submit">Buscar</button>
+        <button type="submit"><?= htmlspecialchars(t('mame.submit')) ?></button>
       </form>
-      <p class="hint">Los resultados se muestran en la lista principal bajo el buscador.</p>
+      <p class="hint"><?= htmlspecialchars(t('mame.results_hint')) ?></p>
     </section>
     <?php endif; ?>
 
     <section role="tabpanel" id="tab-panel-5" aria-labelledby="tab-btn-5" hidden>
-      <h3>Eliminar duplicados por región</h3>
+      <h3><?= htmlspecialchars(t('tabs.dedupe_region')) ?></h3>
       <?php if ($xml): ?>
         <?php include __DIR__ . '/partials/sections/dedupe-region.php'; ?>
       <?php else: ?>
-        <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar" para usar esta herramienta.</p>
+        <p class="hint"><?= htmlspecialchars(t('hint.load_first_tool')) ?></p>
       <?php endif; ?>
     </section>
 
     <section role="tabpanel" id="tab-panel-6" aria-labelledby="tab-btn-6" hidden>
-      <h3>Buscar juego en webs externas</h3>
+      <h3><?= htmlspecialchars(t('search_external.h3')) ?></h3>
       <?php include __DIR__ . '/partials/sections/search-external.php'; ?>
     </section>
   </div>
