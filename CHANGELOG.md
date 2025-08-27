@@ -4,7 +4,7 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 
 ## 2025-08-27
 
-### Added
+### Added — 2025-08-27
 
 - Botón y endpoint para **exportar resultados filtrados a XML** sin duplicados.
   - Formulario con preservación de filtros actuales (`q`, `q_in_roms`, `q_in_hashes`) y token CSRF.
@@ -14,7 +14,7 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
   - Nuevo endpoint `search_archive` (POST, AJAX+CSRF) en `inc/acciones/search_external.php` que consulta `advancedsearch` de Archive.org
   - Botón "Comprobar Archive" y bloque de resultado con "Encontrado/No encontrado" y enlace a `details/{identifier}`
 
-### Fixed
+### Fixed — 2025-08-27
 
 - Corrección de warnings de `DOMDocument::createElement()` por caracteres especiales (p. ej. `&`, `"`, `<`):
   - Se escapa el contenido textual con `htmlspecialchars(..., ENT_XML1 | ENT_COMPAT, 'UTF-8')` en `inc/acciones/crud.php` (acción `export_filtered_xml`).
@@ -27,23 +27,23 @@ Notas:
 
 ## 2025-08-25
 
-### Added
+### Added — 2025-08-25
 
 - Interfaz por pestañas accesible (ARIA + teclado) como modo por defecto.
 - Iconos SVG en pestañas: `img/ico-home.svg`, `ico-upload.svg`, `ico-bulk.svg`, `ico-mame.svg`, `ico-dedupe.svg`.
 - Persistencia de pestaña activa y posición de scroll por panel (sessionStorage).
 - Parciales reutilizables: `partials/sections/mame-filters.php` y `partials/sections/dedupe-region.php`.
 
-### Changed
+### Changed — 2025-08-25
 
 - `index.php`: la UI por defecto pasa a ser la de pestañas. La UI clásica queda accesible con `?ui=classic`.
 - Estilos en `css/tabs.css` para estado activo y alineado de iconos.
 
-### Breaking Change
+### Breaking Change — 2025-08-25
 
 - La navegación por defecto cambia a la UI por pestañas. La antigua UI se mantiene únicamente con `?ui=classic`.
 
-### Debug
+### Debug — 2025-08-25
 
 - Instrumentación opcional con `?debug=assets` para diagnóstico de carga de assets y cambios de pestañas.
 - Archivos: `js/utils.js`, `js/tabs.js`, `js/bulk.js`, `js/dedupe.js`.
