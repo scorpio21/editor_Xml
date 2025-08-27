@@ -106,7 +106,8 @@ editor_Xml/
 ├─ inc/
 │  ├─ acciones.php         # Procesa todas las acciones POST (edit, delete, bulk_delete, compact_xml, etc.)
 │  ├─ csrf-helper.php      # Helpers de CSRF: generar/verificar token y campo oculto
-│  ├─ xml-helpers.php      # Helpers: asegurarCarpetaUploads, guardar con backup, limpiar espacios DOM
+│  ├─ EditorXml.php        # Fachada de utilidades XML centralizadas (métodos estáticos)
+│  ├─ xml-helpers.php      # Implementaciones de bajo nivel; invocadas desde EditorXml
 │  └─ mame-filters.php     # Lógica específica de MAME: filtros, procesamiento y helpers de búsqueda
 ├─ partials/
 │  ├─ header-file.php      # Cabecera de archivo actual y acciones relacionadas
@@ -152,8 +153,8 @@ editor_Xml/
      SetEnv LOG_LEVEL_MIN "INFO"
      SetEnv LOG_DIR "D:/xampp/logs/editor_Xml"
      ```
-   
-   - Windows (Panel de control > Sistema > Configuración avanzada > Variables de entorno):
+
+- Windows (Panel de control > Sistema > Configuración avanzada > Variables de entorno):
 
      ```cmd
      APP_ENV=production
@@ -276,6 +277,7 @@ export LOG_LEVEL_MIN=INFO
 - La edición multi-ROM reemplaza todos los nodos `<rom>` del elemento editado por los nuevos valores validados.
 - La eliminación masiva soporta un conteo previo por AJAX y contempla nodos `<game>` y `<machine>`.
 - Reloj en UI: elementos con `data-clock` muestran la hora actual del navegador, actualizada cada minuto. “Última modificación” en cabecera usa `filemtime` del XML y la zona horaria de PHP.
+- Centralización de helpers XML: las acciones usan `EditorXml::<método>()` (por ejemplo, `guardarDomConBackup`, `limpiarEspaciosEnBlancoDom`, `tokenizar`) que delegan en `inc/xml-helpers.php`.
 
 ## Logs y errores
 

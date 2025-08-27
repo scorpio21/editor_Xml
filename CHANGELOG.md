@@ -31,6 +31,9 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
   - intento de backup previo en guardado (`guardarDomConBackup`, con advertencia si falla),
   - y bytes escritos al guardar exitosamente.
   - Rotación básica y niveles configurables en `inc/logger.php` y `inc/config.php` (`LOG_PATH`, `LOG_LEVEL_MIN`).
+  - Refactor: centralización de helpers XML mediante `inc/EditorXml.php` (métodos estáticos).
+    - Acciones actualizadas para usar `EditorXml`: `inc/acciones/crud.php`, `inc/acciones/bulk.php`, `inc/acciones/dedupe.php`.
+    - Compatibilidad: `inc/xml-helpers.php` mantiene la implementación y se invoca desde `EditorXml` para evitar duplicación. Tests existentes siguen apuntando a helpers globales.
 
 Notas:
 
