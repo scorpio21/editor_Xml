@@ -192,28 +192,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'reset_filters') {
     exit;
 }
 
-// Helper: tokenizar texto en mayúsculas por caracteres A-Z0-9
-function tokenizar(string $s): array {
-    $tokens = preg_split('/[^A-Z0-9]+/', $s);
-    if (!is_array($tokens)) { return []; }
-    $tokens = array_values(array_filter($tokens, static fn($t) => $t !== ''));
-    return $tokens;
-}
-
-// Helper: ¿algún término coincide? Si el término contiene caracteres no alfanuméricos, usamos strpos sobre el haystack;
-// si es alfanumérico puro, exigimos coincidencia de token completa para evitar falsos positivos (ej.: ES dentro de GAMES)
-function anyTermMatch(array $tokens, string $haystackUpper, array $terms): bool {
-    foreach ($terms as $t) {
-        $t = strtoupper((string)$t);
-        if ($t === '') { continue; }
-        if (preg_match('/[^A-Z0-9]/', $t)) {
-            if (strpos($haystackUpper, $t) !== false) { return true; }
-        } else {
-            if (in_array($t, $tokens, true)) { return true; }
-        }
-    }
-    return false;
-}
+// Helpers de búsqueda movidos a inc/xml-helpers.php
 
 // Subida de fichero (no depende de action) — proteger con CSRF
 if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['xmlFile']['error'] === UPLOAD_ERR_OK) {
@@ -373,52 +352,12 @@ if (isset($_POST['action']) && $_POST['action'] === 'add_game' && $xml) {
     exit;
 }
 
-// Helper: construir términos desde selects (regiones a incluir e idiomas a excluir)
-function mapearRegionesIdiomas(array $includeRegions, array $excludeLangs, array &$includeTerms, array &$excludeTerms): void {
-    $regionMap = [
-        'JAPON' => ['JAPAN'],
-        'EUROPA' => ['EUROPE'],
-        'USA' => ['USA', 'U.S.A.', 'UNITED STATES', 'AMERICA'],
-        'ASIA' => ['ASIA'],
-        'AUSTRALIA' => ['AUSTRALIA'],
-        'ESCANDINAVIA' => ['SCANDINAVIA'],
-        'COREA' => ['KOREA'],
-        'CHINA' => ['CHINA'],
-        'HONG KONG' => ['HONG KONG'],
-        'TAIWAN' => ['TAIWAN'],
-        'RUSIA' => ['RUSSIA'],
-        'ESPAÑA' => ['SPAIN'],
-        'ALEMANIA' => ['GERMANY'],
-        'FRANCIA' => ['FRANCE'],
-        'ITALIA' => ['ITALY'],
-        'PAISES BAJOS' => ['NETHERLANDS'],
-        'PORTUGAL' => ['PORTUGAL'],
-        'BRASIL' => ['BRAZIL','BRAZILIAN'],
-        'MEXICO' => ['MEXICO','MEXICAN'],
-        'REINO UNIDO' => ['UNITED KINGDOM','UK','ENGLAND','BRITAIN','BRITISH'],
-        'NORTEAMERICA' => ['NORTH AMERICA','NA'],
-        'MUNDO/INTERNACIONAL' => ['WORLD','INTERNATIONAL'],
-        'PAL' => ['PAL'],
-        'NTSC' => ['NTSC']
-    ];
-    foreach ($includeRegions as $r) {
-        $key = mb_strtoupper(trim((string)$r), 'UTF-8');
-        if (isset($regionMap[$key])) { foreach ($regionMap[$key] as $pat) { $includeTerms[] = $pat; } }
-    }
-    $langMap = [
-        'EN' => ['EN'], 'JA' => ['JA'], 'FR' => ['FR'], 'DE' => ['DE'], 'ES' => ['ES'], 'IT' => ['IT'],
-        'NL' => ['NL'], 'PT' => ['PT'], 'SV' => ['SV'], 'NO' => ['NO'], 'DA' => ['DA'], 'FI' => ['FI'],
-        'ZH' => ['ZH'], 'KO' => ['KO'], 'PL' => ['PL'], 'RU' => ['RU'], 'CS' => ['CS'], 'HU' => ['HU']
-    ];
-    foreach ($excludeLangs as $l) {
-        $key = mb_strtoupper(trim((string)$l), 'UTF-8');
-        if (isset($langMap[$key])) { foreach ($langMap[$key] as $pat) { $excludeTerms[] = $pat; } }
-    }
-}
+// Helper mapearRegionesIdiomas() movido a inc/xml-helpers.php
 
 // Simulación: contar coincidencias
 if (isset($_POST['action']) && $_POST['action'] === 'bulk_count' && $xml) {
     requireValidCsrf();
+    require_once __DIR__ . '/xml-helpers.php';
     $include = isset($_POST['include']) ? trim((string)$_POST['include']) : '';
     $exclude = isset($_POST['exclude']) ? trim((string)$_POST['exclude']) : '';
     $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
@@ -684,7 +623,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete' && $xml) {
 // Eliminación masiva
 if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete' && $xml) {
     requireValidCsrf();
-    
+    require_once __DIR__ . '/xml-helpers.php';
     require_once __DIR__ . '/mame-filters.php';
     
     $include = sanitizarTexto($_POST['include'] ?? '');

@@ -67,3 +67,76 @@ function guardarDomConBackup(DOMDocument $dom, string $xmlFile): bool {
     return true;
 }
 
+/**
+ * Divide una cadena en tokens alfanuméricos en mayúsculas (A-Z0-9).
+ * Devuelve un array sin vacíos.
+ */
+function tokenizar(string $s): array {
+    $tokens = preg_split('/[^A-Z0-9]+/', strtoupper($s));
+    if (!is_array($tokens)) { return []; }
+    $tokens = array_values(array_filter($tokens, static fn($t) => $t !== ''));
+    return $tokens;
+}
+
+/**
+ * Comprueba si algún término coincide con el haystack.
+ * - Si el término tiene no-alfanuméricos, usa strpos sobre el haystack (en mayúsculas).
+ * - Si es alfanumérico puro, exige coincidencia exacta de token.
+ */
+function anyTermMatch(array $tokens, string $haystackUpper, array $terms): bool {
+    foreach ($terms as $t) {
+        $t = strtoupper((string)$t);
+        if ($t === '') { continue; }
+        if (preg_match('/[^A-Z0-9]/', $t)) {
+            if (strpos($haystackUpper, $t) !== false) { return true; }
+        } else {
+            if (in_array($t, $tokens, true)) { return true; }
+        }
+    }
+    return false;
+}
+
+/**
+ * Mapea selects de regiones a términos de inclusión y de idiomas a términos de exclusión.
+ */
+function mapearRegionesIdiomas(array $includeRegions, array $excludeLangs, array &$includeTerms, array &$excludeTerms): void {
+    $regionMap = [
+        'JAPON' => ['JAPAN'],
+        'EUROPA' => ['EUROPE'],
+        'USA' => ['USA', 'U.S.A.', 'UNITED STATES', 'AMERICA'],
+        'ASIA' => ['ASIA'],
+        'AUSTRALIA' => ['AUSTRALIA'],
+        'ESCANDINAVIA' => ['SCANDINAVIA'],
+        'COREA' => ['KOREA'],
+        'CHINA' => ['CHINA'],
+        'HONG KONG' => ['HONG KONG'],
+        'TAIWAN' => ['TAIWAN'],
+        'RUSIA' => ['RUSSIA'],
+        'ESPAÑA' => ['SPAIN'],
+        'ALEMANIA' => ['GERMANY'],
+        'FRANCIA' => ['FRANCE'],
+        'ITALIA' => ['ITALY'],
+        'PAISES BAJOS' => ['NETHERLANDS'],
+        'PORTUGAL' => ['PORTUGAL'],
+        'BRASIL' => ['BRAZIL','BRAZILIAN'],
+        'MEXICO' => ['MEXICO','MEXICAN'],
+        'REINO UNIDO' => ['UNITED KINGDOM','UK','ENGLAND','BRITAIN','BRITISH'],
+        'NORTEAMERICA' => ['NORTH AMERICA','NA'],
+        'MUNDO/INTERNACIONAL' => ['WORLD','INTERNATIONAL'],
+        'PAL' => ['PAL'],
+        'NTSC' => ['NTSC']
+    ];
+    foreach ($includeRegions as $r) {
+        $key = mb_strtoupper(trim((string)$r), 'UTF-8');
+        if (isset($regionMap[$key])) { foreach ($regionMap[$key] as $pat) { $includeTerms[] = $pat; } }
+    }
+    $langMap = [
+        'EN' => ['EN'], 'JA' => ['JA'], 'FR' => ['FR'], 'DE' => ['DE'], 'ES' => ['ES'], 'IT' => ['IT'],
+        'NL' => ['NL'], 'PT' => ['PT'], 'SV' => ['SV'], 'NO' => ['NO'], 'DA' => ['DA'], 'FI' => ['FI'],
+        'ZH' => ['ZH'], 'KO' => ['KO'], 'PL' => ['PL'], 'RU' => ['RU'], 'CS' => ['CS'], 'HU' => ['HU']
+    ];
+    foreach ($excludeLangs as $l) {
+        $key = mb_strtoupper(trim((string)$l), 'UTF-8');
+        if (isset($langMap[$key])) { foreach ($langMap[$key] as $pat) { $excludeTerms[] = $pat; } }
+    }
+}
