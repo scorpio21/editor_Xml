@@ -235,6 +235,12 @@ export LOG_LEVEL_MIN=INFO
 1. **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
    - Nota MAME: aparece la pestaña **MAME (buscar)** con buscador por nombre, ROM y hash; sin eliminación.
 
+### Flujo: Compactar y Descargar
+
+- **Compactar XML** (`compact_xml`): limpia y formatea el XML y lo guarda SOBRE EL MISMO archivo. Crea copia `*.bak` antes de escribir. No descarga nada.
+- **Descargar XML** (`download_xml`): envía el fichero actual (ya compactado si lo hiciste antes) con nombre amigable y conteo de entradas. No modifica el archivo.
+- Recomendado: primero “Compactar XML”, luego “Descargar XML”.
+
 1. **Exportar resultados (XML)**:
 
 - Bajo el buscador, pulsa “Exportar resultados (XML)”.

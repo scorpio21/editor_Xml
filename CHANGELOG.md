@@ -38,6 +38,7 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 Notas:
 
 - Flujo protegido con CSRF y finalizado con `exit` tras envío de cabeceras y contenido.
+- "Compactar XML" sobrescribe el archivo actual y crea `.bak`. Para obtener un fichero nuevo, usa "Descargar XML".
 - Cierra #25.
 
 ## 2025-08-25

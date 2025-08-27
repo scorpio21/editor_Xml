@@ -61,7 +61,7 @@ if ($action === 'compact_xml') {
             registrarError('crud.php:compact_xml', 'Fallo al guardar XML compactado. Revertido al respaldo.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo guardar el XML compactado. Se revirtió al respaldo.';
         } else {
-            $_SESSION['message'] = 'XML guardado y compactado correctamente.';
+            $_SESSION['message'] = 'XML guardado y compactado correctamente. Ahora puedes descargarlo desde “Descargar XML”.';
             unset($_SESSION['pending_save']);
             $_SESSION['xml_uploaded'] = true;
         }
