@@ -16,6 +16,10 @@
   const errorsEl = $('#se-errors');
   const results = $('#se-results');
   const linksList = $('#se-links');
+  const btnCheckArchive = $('#se-check-archive');
+  const csrfInput = $('#se-csrf');
+  const archiveBox = $('#se-archive-check');
+  const archiveStatus = $('#se-archive-status');
 
   const HEX32 = /^[0-9a-fA-F]{32}$/;
   const HEX40 = /^[0-9a-fA-F]{40}$/;
@@ -120,6 +124,64 @@
     });
   }
 
+  function parseAjax(text) {
+    if (window.AppUtils && typeof window.AppUtils.parseAjaxJson === 'function') {
+      return window.AppUtils.parseAjaxJson(text);
+    }
+    try { return JSON.parse(text); } catch(_) { return { ok:false, message:'Respuesta no válida.' }; }
+  }
+
+  function comprobarArchive() {
+    const name = normalizarTexto(nameInput.value);
+    const md5 = normalizarTexto(md5Input.value);
+    const sha1 = normalizarTexto(sha1Input.value);
+    const crc = normalizarTexto(crcInput.value);
+
+    const errs = [];
+    if (md5 && !HEX32.test(md5)) errs.push('MD5 debe tener 32 caracteres hexadecimales.');
+    if (sha1 && !HEX40.test(sha1)) errs.push('SHA1 debe tener 40 caracteres hexadecimales.');
+    if (crc && !HEX8.test(crc)) errs.push('CRC debe tener 8 caracteres hexadecimales.');
+    if (!name && !md5 && !sha1 && !crc) errs.push('Introduce al menos un dato: Nombre, MD5, SHA1 o CRC.');
+    if (errs.length) { errorsEl.textContent = errs.join(' '); return; }
+
+    if (archiveBox) { archiveBox.hidden = false; }
+    if (archiveStatus) { archiveStatus.textContent = 'Comprobando…'; }
+
+    const fd = new FormData();
+    fd.set('action', 'search_archive');
+    fd.set('ajax', '1');
+    if (csrfInput) fd.set('csrf_token', csrfInput.value);
+    if (name) fd.set('name', name);
+    if (md5) fd.set('md5', md5);
+    if (sha1) fd.set('sha1', sha1);
+    if (crc) fd.set('crc', crc);
+
+    fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(r => r.text().then(t => ({ status: r.status, text: t })))
+      .then(resp => {
+        const data = parseAjax(resp.text) || { ok:false, message:'Sin respuesta' };
+        if (data.ok === false) {
+          if (archiveStatus) archiveStatus.textContent = 'Error: ' + (data.message || 'No se pudo consultar Archive.');
+          return;
+        }
+        if (data.found) {
+          if (archiveStatus) {
+            const a = document.createElement('a');
+            a.href = data.link;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = data.title || data.identifier || 'Ver en Archive';
+            archiveStatus.textContent = 'Encontrado: ';
+            archiveStatus.appendChild(a);
+          }
+        } else {
+          if (archiveStatus) archiveStatus.textContent = 'No encontrado.';
+        }
+      })
+      .catch(() => { if (archiveStatus) archiveStatus.textContent = 'No se pudo consultar Archive.org.'; });
+  }
+
   btnBuild?.addEventListener('click', construirEnlaces);
   btnOpenAll?.addEventListener('click', abrirTodas);
+  btnCheckArchive?.addEventListener('click', comprobarArchive);
 })();

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../../inc/csrf-helper.php';
 ?>
 <div id="search-external" class="search-external" aria-labelledby="tab-btn-6">
   <p class="hint">Busca juegos en webs externas por nombre o por hash (MD5/SHA1/CRC). Se abrirán enlaces de búsqueda en nuevas pestañas.</p>
@@ -28,6 +29,8 @@ declare(strict_types=1);
     <div class="actions">
       <button type="button" id="se-build-links" class="primary">Generar enlaces</button>
       <button type="button" id="se-open-all" class="secondary" disabled>Abrir todas</button>
+      <button type="button" id="se-check-archive" class="secondary">Comprobar Archive</button>
+      <input type="hidden" name="csrf_token" id="se-csrf" value="<?= htmlspecialchars(obtenerTokenCSRF(), ENT_QUOTES) ?>">
       <span id="se-errors" class="form-errors" aria-live="polite"></span>
     </div>
   </form>
@@ -36,5 +39,10 @@ declare(strict_types=1);
     <h4>Enlaces de búsqueda</h4>
     <ul id="se-links" class="links-list"></ul>
     <p class="hint">Consejo: algunos sitios no soportan búsqueda por hash directa; por eso usamos búsquedas "site:".</p>
+  </div>
+
+  <div class="results" id="se-archive-check" hidden>
+    <h4>Archive.org</h4>
+    <div id="se-archive-status" class="archive-status" aria-live="polite"></div>
   </div>
 </div>
