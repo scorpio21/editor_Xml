@@ -125,27 +125,27 @@ editor_Xml/
 
 ## Uso
 
-1) **Subir archivo**: selecciona un `.xml` o `.dat` y pulsa “Cargar XML/DAT”.
-2) **Explorar**: usa la paginación y “Ir a” para navegar (verás juegos y máquinas).
-3) **Editar**: pulsa “Editar” en un juego o una máquina, modifica y guarda.
+1. **Subir archivo**: selecciona un `.xml` o `.dat` y pulsa “Cargar XML/DAT”.
+1. **Explorar**: usa la paginación y “Ir a” para navegar (verás juegos y máquinas).
+1. **Editar**: pulsa “Editar” en un juego o una máquina, modifica y guarda.
    - Puedes añadir, eliminar o modificar múltiples ROMs por entrada.
    - Valida `size`, `crc` (8 hex), `md5` (32 hex) y `sha1` (40 hex). Puedes calcular hashes desde fichero.
    - En `machine` no aplica `category`.
-4) **Eliminar**: usa “Eliminar” en un juego o una máquina, o la **Eliminación masiva** con filtros.
-5) **Contar coincidencias**: en masivo, usa el botón “Contar coincidencias” para ver el impacto antes de borrar.
-6) **Guardar / Compactar XML**: tras una eliminación masiva, pulsa el botón para reescritura limpia del XML.
-7) **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
-8) **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
-9) **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
+1. **Eliminar**: usa “Eliminar” en un juego o una máquina, o la **Eliminación masiva** con filtros.
+1. **Contar coincidencias**: en masivo, usa el botón “Contar coincidencias” para ver el impacto antes de borrar.
+1. **Guardar / Compactar XML**: tras una eliminación masiva, pulsa el botón para reescritura limpia del XML.
+1. **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
+1. **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
+1. **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
 
-10) **Exportar resultados (XML)**:
+1. **Exportar resultados (XML)**:
 
 - Bajo el buscador, pulsa “Exportar resultados (XML)”.
 - Se descargará un nuevo XML solo con las entradas filtradas y deduplicadas.
 - Los contenidos de texto (por ejemplo `description`, `category`, `manufacturer`) se escapan correctamente para evitar errores de entidades XML.
 - El nombre del archivo se sanea para ser válido en Windows.
 
-11) **Buscar juego (externo)**:
+1. **Buscar juego (externo)**:
 
 - En la pestaña “Buscar juego”, introduce nombre y/o hashes (MD5/SHA1/CRC).
 - Pulsa “Generar enlaces” para obtener enlaces de búsqueda en myrient, vimm y archive.org (mediante búsquedas `site:`) y alternativas en Google.
