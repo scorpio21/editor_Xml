@@ -198,13 +198,14 @@ editor_Xml/
 
 ## Logs y errores
 
-- Los logs se escriben mediante `inc/logger.php` con niveles (`DEBUG`, `INFO`, `WARNING`, `ERROR`).
+- Los logs se escriben mediante `inc/logger.php` con niveles (`INFO`, `ADVERTENCIA`, `ERROR`).
+- Ruta del archivo: `LOG_PATH` (por defecto `logs/app.log`).
 - Variables de entorno:
   - `APP_ENV`: `production` o `development`.
     - En producción se minimiza la verbosidad y los extras en logs.
-  - `LOG_LEVEL_MIN`: nivel mínimo a registrar (`DEBUG`/`INFO`/`WARNING`/`ERROR`).
+  - `LOG_LEVEL_MIN`: nivel mínimo a registrar (`INFO`/`ADVERTENCIA`/`ERROR`).
   - `LOG_DIR`: carpeta de logs. Recomendado fuera del docroot (ej.: `D:/xampp/logs/editor_Xml`).
-- Rotación simple: el logger hace rotación básica cuando supera tamaño umbral (ver implementación).
+- Rotación simple: cuando el archivo supera ~2 MB se rota a `app.log.1`.
 - Seguridad: no se registran datos sensibles; los mensajes se sanitizan.
 
 Ejemplos de configuración:

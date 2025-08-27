@@ -60,10 +60,18 @@ Siguientes líneas de trabajo sugeridas:
 - Sin cambios funcionales: solo reorganización para mejorar mantenibilidad y futuras pruebas unitarias.
 - Documentación: `README.md` actualizado para reflejar la nueva estructura y el módulo `inc/mame-filters.php`.
 
-### Actualización 2025-08-27 — Fase 3
+### Actualización 2025-08-27 — Fase 3 (cerrada)
 
 - Centralización de carga XML: `inc/router-acciones.php` ahora usa `cargarXmlSiDisponible()` de `inc/xml-helpers.php`.
 - Eliminada duplicación de helpers (`tokenizar`, `anyTermMatch`, `mapearRegionesIdiomas`) en `inc/acciones/common.php`; se reutilizan los de `inc/xml-helpers.php`.
 - Robustez: `cargarXmlSiDisponible()` captura y registra errores de libxml; añadidos docblocks en helpers.
 - Logging: `crearBackup()` y `guardarDomConBackup()` registran éxito/fracaso de copia y bytes escritos al guardar.
 - Tests mínimos: `test/xml_helpers_test.php` creado y ejecutado con resultados OK.
+
+Checklist de cierre F3:
+
+- [x] Centralización carga XML en router
+- [x] Eliminar helpers duplicados en `common.php`
+- [x] Manejo de errores y docblocks en helpers
+- [x] Logging de backups/guardado con bytes
+- [x] Tests mínimos y documentación actualizada
