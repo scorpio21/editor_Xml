@@ -14,6 +14,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 - [Pila tecnológica](#pila-tecnológica)
 - [Requisitos](#requisitos)
 - [Instalación](#instalación)
+- [Guía de instalación (detallada)](#guía-de-instalación-detallada)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Uso](#uso)
 - [Interfaz por pestañas](#interfaz-por-pestañas)
@@ -135,6 +136,86 @@ editor_Xml/
 5. Asegúrate de que la carpeta `uploads/` existe y es escribible (se crea automáticamente si falta).
 6. Abre en el navegador: `http://localhost/editor_Xml/`.
 7. Opcional (VirtualHost): configura un host como `http://editor.local/` apuntando a esta carpeta.
+
+## Guía de instalación (detallada)
+
+### Opción A: XAMPP en Windows (recomendada)
+
+1. Instala XAMPP 8.x y arranca Apache.
+2. Clona o copia `editor_Xml` en `D:/xampp/htdocs/editor_Xml`.
+3. Crea la carpeta de logs si usas ruta fuera del proyecto (opcional): `D:/xampp/logs/editor_Xml`.
+4. Variables de entorno (elige una de estas formas):
+   - Apache (httpd.conf o VirtualHost):
+
+     ```apache
+     SetEnv APP_ENV "production"
+     SetEnv LOG_LEVEL_MIN "INFO"
+     SetEnv LOG_DIR "D:/xampp/logs/editor_Xml"
+     ```
+   
+   - Windows (Panel de control > Sistema > Configuración avanzada > Variables de entorno):
+
+     ```cmd
+     APP_ENV=production
+     LOG_LEVEL_MIN=INFO
+     LOG_DIR=D:\\xampp\\logs\\editor_Xml
+     ```
+
+5. Permisos: asegúrate de que `uploads/` y (si aplica) `D:/xampp/logs/editor_Xml` son escribibles por Apache.
+6. php.ini (recomendado para DATS medianos/grandes):
+   - `upload_max_filesize = 64M`
+   - `post_max_size = 64M`
+   - `max_execution_time = 90`
+7. Abre `http://localhost/editor_Xml/` y verifica que carga la UI.
+
+VirtualHost opcional (mejor DX):
+
+```apache
+<VirtualHost *:80>
+    ServerName editor.local
+    DocumentRoot "D:/xampp/htdocs/editor_Xml"
+    <Directory "D:/xampp/htdocs/editor_Xml">
+        AllowOverride All
+        Require all granted
+    </Directory>
+    SetEnv APP_ENV "production"
+    SetEnv LOG_LEVEL_MIN "INFO"
+    SetEnv LOG_DIR "D:/xampp/logs/editor_Xml"
+    ErrorLog "logs/editor.error.log"
+    CustomLog "logs/editor.access.log" combined
+</VirtualHost>
+```
+
+Añade `127.0.0.1 editor.local` al archivo `C:\\Windows\\System32\\drivers\\etc\\hosts`.
+
+### Opción B: Servidor/CLI genérico
+
+1. Requisitos: PHP 8+ con extensión DOM.
+2. Sirve la carpeta con tu servidor web preferido o usa el built-in de PHP solo para pruebas locales:
+
+```bash
+php -S 127.0.0.1:8080 -t .
+```
+
+1. Configura variables de entorno antes de arrancar (opcional):
+
+```bash
+# Linux/macOS
+export APP_ENV=development
+export LOG_LEVEL_MIN=INFO
+```
+
+### Verificación rápida
+
+- Cargar un XML/DAT y comprobar que aparece en `uploads/current.xml`.
+- Probar “Guardar/Compactar” y verificar que se crea `uploads/current.xml.bak` y `logs/app.log` recibe entradas.
+
+### Troubleshooting
+
+- 404 o index en blanco: confirma DocumentRoot y `AllowOverride All` en el VirtualHost.
+- No se escribe el log: revisa `LOG_DIR`/`LOG_PATH` y permisos; si falta, se usa `logs/app.log` dentro del proyecto.
+- Fallo al subir archivos: ajusta `upload_max_filesize`/`post_max_size` y reinicia Apache.
+- Mensajes de entidad XML: asegúrate de usar archivos con codificación UTF‑8; el sistema escapa contenido textual automáticamente.
 
 ## Uso
 
