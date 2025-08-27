@@ -90,6 +90,17 @@ declare(strict_types=1);
 
             return $matchBase || $matchRoms || $matchHashes;
         }));
+        // Deduplicar por clave tipo+nombre (case-insensitive)
+        $seen = [];
+        $entries = array_values(array_filter($entries, static function($item) use (&$seen) {
+            $node = $item['el'];
+            $type = $item['type'];
+            $name = (string)($node['name'] ?? '');
+            $key = $type . '|' . mb_strtolower($name, 'UTF-8');
+            if (isset($seen[$key])) { return false; }
+            $seen[$key] = true;
+            return true;
+        }));
     }
 ?>
 <?php
@@ -126,6 +137,17 @@ declare(strict_types=1);
     <?php if ($perPage !== 10): ?><input type="hidden" name="per_page" value="<?= $perPage ?>"><?php endif; ?>
     <button type="submit">Buscar</button>
 </form>
+
+<!-- Exportar resultados filtrados a XML -->
+<form method="post" class="inline-form">
+    <input type="hidden" name="action" value="export_filtered_xml">
+    <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
+    <?php if ($qInRoms): ?><input type="hidden" name="q_in_roms" value="1"><?php endif; ?>
+    <?php if ($qInHashes): ?><input type="hidden" name="q_in_hashes" value="1"><?php endif; ?>
+    <?= campoCSRF() ?>
+    <button type="submit" class="secondary">Exportar resultados (XML)</button>
+    <small class="hint">Exporta los resultados actuales, sin duplicados, en un nuevo XML.</small>
+    </form>
 
 <form method="get" class="per-page-form">
     <label for="per_page">Mostrar</label>
