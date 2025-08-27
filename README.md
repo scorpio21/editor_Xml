@@ -42,7 +42,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 - 📄 Paginación en servidor para DATS grandes
 - 🔐 Protección CSRF en todas las acciones POST
 - ⬇️ Exportación a XML de resultados filtrados (sin duplicados)
-- 🌐 Búsqueda externa (myrient, vimm) por nombre y hashes (MD5/SHA1/CRC)
+- 🌐 Búsqueda externa (myrient, vimm, archive.org) por nombre y hashes (MD5/SHA1/CRC). Fase 2: botón "Comprobar Archive" con enlace directo cuando hay coincidencia.
 
 ## Características
 
@@ -148,7 +148,8 @@ editor_Xml/
 11) **Buscar juego (externo)**:
 
 - En la pestaña “Buscar juego”, introduce nombre y/o hashes (MD5/SHA1/CRC).
-- Pulsa “Generar enlaces” para obtener enlaces de búsqueda en myrient y vimm (mediante búsquedas `site:`) y alternativas en Google.
+- Pulsa “Generar enlaces” para obtener enlaces de búsqueda en myrient, vimm y archive.org (mediante búsquedas `site:`) y alternativas en Google.
+- Opcional: pulsa “Comprobar Archive” para consultar Archive.org y, si hay coincidencias, mostrar un enlace directo (sin scraping; usa su API de búsqueda avanzada, protegido con CSRF).
 - Puedes abrir cada enlace o “Abrir todas”. Si no hay datos suficientes, se muestra un aviso.
 
 ## Interfaz por pestañas
