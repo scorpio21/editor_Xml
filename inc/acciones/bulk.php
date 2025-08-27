@@ -184,9 +184,9 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     foreach ($machines as $m) {
         $haystack = obtenerTextoParaBusqueda($m, 'machine');
         $haystackUpper = strtoupper($haystack);
-        $tokens = tokenizar($haystackUpper);
-        if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
-        if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
+        $tokens = EditorXml::tokenizar($haystackUpper);
+        if (!EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
+        if (EditorXml::anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
         // Aplicar filtros MAME específicos
         if (!aplicarFiltrosMame($m, $allFilters)) { continue; }
         $m->parentNode->removeChild($m);

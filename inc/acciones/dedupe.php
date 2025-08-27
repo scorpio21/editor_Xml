@@ -42,7 +42,7 @@ if ($action === 'dedupe_region_count' && isset($xml) && $xml instanceof SimpleXM
     $excludeTerms = [];
     $regionsPref = [$prefer];
     if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
-    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+    EditorXml::mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
 
     // Agrupar por nombre base (eliminando paréntesis)
     $groups = [];
@@ -66,8 +66,8 @@ if ($action === 'dedupe_region_count' && isset($xml) && $xml instanceof SimpleXM
             $hay = strtoupper((string)$el->getAttribute('name'));
             $d = $xpath->query('./description', $el)->item(0);
             if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
-            $tokens = tokenizar($hay);
-            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $tokens = EditorXml::tokenizar($hay);
+            $pref = EditorXml::anyTermMatch($tokens, $hay, $includeTerms);
             $isPreferred[$idx] = $pref;
             if ($pref) { $hasPreferred = true; }
         }
@@ -128,7 +128,7 @@ if ($action === 'dedupe_region' && isset($xml) && $xml instanceof SimpleXMLEleme
     $excludeTerms = [];
     $regionsPref = [$prefer];
     if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
-    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+    EditorXml::mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
 
     // Construir grupos por nombre base
     $groups = [];
@@ -142,7 +142,7 @@ if ($action === 'dedupe_region' && isset($xml) && $xml instanceof SimpleXMLEleme
         $groups[$base][] = $g;
     }
 
-    crearBackup($xmlFile);
+    EditorXml::crearBackup($xmlFile);
 
     $deleted = 0;
     foreach ($groups as $base => $items) {
@@ -154,8 +154,8 @@ if ($action === 'dedupe_region' && isset($xml) && $xml instanceof SimpleXMLEleme
             $hay = strtoupper((string)$el->getAttribute('name'));
             $d = $xpath->query('./description', $el)->item(0);
             if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
-            $tokens = tokenizar($hay);
-            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $tokens = EditorXml::tokenizar($hay);
+            $pref = EditorXml::anyTermMatch($tokens, $hay, $includeTerms);
             $isPreferred[$idx] = $pref;
             if ($pref) { $hasPreferred = true; }
         }
@@ -170,8 +170,8 @@ if ($action === 'dedupe_region' && isset($xml) && $xml instanceof SimpleXMLEleme
     // Guardar bonito
     $dom->formatOutput = true;
     $dom->normalizeDocument();
-    limpiarEspaciosEnBlancoDom($dom);
-    if (!guardarDomConBackup($dom, $xmlFile)) {
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
+    if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
@@ -224,7 +224,7 @@ if ($action === 'dedupe_region_export_csv' && isset($xml) && $xml instanceof Sim
     $excludeTerms = [];
     $regionsPref = [$prefer];
     if ($keepEU && mb_strtoupper($prefer, 'UTF-8') !== 'EUROPA') { $regionsPref[] = 'Europa'; }
-    mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
+    EditorXml::mapearRegionesIdiomas($regionsPref, [], $includeTerms, $excludeTerms);
 
     // Agrupar por nombre base y determinar duplicados
     $groups = [];
@@ -248,8 +248,8 @@ if ($action === 'dedupe_region_export_csv' && isset($xml) && $xml instanceof Sim
             $hay = strtoupper((string)$el->getAttribute('name'));
             $d = $xpath->query('./description', $el)->item(0);
             if ($d) { $hay .= ' ' . strtoupper((string)$d->nodeValue); }
-            $tokens = tokenizar($hay);
-            $pref = anyTermMatch($tokens, $hay, $includeTerms);
+            $tokens = EditorXml::tokenizar($hay);
+            $pref = EditorXml::anyTermMatch($tokens, $hay, $includeTerms);
             $isPreferred[$idx] = $pref;
             if ($pref) { $hasPreferred = true; }
         }
