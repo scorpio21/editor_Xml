@@ -177,6 +177,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'create_xml') {
     $_SESSION['xml_uploaded'] = true;
     unset($_SESSION['pending_save']);
     $_SESSION['message'] = 'XML creado correctamente.';
+    // Al cambiar de fichero, limpiar filtros previos de eliminación masiva
+    unset($_SESSION['bulk_filters']);
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
 }
@@ -223,6 +225,8 @@ if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['
         move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile);
         $_SESSION['xml_uploaded'] = true;
         $_SESSION['message'] = 'Archivo cargado correctamente.';
+        // Al cargar un nuevo fichero, limpiar filtros de sesión para evitar arrastre
+        unset($_SESSION['bulk_filters']);
 
     } else {
         $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
@@ -237,6 +241,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'restore_backup') {
         if (@copy($backupFile, $xmlFile)) {
             $_SESSION['xml_uploaded'] = true;
             $_SESSION['message'] = 'Restaurado correctamente desde la copia de seguridad (.bak).';
+            // Limpiar filtros por cambio de contenido
+            unset($_SESSION['bulk_filters']);
 
         } else {
             $_SESSION['error'] = 'No se pudo restaurar desde la copia de seguridad.';

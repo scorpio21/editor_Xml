@@ -72,6 +72,7 @@ declare(strict_types=1);
         <li>Pulsa <strong>Eliminar</strong> en la entrada (juego o máquina) y confirma la acción.</li>
         <li>Se crea automáticamente una copia <code>.bak</code> antes de escribir cambios.</li>
       </ol>
+      <p><small><strong>Nota:</strong> en ficheros <strong>MAME</strong> la eliminación individual está <strong>deshabilitada</strong>. Solo se permite buscar y editar.</small></p>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
 
@@ -88,15 +89,19 @@ declare(strict_types=1);
         <li>Usa <strong>Contar coincidencias</strong> para previsualizar el impacto (no borra nada).</li>
         <li>Si estás conforme, pulsa <strong>Eliminar filtrados</strong>.</li>
       </ol>
-      <p><small>Tras una eliminación masiva exitosa, aparecerá el botón <em>Guardar / Compactar XML</em>.</small></p>
+      <p><small><strong>Importante:</strong> la eliminación masiva <strong>no está disponible</strong> para ficheros <strong>MAME</strong>.</small></p>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
 
     <section id="h-busqueda">
       <h4>7) Búsqueda</h4>
       <ul>
-        <li>El cuadro de búsqueda filtra por nombre, descripción y categoría antes de paginar.</li>
-        <li>El término se conserva al navegar entre páginas o cambiar "Mostrar N".</li>
+        <li><strong>Índice</strong>:
+          <ul>
+            <li><em>Búsqueda general</em>: filtra por <strong>nombre</strong>, <strong>descripción</strong> y <strong>categoría</strong> antes de paginar. El término se conserva al navegar entre páginas o cambiar "Mostrar N".</li>
+            <li><em>MAME (buscar)</em>: buscador específico por <strong>nombre</strong>, <strong>ROM</strong> y <strong>hash</strong>. No hay eliminación masiva ni botones de eliminar.</li>
+          </ul>
+        </li>
       </ul>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>

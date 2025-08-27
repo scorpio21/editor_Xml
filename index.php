@@ -66,12 +66,14 @@ if ($xml) {
       <button role="tab" id="tab-btn-2" aria-selected="false" aria-controls="tab-panel-2">
         <img class="tab-ico" src="img/ico-upload.svg" alt="" aria-hidden="true"><span class="tab-text">Cargar y buscar</span>
       </button>
+      <?php if (!$isMame): ?>
       <button role="tab" id="tab-btn-3" aria-selected="false" aria-controls="tab-panel-3">
         <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminación masiva</span>
       </button>
+      <?php endif; ?>
       <?php if ($isMame): ?>
       <button role="tab" id="tab-btn-4" aria-selected="false" aria-controls="tab-panel-4">
-        <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text">Filtros MAME (opcional)</span>
+        <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text">MAME (buscar)</span>
       </button>
       <?php endif; ?>
       <button role="tab" id="tab-btn-5" aria-selected="false" aria-controls="tab-panel-5">
@@ -98,6 +100,7 @@ if ($xml) {
       <?php endif; ?>
     </section>
 
+    <?php if (!$isMame): ?>
     <section role="tabpanel" id="tab-panel-3" aria-labelledby="tab-btn-3" hidden>
       <?php if ($xml): ?>
         <?php include __DIR__ . '/partials/bulk-delete.php'; ?>
@@ -105,15 +108,22 @@ if ($xml) {
         <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar".</p>
       <?php endif; ?>
     </section>
+    <?php endif; ?>
 
     <?php if ($isMame): ?>
     <section role="tabpanel" id="tab-panel-4" aria-labelledby="tab-btn-4" hidden>
-      <h3>Filtros específicos MAME</h3>
-      <p class="hint">Estos filtros se aplican al realizar acciones en "Eliminación masiva". Ajusta aquí y luego ejecuta desde la pestaña correspondiente.</p>
-      <?php include __DIR__ . '/partials/sections/mame-filters.php'; ?>
-      <p>
-        <button type="button" class="secondary" data-goto-tab="#tab-btn-3" data-goto-target="#mame-filters">Ir a ejecutar en Eliminación masiva</button>
-      </p>
+      <h3>Búsqueda en ficheros MAME</h3>
+      <p class="hint">Para ficheros MAME, esta sección permite buscar máquinas por nombre, ROM o hash. La eliminación masiva está deshabilitada.</p>
+      <form method="get" class="search-form">
+        <label for="q_mame">Buscar</label>
+        <input id="q_mame" name="q" type="text" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" placeholder="Nombre de máquina, ROM o hash">
+        <div class="search-options">
+          <label><input type="checkbox" name="q_in_roms" value="1" <?= !empty($_GET['q_in_roms']) && $_GET['q_in_roms'] === '1' ? 'checked' : '' ?>> Buscar en ROMs</label>
+          <label><input type="checkbox" name="q_in_hashes" value="1" <?= !empty($_GET['q_in_hashes']) && $_GET['q_in_hashes'] === '1' ? 'checked' : '' ?>> Buscar en hashes (CRC/MD5/SHA1)</label>
+        </div>
+        <button type="submit">Buscar</button>
+      </form>
+      <p class="hint">Los resultados se muestran en la lista principal bajo el buscador.</p>
     </section>
     <?php endif; ?>
 

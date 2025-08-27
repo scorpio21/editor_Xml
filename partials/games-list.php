@@ -249,14 +249,17 @@ declare(strict_types=1);
             <div class="game-actions">
                 <?php if (!$isMachine): ?>
                     <button onclick="openEditModal(<?= $gameIdx ?>)">Editar</button>
+                    <?php if (empty($isMame)): ?>
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="index" value="<?= $absIndex ?>">
                         <?= campoCSRF() ?>
                         <button type="submit" onclick="return confirm('¿Eliminar este juego?')">Eliminar</button>
                     </form>
+                    <?php endif; ?>
                 <?php else: ?>
                     <button onclick="openEditModalMachine(<?= $machineIdx ?>)">Editar</button>
+                    <?php if (empty($isMame)): ?>
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="node_type" value="machine">
@@ -264,6 +267,7 @@ declare(strict_types=1);
                         <?= campoCSRF() ?>
                         <button type="submit" onclick="return confirm('¿Eliminar esta máquina?')">Eliminar</button>
                     </form>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>

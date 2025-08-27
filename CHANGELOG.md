@@ -24,6 +24,8 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 
 - UI: La pestaña y panel "Filtros MAME (opcional)" ahora solo se muestran cuando el XML contiene nodos `<machine>` (detección de tipo MAME).
   - Referencias: `index.php` (variable `$isMame` y render condicional) y `partials/bulk-delete.php` (bloque condicional con nota accesible cuando no aplica).
+− UI (MAME): Cuando el fichero es MAME, la **eliminación masiva se deshabilita** y no se muestra la pestaña correspondiente; la pestaña de MAME se convierte en **solo buscador** (nombre/ROM/hash).
+  - Referencias: `index.php` (oculta tab/panel de eliminación masiva en MAME; renombra y ajusta panel MAME a “MAME (buscar)”), `partials/games-list.php` (oculta botones “Eliminar” si `$isMame`).
 
 Notas:
 
