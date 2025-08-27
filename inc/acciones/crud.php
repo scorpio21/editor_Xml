@@ -56,8 +56,8 @@ if ($action === 'compact_xml') {
         }
         $dom->formatOutput = true;
         $dom->normalizeDocument();
-        limpiarEspaciosEnBlancoDom($dom);
-        if (!guardarDomConBackup($dom, $xmlFile)) {
+        EditorXml::limpiarEspaciosEnBlancoDom($dom);
+        if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
             registrarError('crud.php:compact_xml', 'Fallo al guardar XML compactado. Revertido al respaldo.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo guardar el XML compactado. Se revirtió al respaldo.';
         } else {
@@ -290,7 +290,7 @@ if ($action === 'export_filtered_xml') {
 
     $dom->appendChild($datafile);
     $dom->normalizeDocument();
-    limpiarEspaciosEnBlancoDom($dom);
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
 
     // Nombre de archivo amigable
     $base = 'filtered';
@@ -346,8 +346,8 @@ if ($action === 'create_xml') {
 
     // Limpieza de espacios y guardado con backup
     $dom->normalizeDocument();
-    limpiarEspaciosEnBlancoDom($dom);
-    if (!guardarDomConBackup($dom, $xmlFile)) {
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
+    if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
         registrarError('crud.php:create_xml', 'No se pudo crear/guardar el XML.', [ 'file' => $xmlFile ]);
         $_SESSION['error'] = 'No se pudo crear/guardar el XML.';
         header('Location: ' . $_SERVER['PHP_SELF']);
@@ -469,7 +469,7 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
         exit;
     }
 
-    crearBackup($xmlFile);
+    EditorXml::crearBackup($xmlFile);
 
     // Detectar tipo predominante en el XML actual: machine vs game
     $hasMachine = $xpath->query('/datafile/machine')->length > 0;
@@ -659,8 +659,8 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
             $dom->preserveWhiteSpace = false;
             $dom->formatOutput = true;
             $dom->normalizeDocument();
-            limpiarEspaciosEnBlancoDom($dom);
-            if (!guardarDomConBackup($dom, $xmlFile)) {
+            EditorXml::limpiarEspaciosEnBlancoDom($dom);
+            if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
                 registrarError('crud.php:edit', 'No se pudo guardar el XML tras editar. Revertido al respaldo.', [ 'file' => $xmlFile ]);
                 if ($isAjax) {
                     header('Content-Type: application/json; charset=UTF-8');
@@ -709,7 +709,7 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $xpath = new DOMXPath($dom);
     $nodes = $xpath->query('/datafile/' . $nodeType);
     if ($nodes && $index >= 0 && $index < $nodes->length) {
-        crearBackup($xmlFile);
+        EditorXml::crearBackup($xmlFile);
         $toRemove = $nodes->item($index);
         if ($toRemove instanceof DOMElement) {
             $deletedName = $toRemove->getAttribute('name');
@@ -719,8 +719,8 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
         $dom->preserveWhiteSpace = false;
         $dom->formatOutput = true;
         $dom->normalizeDocument();
-        limpiarEspaciosEnBlancoDom($dom);
-        if (!guardarDomConBackup($dom, $xmlFile)) {
+        EditorXml::limpiarEspaciosEnBlancoDom($dom);
+        if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
             registrarError('crud.php:delete', 'No se pudo guardar el XML tras eliminar. Revertido al respaldo.', [ 'file' => $xmlFile ]);
             $_SESSION['error'] = 'No se pudo guardar el XML tras eliminar. Se revirtió al respaldo.';
             header('Location: ' . $_SERVER['PHP_SELF']);
