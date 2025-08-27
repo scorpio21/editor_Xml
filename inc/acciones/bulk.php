@@ -25,7 +25,7 @@ if ($action === 'bulk_count' && isset($xml) && $xml instanceof SimpleXMLElement)
         $includeTerms = array_values(array_filter(array_map('trim', preg_split('/[,\n]+/', strtoupper($include)))));
     }
     $excludeTerms = $exclude !== '' ? array_values(array_filter(array_map('trim', preg_split('/[,\n]+/', strtoupper($exclude))))) : [];
-    mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
+    EditorXml::mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
 
     if (count($includeTerms) === 0) {
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
@@ -61,11 +61,11 @@ if ($action === 'bulk_count' && isset($xml) && $xml instanceof SimpleXMLElement)
         $cNode = $xpath->query('./category', $g)->item(0);
         if ($cNode) { $cat = (string)$cNode->nodeValue; }
         $haystackUpper = strtoupper($name.' '.$desc.' '.$cat);
-        $tokens = tokenizar($haystackUpper);
+        $tokens = EditorXml::tokenizar($haystackUpper);
 
-        $matchInclude = anyTermMatch($tokens, $haystackUpper, $includeTerms);
+        $matchInclude = EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms);
         if (!$matchInclude) { continue; }
-        $matchExclude = anyTermMatch($tokens, $haystackUpper, $excludeTerms);
+        $matchExclude = EditorXml::anyTermMatch($tokens, $haystackUpper, $excludeTerms);
         if ($matchExclude) { continue; }
         $matches++;
     }
@@ -84,11 +84,11 @@ if ($action === 'bulk_count' && isset($xml) && $xml instanceof SimpleXMLElement)
         $manNode = $xpath->query('./manufacturer', $m)->item(0);
         if ($manNode) { $manu = (string)$manNode->nodeValue; }
         $haystackUpper = strtoupper($name.' '.$desc.' '.$year.' '.$manu);
-        $tokens = tokenizar($haystackUpper);
+        $tokens = EditorXml::tokenizar($haystackUpper);
 
-        $matchInclude = anyTermMatch($tokens, $haystackUpper, $includeTerms);
+        $matchInclude = EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms);
         if (!$matchInclude) { continue; }
-        $matchExclude = anyTermMatch($tokens, $haystackUpper, $excludeTerms);
+        $matchExclude = EditorXml::anyTermMatch($tokens, $haystackUpper, $excludeTerms);
         if ($matchExclude) { continue; }
         $matches++;
     }
@@ -144,7 +144,7 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     }
     $excludeTerms = $exclude !== '' ? array_values(array_filter(array_map('trim', preg_split('/[,\n]+/', strtoupper($exclude))))) : [];
 
-    mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
+    EditorXml::mapearRegionesIdiomas($includeRegions, $excludeLangs, $includeTerms, $excludeTerms);
 
     if (count($includeTerms) === 0) {
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
@@ -166,7 +166,7 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     $games = $xpath->query('/datafile/game');
     $machines = $xpath->query('/datafile/machine');
 
-    crearBackup($xmlFile);
+    EditorXml::crearBackup($xmlFile);
 
     $deleted = 0;
     $allFilters = $_SESSION['bulk_filters'];
@@ -174,9 +174,9 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     foreach ($games as $g) {
         $haystack = obtenerTextoParaBusqueda($g, 'game');
         $haystackUpper = strtoupper($haystack);
-        $tokens = tokenizar($haystackUpper);
-        if (!anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
-        if (anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
+        $tokens = EditorXml::tokenizar($haystackUpper);
+        if (!EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms)) { continue; }
+        if (EditorXml::anyTermMatch($tokens, $haystackUpper, $excludeTerms)) { continue; }
         $g->parentNode->removeChild($g);
         $deleted++;
     }
@@ -197,9 +197,9 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
     $dom->normalizeDocument();
-    limpiarEspaciosEnBlancoDom($dom);
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
 
-    if (!guardarDomConBackup($dom, $xmlFile)) {
+    if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode([
