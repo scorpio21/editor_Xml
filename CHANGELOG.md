@@ -9,6 +9,7 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 - Botón y endpoint para **exportar resultados filtrados a XML** sin duplicados.
   - Formulario con preservación de filtros actuales (`q`, `q_in_roms`, `q_in_hashes`) y token CSRF.
   - Generación de un nuevo `datafile` con cabecera original y solo entradas `<game>`/`<machine>` filtradas.
+ - Nueva pestaña "Buscar juego": formulario para construir enlaces de búsqueda en webs externas (myrient, vimm) por nombre y por hash (MD5/SHA1/CRC) usando búsquedas `site:`.
 
 ### Fixed
 

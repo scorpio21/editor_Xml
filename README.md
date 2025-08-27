@@ -42,6 +42,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 - 📄 Paginación en servidor para DATS grandes
 - 🔐 Protección CSRF en todas las acciones POST
 - ⬇️ Exportación a XML de resultados filtrados (sin duplicados)
+- 🌐 Búsqueda externa (myrient, vimm) por nombre y hashes (MD5/SHA1/CRC)
 
 ## Características
 
@@ -143,6 +144,12 @@ editor_Xml/
 - Se descargará un nuevo XML solo con las entradas filtradas y deduplicadas.
 - Los contenidos de texto (por ejemplo `description`, `category`, `manufacturer`) se escapan correctamente para evitar errores de entidades XML.
 - El nombre del archivo se sanea para ser válido en Windows.
+
+11) **Buscar juego (externo)**:
+
+- En la pestaña “Buscar juego”, introduce nombre y/o hashes (MD5/SHA1/CRC).
+- Pulsa “Generar enlaces” para obtener enlaces de búsqueda en myrient y vimm (mediante búsquedas `site:`) y alternativas en Google.
+- Puedes abrir cada enlace o “Abrir todas”. Si no hay datos suficientes, se muestra un aviso.
 
 ## Interfaz por pestañas
 

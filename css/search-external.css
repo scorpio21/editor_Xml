@@ -1,0 +1,13 @@
+/* Estilos para la pestaña Buscar juego */
+.search-external { padding: 0.5rem 0; }
+.search-external .hint { color: #555; font-size: 0.95rem; }
+.search-external-form fieldset { border: 1px solid #ccc; border-radius: 6px; padding: 0.75rem; }
+.search-external-form legend { padding: 0 0.25rem; font-weight: 600; }
+.search-external-form .form-row { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
+.search-external-form label { font-weight: 600; }
+.search-external-form input[type="text"] { padding: 0.4rem 0.5rem; border: 1px solid #bbb; border-radius: 4px; }
+.search-external .actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.search-external .form-errors { color: #b00020; }
+.links-list { list-style: disc; padding-left: 1.2rem; }
+.links-list a { text-decoration: none; color: var(--accent-600, #0a5); }
+.links-list a:hover { text-decoration: underline; }

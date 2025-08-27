@@ -23,6 +23,7 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
     <link rel="stylesheet" href="css/editor-xml.css">
     <?php if ($uiTabs): ?>
       <link rel="stylesheet" href="css/tabs.css">
+      <link rel="stylesheet" href="css/search-external.css">
     <?php endif; ?>
 </head>
 <body>
@@ -68,6 +69,9 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
       <button role="tab" id="tab-btn-5" aria-selected="false" aria-controls="tab-panel-5">
         <img class="tab-ico" src="img/ico-dedupe.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminar duplicados</span>
       </button>
+      <button role="tab" id="tab-btn-6" aria-selected="false" aria-controls="tab-panel-6">
+        <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text">Buscar juego</span>
+      </button>
     </div>
 
     <section role="tabpanel" id="tab-panel-1" aria-labelledby="tab-btn-1">
@@ -111,6 +115,11 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
         <p class="hint">Primero carga un fichero XML/DAT en la pestaña "Cargar y buscar" para usar esta herramienta.</p>
       <?php endif; ?>
     </section>
+
+    <section role="tabpanel" id="tab-panel-6" aria-labelledby="tab-btn-6" hidden>
+      <h3>Buscar juego en webs externas</h3>
+      <?php include __DIR__ . '/partials/sections/search-external.php'; ?>
+    </section>
   </div>
 <?php else: ?>
   <?php include __DIR__ . '/partials/header-file.php'; ?>
@@ -141,6 +150,7 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
 <script src="js/modales.js"></script>
 <script src="js/bulk.js"></script>
 <script src="js/dedupe.js"></script>
+<script src="js/search-external.js"></script>
 
 </body>
 </html>
