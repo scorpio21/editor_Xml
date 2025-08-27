@@ -79,9 +79,13 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
         
         <!-- Filtros específicos MAME -->
+        <?php if (!empty($isMame)): ?>
         <div id="mame-filters">
             <?php include __DIR__ . '/sections/mame-filters.php'; ?>
         </div>
+        <?php else: ?>
+        <p class="hint" role="note">Este XML no parece ser de tipo MAME; los filtros MAME no aplican.</p>
+        <?php endif; ?>
         
         <div class="actions">
             <button type="button" class="secondary" id="clear-filters">Limpiar filtros</button>

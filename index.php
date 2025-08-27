@@ -14,6 +14,12 @@ require_once __DIR__ . '/inc/router-acciones.php';
 $xml = cargarXmlSiDisponible($xmlFile);
 // Modo UI por pestañas por defecto. Para ver la UI clásica, usar ?ui=classic
 $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
+// Detectar si el XML cargado parece ser de tipo MAME (presencia de <machine>)
+$isMame = false;
+if ($xml) {
+    $machines = $xml->xpath('/datafile/machine');
+    $isMame = is_array($machines) && count($machines) > 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -63,9 +69,11 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
       <button role="tab" id="tab-btn-3" aria-selected="false" aria-controls="tab-panel-3">
         <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminación masiva</span>
       </button>
+      <?php if ($isMame): ?>
       <button role="tab" id="tab-btn-4" aria-selected="false" aria-controls="tab-panel-4">
         <img class="tab-ico" src="img/ico-mame.svg" alt="" aria-hidden="true"><span class="tab-text">Filtros MAME (opcional)</span>
       </button>
+      <?php endif; ?>
       <button role="tab" id="tab-btn-5" aria-selected="false" aria-controls="tab-panel-5">
         <img class="tab-ico" src="img/ico-dedupe.svg" alt="" aria-hidden="true"><span class="tab-text">Eliminar duplicados</span>
       </button>
@@ -98,6 +106,7 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
       <?php endif; ?>
     </section>
 
+    <?php if ($isMame): ?>
     <section role="tabpanel" id="tab-panel-4" aria-labelledby="tab-btn-4" hidden>
       <h3>Filtros específicos MAME</h3>
       <p class="hint">Estos filtros se aplican al realizar acciones en "Eliminación masiva". Ajusta aquí y luego ejecuta desde la pestaña correspondiente.</p>
@@ -106,6 +115,7 @@ $uiTabs = !isset($_GET['ui']) || $_GET['ui'] !== 'classic';
         <button type="button" class="secondary" data-goto-tab="#tab-btn-3" data-goto-target="#mame-filters">Ir a ejecutar en Eliminación masiva</button>
       </p>
     </section>
+    <?php endif; ?>
 
     <section role="tabpanel" id="tab-panel-5" aria-labelledby="tab-btn-5" hidden>
       <h3>Eliminar duplicados por región</h3>

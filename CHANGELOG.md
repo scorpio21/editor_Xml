@@ -20,6 +20,11 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
   - Se escapa el contenido textual con `htmlspecialchars(..., ENT_XML1 | ENT_COMPAT, 'UTF-8')` en `inc/acciones/crud.php` (acción `export_filtered_xml`).
 - Saneado del nombre del archivo exportado para compatibilidad con Windows.
 
+### Changed — 2025-08-27
+
+- UI: La pestaña y panel "Filtros MAME (opcional)" ahora solo se muestran cuando el XML contiene nodos `<machine>` (detección de tipo MAME).
+  - Referencias: `index.php` (variable `$isMame` y render condicional) y `partials/bulk-delete.php` (bloque condicional con nota accesible cuando no aplica).
+
 Notas:
 
 - Flujo protegido con CSRF y finalizado con `exit` tras envío de cabeceras y contenido.
