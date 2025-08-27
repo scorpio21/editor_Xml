@@ -22,6 +22,7 @@ if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['
             $_SESSION['xml_uploaded'] = true;
             $_SESSION['message'] = 'Archivo cargado correctamente.';
         }
+
     } else {
         $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
     }
@@ -115,6 +116,198 @@ if ($action === 'download_xml') {
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
+}
+
+// Exportar resultados filtrados (sin duplicados) a un nuevo XML en memoria
+if ($action === 'export_filtered_xml') {
+    requireValidCsrf();
+    if (!file_exists($xmlFile)) {
+        $_SESSION['error'] = 'No hay XML disponible para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    // Parámetros de filtrado (simulan los GET del listado)
+    $q = isset($_POST['q']) ? trim((string)$_POST['q']) : '';
+    $qInRoms = isset($_POST['q_in_roms']) && (string)$_POST['q_in_roms'] === '1';
+    $qInHashes = isset($_POST['q_in_hashes']) && (string)$_POST['q_in_hashes'] === '1';
+
+    $sx = @simplexml_load_file($xmlFile);
+    if (!($sx instanceof SimpleXMLElement)) {
+        registrarError('crud.php:export_filtered_xml', 'Fallo al cargar XML para exportar filtrado.', [ 'file' => $xmlFile ]);
+        $_SESSION['error'] = 'No se pudo cargar el XML para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Recopilar entradas game/machine en orden
+    $children = $sx->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    $entries = [];
+    foreach ($children as $node) {
+        $entries[] = [ 'el' => $node, 'type' => $node->getName() === 'machine' ? 'machine' : 'game' ];
+    }
+
+    if ($q !== '') {
+        $qUpper = mb_strtoupper($q, 'UTF-8');
+        $terms = array_values(array_filter(preg_split('/\s+/', $q)));
+        $hasSpace = mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false;
+        $qHash = strtoupper(str_replace([' ', '-', '_'], '', $q));
+        $entries = array_values(array_filter($entries, static function($item) use ($terms, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
+            $e = $item['el'];
+            $name = (string)($e['name'] ?? '');
+            $hayName = mb_strtoupper($name, 'UTF-8');
+            $matchBase = false;
+            if ($hasSpace) {
+                if (mb_strpos($hayName, $qUpper, 0, 'UTF-8') !== false) { $matchBase = true; }
+                if (!$matchBase) {
+                    $all = true;
+                    foreach ($terms as $t) {
+                        $t = mb_strtoupper((string)$t, 'UTF-8');
+                        if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                    }
+                    $matchBase = $all;
+                }
+            } else {
+                $all = true;
+                foreach ($terms as $t) {
+                    $t = mb_strtoupper((string)$t, 'UTF-8');
+                    if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                }
+                $matchBase = $all;
+            }
+
+            $matchRoms = false;
+            if ($qInRoms && isset($e->rom)) {
+                foreach ($e->rom as $rom) {
+                    $romName = (string)($rom['name'] ?? '');
+                    $hayRom = mb_strtoupper($romName, 'UTF-8');
+                    if ($hasSpace) {
+                        if (mb_strpos($hayRom, $qUpper, 0, 'UTF-8') !== false) { $matchRoms = true; break; }
+                        $all = true;
+                        foreach ($terms as $t) {
+                            $t = mb_strtoupper((string)$t, 'UTF-8');
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        }
+                        if ($all) { $matchRoms = true; break; }
+                    } else {
+                        $all = true;
+                        foreach ($terms as $t) {
+                            $t = mb_strtoupper((string)$t, 'UTF-8');
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        }
+                        if ($all) { $matchRoms = true; break; }
+                    }
+                }
+            }
+
+            $matchHashes = false;
+            if ($qInHashes && isset($e->rom)) {
+                foreach ($e->rom as $rom) {
+                    $crc  = strtoupper((string)($rom['crc'] ?? ''));
+                    $md5  = strtoupper((string)($rom['md5'] ?? ''));
+                    $sha1 = strtoupper((string)($rom['sha1'] ?? ''));
+                    $hay = str_replace([' ', '-', '_'], '', $crc . $md5 . $sha1);
+                    if ($qHash !== '' && strpos($hay, $qHash) !== false) { $matchHashes = true; break; }
+                }
+            }
+
+            return $matchBase || $matchRoms || $matchHashes;
+        }));
+        // Deduplicar por (tipo + nombre)
+        $seen = [];
+        $entries = array_values(array_filter($entries, static function($item) use (&$seen) {
+            $node = $item['el'];
+            $type = $item['type'];
+            $name = (string)($node['name'] ?? '');
+            $key = $type . '|' . mb_strtolower($name, 'UTF-8');
+            if (isset($seen[$key])) { return false; }
+            $seen[$key] = true;
+            return true;
+        }));
+    }
+
+    // Construir DOM de salida
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    $datafile = $dom->createElement('datafile');
+
+    // Copiar cabecera si existe
+    if (isset($sx->header)) {
+        $header = $dom->createElement('header');
+        $fields = ['name','description','version','date','author','homepage','url'];
+        foreach ($fields as $f) {
+            if (isset($sx->header->{$f}) && (string)$sx->header->{$f} !== '') {
+                // Escapar contenido textual para XML
+                $safeVal = htmlspecialchars((string)$sx->header->{$f}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $header->appendChild($dom->createElement($f, $safeVal));
+            }
+        }
+        $datafile->appendChild($header);
+    }
+
+    // Añadir entradas filtradas
+    foreach ($entries as $it) {
+        $e = $it['el'];
+        $type = $it['type'];
+        $node = $dom->createElement($type);
+        $node->setAttribute('name', (string)($e['name'] ?? ''));
+        if ($type === 'game') {
+            if (isset($e->description)) {
+                $safeDesc = htmlspecialchars((string)$e->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('description', $safeDesc));
+            }
+            if (isset($e->category) && (string)$e->category !== '') {
+                $safeCat = htmlspecialchars((string)$e->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('category', $safeCat));
+            }
+        } else { // machine
+            if (isset($e->description)) {
+                $safeDesc = htmlspecialchars((string)$e->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('description', $safeDesc));
+            }
+            if (isset($e->year) && (string)$e->year !== '') {
+                $safeYear = htmlspecialchars((string)$e->year, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('year', $safeYear));
+            }
+            if (isset($e->manufacturer) && (string)$e->manufacturer !== '') {
+                $safeMan = htmlspecialchars((string)$e->manufacturer, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('manufacturer', $safeMan));
+            }
+        }
+        if (isset($e->rom)) {
+            foreach ($e->rom as $rom) {
+                $romEl = $dom->createElement('rom');
+                foreach (['name','size','crc','md5','sha1'] as $attr) {
+                    if (isset($rom[$attr]) && (string)$rom[$attr] !== '') {
+                        $romEl->setAttribute($attr, (string)$rom[$attr]);
+                    }
+                }
+                $node->appendChild($romEl);
+            }
+        }
+        $datafile->appendChild($node);
+    }
+
+    $dom->appendChild($datafile);
+    $dom->normalizeDocument();
+    limpiarEspaciosEnBlancoDom($dom);
+
+    // Nombre de archivo amigable
+    $base = 'filtered';
+    if (isset($_SESSION['original_filename'])) {
+        $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
+        $base = preg_replace('/[\\\/:\*\?\"<>\|]/', ' ', (string)$origNoExt);
+    }
+    $dateStr = date('Y-m-d H-i-s');
+    $filename = sprintf('%s (filtered) (%d) (%s).xml', $base !== '' ? $base : 'datafile', count($entries), $dateStr);
+
+    header('Content-Type: application/xml; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    echo $dom->saveXML();
+    exit;
 }
 
 // Crear nuevo XML desde cero

@@ -39,3 +39,12 @@ Siguientes líneas de trabajo sugeridas:
 - Tema oscuro y variables de color (`--accent-*`).
 - E2E de navegación por pestañas y flujos de eliminación masiva/duplicados.
 -. Proteger el diagnóstico `?debug=assets` por entorno (`APP_ENV=development`) o bandera de build.
+
+## Actualización 2025-08-27
+
+- Nueva funcionalidad: botón y endpoint para **exportar resultados filtrados a XML** sin duplicados.
+- Robustez: se **escapan caracteres especiales** al construir elementos XML con `DOMDocument` (`ENT_XML1`), evitando warnings por entidades no terminadas.
+- Nombre de archivo: saneado para Windows; patrón de exportación `Nombre (filtered) (N) (YYYY-MM-DD HH-mm-ss).xml`.
+- Seguridad: mantiene verificación **CSRF** en el flujo de exportación y finaliza con `exit` tras enviar cabeceras/archivo.
+- Documentación: actualizado `README.md` (uso y características) y `CHANGELOG.md` (historial).
+- Estado: cierra issue de exportación filtrada y errores XML.

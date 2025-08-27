@@ -4,7 +4,7 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
-Actualizado: 2025-08-25 — ver `CHANGELOG.md` (Tabs accesibles por defecto, iconos SVG y persistencia de estado).
+Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados filtrados y corrección de caracteres especiales en DOM).
 
 ## Tabla de contenidos
 
@@ -41,6 +41,7 @@ Actualizado: 2025-08-25 — ver `CHANGELOG.md` (Tabs accesibles por defecto, ico
 - 🧹 Compactación y limpieza automática del XML al guardar
 - 📄 Paginación en servidor para DATS grandes
 - 🔐 Protección CSRF en todas las acciones POST
+- ⬇️ Exportación a XML de resultados filtrados (sin duplicados)
 
 ## Características
 
@@ -135,6 +136,13 @@ editor_Xml/
 7) **Restaurar**: si lo necesitas, “Restaurar desde .bak”.
 8) **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
 9) **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
+
+10) **Exportar resultados (XML)**:
+
+- Bajo el buscador, pulsa “Exportar resultados (XML)”.
+- Se descargará un nuevo XML solo con las entradas filtradas y deduplicadas.
+- Los contenidos de texto (por ejemplo `description`, `category`, `manufacturer`) se escapan correctamente para evitar errores de entidades XML.
+- El nombre del archivo se sanea para ser válido en Windows.
 
 ## Interfaz por pestañas
 

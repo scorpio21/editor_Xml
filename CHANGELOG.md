@@ -2,6 +2,25 @@
 
 Todas las modificaciones notables de este proyecto se documentarán en este archivo.
 
+## 2025-08-27
+
+### Added
+
+- Botón y endpoint para **exportar resultados filtrados a XML** sin duplicados.
+  - Formulario con preservación de filtros actuales (`q`, `q_in_roms`, `q_in_hashes`) y token CSRF.
+  - Generación de un nuevo `datafile` con cabecera original y solo entradas `<game>`/`<machine>` filtradas.
+
+### Fixed
+
+- Corrección de warnings de `DOMDocument::createElement()` por caracteres especiales (p. ej. `&`, `"`, `<`):
+  - Se escapa el contenido textual con `htmlspecialchars(..., ENT_XML1 | ENT_COMPAT, 'UTF-8')` en `inc/acciones/crud.php` (acción `export_filtered_xml`).
+- Saneado del nombre del archivo exportado para compatibilidad con Windows.
+
+Notas:
+
+- Flujo protegido con CSRF y finalizado con `exit` tras envío de cabeceras y contenido.
+- Cierra #25.
+
 ## 2025-08-25
 
 ### Added
