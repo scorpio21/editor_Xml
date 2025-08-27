@@ -97,35 +97,51 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 ```text
 editor_Xml/
 ├─ css/
-│  ├─ editor-xml.css
-│  └─ tabs.css                 # Estilos de la UI por pestañas
+│  ├─ editor-xml.css           # Estilos principales de la app
+│  ├─ tabs.css                 # Estilos de la UI por pestañas
+│  └─ search-external.css      # Estilos del buscador externo
 ├─ js/
-│  ├─ editor-xml.js
-│  ├─ tabs.js                  # Componente de pestañas accesibles (ARIA + teclado)
-│  └─ dedupe.js                # Lógica AJAX para eliminar duplicados
+│  ├─ bulk.js                  # Lógica de eliminación masiva
+│  ├─ dedupe.js                # Lógica de deduplicación por región
+│  ├─ hashes.js                # Cálculo/gestión de hashes (MD5/SHA1/CRC)
+│  ├─ modales.js               # Comportamiento de modales y UI
+│  └─ ...                      # Otros utilitarios de interfaz
 ├─ inc/
-│  ├─ acciones.php         # Procesa todas las acciones POST (edit, delete, bulk_delete, compact_xml, etc.)
-│  ├─ csrf-helper.php      # Helpers de CSRF: generar/verificar token y campo oculto
-│  ├─ EditorXml.php        # Fachada de utilidades XML centralizadas (métodos estáticos)
-│  ├─ xml-helpers.php      # Implementaciones de bajo nivel; invocadas desde EditorXml
-│  └─ mame-filters.php     # Lógica específica de MAME: filtros, procesamiento y helpers de búsqueda
+│  ├─ EditorXml.php            # Utilidades XML centralizadas (fachada)
+│  ├─ acciones.php             # Enrutador de acciones POST
+│  ├─ config.php               # Configuración de app
+│  ├─ acciones/                # Acciones específicas (módulos)
+│  │  ├─ bulk.php              # Acciones de eliminación masiva y helpers
+│  │  ├─ common.php            # Utilidades compartidas de acciones
+│  │  ├─ crud.php              # Operaciones CRUD
+│  │  └─ ...                   # Otras acciones
+│  └─ ...                      # Otros helpers (CSRF, XML, logger, etc.)
 ├─ partials/
-│  ├─ header-file.php      # Cabecera de archivo actual y acciones relacionadas
-│  ├─ games-list.php       # Render de la lista unificada de juegos y máquinas (paginada)
-│  ├─ bulk-delete.php      # Formulario y controles de eliminación masiva (juegos y máquinas)
-│  ├─ modal-edit.php       # Modal para editar juego/máquina con soporte multi-ROM
-│  ├─ modal-help.php       # Modal de ayuda (uso de la app)
-│  └─ sections/
-│     ├─ mame-filters.php      # Controles de filtros específicos MAME (reutilizable)
-│     └─ dedupe-region.php     # Formulario de eliminación de duplicados por región
+│  ├─ header-file.php          # Cabecera del archivo actual y acciones
+│  ├─ games-list.php           # Render de la lista unificada (paginada)
+│  ├─ bulk-delete.php          # Formulario y controles de eliminación masiva
+│  ├─ sections/
+│  │  ├─ mame-filters.php      # Controles/filtros específicos de MAME
+│  │  ├─ dedupe-region.php     # Formulario de deduplicados por región
+│  │  └─ search-external.php   # Buscador externo por nombre y hashes
+│  └─ ...
 ├─ img/
-│  ├─ ico-home.svg, ico-upload.svg, ico-bulk.svg, ico-mame.svg, ico-dedupe.svg
-├─ uploads/
-│  ├─ current.xml          # Fichero XML activo (se crea tras subir)
-│  └─ current.xml.bak      # Copia de seguridad
-├─ index.php               # Punto de entrada (UI)
-├─ MEJORAS.md              # Roadmap y registro de mejoras
-└─ README.md               # Este archivo
+│  ├─ flags/                   # Banderas de idioma (i18n)
+│  │  ├─ es.svg
+│  │  └─ gb.svg
+│  ├─ captura-*.png            # Capturas para el README
+│  └─ *.svg                    # Iconos de la interfaz
+├─ test/
+│  ├─ editorxml_test.php       # Pruebas unitarias
+│  ├─ integration_actions_test.php
+│  ├─ integration_harness_runner.php
+│  └─ xml_helpers_test.php
+├─ index.php                   # Punto de entrada (UI)
+├─ .gitignore
+├─ CHANGELOG.md
+├─ LICENSE
+├─ MEJORAS.md
+└─ README.md
 ```
 
 ## Instalación
