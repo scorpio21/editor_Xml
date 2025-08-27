@@ -118,3 +118,11 @@ Checklist de cierre F3:
 - [x] Manejo de errores y docblocks en helpers
 - [x] Logging de backups/guardado con bytes
 - [x] Tests mínimos y documentación actualizada
+
+### Actualización 2025-08-27 — i18n básico y Búsqueda externa (Fase 2)
+
+- i18n: selector de idioma por banderas en la cabecera (`img/flags/es.svg`, `img/flags/gb.svg`) con estilos mínimos en `css/editor-xml.css`.
+- Documentación y ayuda: actualizado `README.md` (Estructura) y `partials/modal-help.php` (secciones de Exportar XML, Búsqueda externa y selector de idioma).
+- Búsqueda externa Fase 2: añade botón "Comprobar Archive" que consulta la API de Archive.org para ofrecer enlace directo cuando hay coincidencias.
+  - Sin scraping, protegido con CSRF, y sin exponer claves.
+  - Se generan enlaces para myrient, vimm y archive.org por nombre y hashes (MD5/SHA1/CRC).

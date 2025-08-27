@@ -15,8 +15,10 @@ declare(strict_types=1);
         <li><a href="#h-eliminar">Eliminación individual</a></li>
         <li><a href="#h-masivo">Eliminación masiva</a></li>
         <li><a href="#h-busqueda">Búsqueda</a></li>
+        <li><a href="#h-exportar">Exportar resultados (XML)</a></li>
         <li><a href="#h-compactar">Guardar / Compactar XML</a></li>
         <li><a href="#h-restaurar">Restaurar desde .bak</a></li>
+        <li><a href="#h-idioma">Idioma de la interfaz</a></li>
         <li><a href="#h-consejos">Consejos y atajos</a></li>
         <li><a href="#h-soporte">Soporte</a></li>
       </ol>
@@ -100,14 +102,24 @@ declare(strict_types=1);
           <ul>
             <li><em>Búsqueda general</em>: filtra por <strong>nombre</strong>, <strong>descripción</strong> y <strong>categoría</strong> antes de paginar. El término se conserva al navegar entre páginas o cambiar "Mostrar N".</li>
             <li><em>MAME (buscar)</em>: buscador específico por <strong>nombre</strong>, <strong>ROM</strong> y <strong>hash</strong>. No hay eliminación masiva ni botones de eliminar.</li>
+            <li><em>Buscar juego (externo)</em>: genera enlaces de búsqueda en <strong>myrient</strong>, <strong>vimm</strong> y <strong>archive.org</strong> por nombre y hashes (MD5/SHA1/CRC). Opción <strong>"Comprobar Archive"</strong> para consultar su API y mostrar un enlace directo cuando hay coincidencias.</li>
           </ul>
         </li>
       </ul>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
 
+    <section id="h-exportar">
+      <h4>8) Exportar resultados (XML)</h4>
+      <ul>
+        <li>Tras aplicar filtros o una búsqueda, pulsa <strong>Exportar resultados (XML)</strong> para descargar un archivo solo con las entradas mostradas (sin duplicados).</li>
+        <li>El nombre del archivo se sanea para Windows y el contenido textual se escapa correctamente para evitar errores de entidades XML.</li>
+      </ul>
+      <p><a href="#helpTitle">Volver al índice</a></p>
+    </section>
+
     <section id="h-compactar">
-      <h4>8) Guardar / Compactar XML</h4>
+      <h4>9) Guardar / Compactar XML</h4>
       <ul>
         <li>Reescribe el fichero con indentación consistente y sin líneas en blanco entre elementos.</li>
         <li>Recomendado tras operaciones masivas para mantener el XML ordenado.</li>
@@ -116,15 +128,24 @@ declare(strict_types=1);
     </section>
 
     <section id="h-restaurar">
-      <h4>9) Restaurar desde .bak</h4>
+      <h4>10) Restaurar desde .bak</h4>
       <ul>
         <li>Usa el botón <strong>Restaurar desde .bak</strong> para volver al estado anterior si algo no salió como esperabas.</li>
       </ul>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
 
+    <section id="h-idioma">
+      <h4>11) Idioma de la interfaz</h4>
+      <ul>
+        <li>Usa las banderas <strong>ES/EN</strong> en la cabecera para alternar el idioma de la interfaz.</li>
+        <li>El estado se recuerda durante la sesión del navegador.</li>
+      </ul>
+      <p><a href="#helpTitle">Volver al índice</a></p>
+    </section>
+
     <section id="h-consejos">
-      <h4>10) Consejos y atajos</h4>
+      <h4>12) Consejos y atajos</h4>
       <ul>
         <li>Para colecciones grandes, reduce los elementos por página para una navegación fluida.</li>
         <li>Si detectas espacios o líneas en blanco, ejecuta <strong>Guardar / Compactar XML</strong>.</li>
@@ -134,7 +155,7 @@ declare(strict_types=1);
     </section>
 
     <section id="h-soporte">
-      <h4>11) Soporte</h4>
+      <h4>13) Soporte</h4>
       <ul>
         <li>Consulta el <strong>README</strong> y el <strong>CHANGELOG</strong> para detalles técnicos y novedades.</li>
         <li>¿Dudas o problemas? Abre un Issue: <a href="https://github.com/scorpio21/editor_Xml/issues/new/choose" target="_blank" rel="noopener">Crear issue en GitHub</a>.</li>
