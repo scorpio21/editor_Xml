@@ -12,7 +12,8 @@ if (!isset($xmlFile)) {
     $xmlFile = $root . '/uploads/current.xml';
 }
 require_once $root . '/inc/xml-helpers.php';
-asegurarCarpetaUploads($root . '/uploads');
+require_once __DIR__ . '/EditorXml.php';
+EditorXml::asegurarCarpetaUploads($root . '/uploads');
 
 // Determinar acciones migradas
 $handledActions = [
@@ -44,7 +45,7 @@ $handledActions = [
 require_once __DIR__ . '/acciones/common.php';
 
 // Cargar XML si está disponible para los módulos que lo necesitan
-$xml = cargarXmlSiDisponible($xmlFile);
+$xml = EditorXml::cargarXmlSiDisponible($xmlFile);
 
 // Incluir módulos de acciones migradas. Cada módulo verifica $_POST['action'] y hace exit cuando corresponde.
 require_once __DIR__ . '/acciones/bulk.php';
