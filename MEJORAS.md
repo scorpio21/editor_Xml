@@ -59,3 +59,10 @@ Siguientes líneas de trabajo sugeridas:
 - Limpieza: `inc/acciones.php` se reduce a un shim que delega en `inc/router-acciones.php`, eliminando código muerto y duplicado.
 - Sin cambios funcionales: solo reorganización para mejorar mantenibilidad y futuras pruebas unitarias.
 - Documentación: `README.md` actualizado para reflejar la nueva estructura y el módulo `inc/mame-filters.php`.
+
+### Actualización 2025-08-27 — Fase 3 (en progreso)
+
+- Centralización de carga XML: `inc/router-acciones.php` ahora usa `cargarXmlSiDisponible()` de `inc/xml-helpers.php`.
+- Eliminada duplicación de helpers (`tokenizar`, `anyTermMatch`, `mapearRegionesIdiomas`) en `inc/acciones/common.php`; se reutilizan los de `inc/xml-helpers.php`.
+- Robustez: `cargarXmlSiDisponible()` captura y registra errores de libxml; añadidos docblocks en helpers.
+- Próximo: pruebas mínimas en `test/xml_helpers_test.php` y mejora de logging en backup/guardado.

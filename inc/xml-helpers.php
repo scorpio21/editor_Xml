@@ -3,21 +3,38 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/logger.php';
 
+/**
+ * Asegura que la carpeta de subidas exista.
+ * Crea la carpeta recursivamente si no existe.
+ */
 function asegurarCarpetaUploads(string $dir): void {
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
     }
 }
 
+/**
+ * Carga el XML actual si está disponible en disco y la sesión lo indica.
+ * Devuelve SimpleXMLElement o null si no hay XML o si falla la carga.
+ * Registra información y errores mediante el logger.
+ */
 function cargarXmlSiDisponible(string $xmlFile): ?SimpleXMLElement {
     if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)) {
+        $prev = libxml_use_internal_errors(true);
         $xml = simplexml_load_file($xmlFile);
         if ($xml === false) {
-            registrarError('xml-helpers.php:cargarXmlSiDisponible', 'Fallo al cargar XML: formato inválido', [ 'xmlFile' => $xmlFile ]);
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            libxml_use_internal_errors($prev);
+            $errs = array_map(static function ($e) {
+                return [ 'level' => $e->level, 'code' => $e->code, 'line' => $e->line, 'message' => trim((string)$e->message) ];
+            }, is_array($errors) ? $errors : []);
+            registrarError('xml-helpers.php:cargarXmlSiDisponible', 'Fallo al cargar XML: formato inválido', [ 'xmlFile' => $xmlFile, 'errors' => $errs ]);
             $_SESSION['error'] = 'Error al cargar el archivo XML. Formato incorrecto.';
             unset($_SESSION['xml_uploaded']);
             return null;
         }
+        libxml_use_internal_errors($prev);
         registrarInfo('xml-helpers.php:cargarXmlSiDisponible', 'XML cargado correctamente', [ 'xmlFile' => $xmlFile ]);
         return $xml;
     }
@@ -42,12 +59,19 @@ function limpiarEspaciosEnBlancoDom(DOMDocument $dom): void {
     }
 }
 
+/**
+ * Crea un archivo de copia de seguridad con extensión .bak si el XML existe.
+ */
 function crearBackup(string $xmlFile): void {
     if (file_exists($xmlFile)) {
         @copy($xmlFile, $xmlFile . '.bak');
     }
 }
 
+/**
+ * Guarda el DOM en disco creando un backup previo si existía el archivo.
+ * En caso de fallo, revierte desde el backup y devuelve false.
+ */
 function guardarDomConBackup(DOMDocument $dom, string $xmlFile): bool {
     $backup = $xmlFile . '.bak';
     if (file_exists($xmlFile)) {

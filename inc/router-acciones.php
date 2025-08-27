@@ -44,10 +44,7 @@ $handledActions = [
 require_once __DIR__ . '/acciones/common.php';
 
 // Cargar XML si está disponible para los módulos que lo necesitan
-$xml = null;
-if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)) {
-    $xml = simplexml_load_file($xmlFile);
-}
+$xml = cargarXmlSiDisponible($xmlFile);
 
 // Incluir módulos de acciones migradas. Cada módulo verifica $_POST['action'] y hace exit cuando corresponde.
 require_once __DIR__ . '/acciones/bulk.php';
