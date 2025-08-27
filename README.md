@@ -162,12 +162,12 @@ editor_Xml/
      LOG_DIR=D:\\xampp\\logs\\editor_Xml
      ```
 
-5. Permisos: asegúrate de que `uploads/` y (si aplica) `D:/xampp/logs/editor_Xml` son escribibles por Apache.
-6. php.ini (recomendado para DATS medianos/grandes):
+1. Permisos: asegúrate de que `uploads/` y (si aplica) `D:/xampp/logs/editor_Xml` son escribibles por Apache.
+2. php.ini (recomendado para DATS medianos/grandes):
    - `upload_max_filesize = 64M`
    - `post_max_size = 64M`
    - `max_execution_time = 90`
-7. Abre `http://localhost/editor_Xml/` y verifica que carga la UI.
+3. Abre `http://localhost/editor_Xml/` y verifica que carga la UI.
 
 VirtualHost opcional (mejor DX):
 
@@ -284,6 +284,57 @@ export LOG_LEVEL_MIN=INFO
 - La eliminación masiva soporta un conteo previo por AJAX y contempla nodos `<game>` y `<machine>`.
 - Reloj en UI: elementos con `data-clock` muestran la hora actual del navegador, actualizada cada minuto. “Última modificación” en cabecera usa `filemtime` del XML y la zona horaria de PHP.
 - Centralización de helpers XML: las acciones usan `EditorXml::<método>()` (por ejemplo, `guardarDomConBackup`, `limpiarEspaciosEnBlancoDom`, `tokenizar`) que delegan en `inc/xml-helpers.php`.
+
+## Pruebas de integración
+
+Para validar el flujo principal de acciones XML sin afectar datos reales, el proyecto incluye:
+
+- **Script E2E**: `test/integration_actions_test.php` (flujo: create_xml → add_game → compact_xml → download_xml).
+- **Harness**: `test/integration_harness_runner.php` para invocar acciones individuales con variables de entorno.
+
+Ejecutar prueba E2E (Windows/XAMPP):
+
+```powershell
+D:\xampp\php\php.exe test\integration_actions_test.php
+```
+
+Resultado esperado: `OK: integración E2E completada.` y artefactos en `uploads/itests_e2e/`.
+
+Ejemplos de uso del harness (PowerShell):
+
+```powershell
+# Crear XML aislado
+$env:ACTION="create_xml"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+# Añadir juego
+$env:ACTION="add_game"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+$env:EXTRA_JSON='{"game_name":"Pac-Man","description":"Arcade clásico","category":"Arcade","rom_name":["pacman.rom"],"size":["16384"],"crc":["0123ABCD"],"md5":["0123456789abcdef0123456789abcdef"],"sha1":["0123456789abcdef0123456789abcdef01234567"]}'; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+# Compactar
+$env:ACTION="compact_xml"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+# Descargar a archivo
+$env:ACTION="download_xml"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php > uploads\itests\downloaded.xml
+
+# Editar una entrada (índice 0, tipo game)
+$env:ACTION="edit"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+$env:EXTRA_JSON='{"index":0,"node_type":"game","game_name":"Pac-Man Plus","description":"Versión mejorada","category":"Arcade","rom_name":["pacmanp.rom"],"size":["32768"],"crc":["89ABCDEF"],"md5":["abcdef0123456789abcdef0123456789"],"sha1":["abcdef0123456789abcdef0123456789abcdef0123"]}'; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+# Eliminar una entrada (índice 0, tipo game)
+$env:ACTION="delete"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+$env:EXTRA_JSON='{"index":0,"node_type":"game"}'; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+```
+
+Notas:
+
+- `XML_PATH` apunta a una ruta dentro de `uploads/itests*/` para aislar los datos.
+- `EXTRA_JSON` permite pasar campos adicionales (por ejemplo, para `add_game`, `edit`, `create_xml`).
 
 ## Logs y errores
 

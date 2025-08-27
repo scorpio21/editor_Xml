@@ -49,6 +49,49 @@ Siguientes líneas de trabajo sugeridas:
 - Documentación: actualizado `README.md` (uso y características) y `CHANGELOG.md` (historial).
 - Estado: cierra issue de exportación filtrada y errores XML.
 
+## Guía rápida: harness de integración y E2E
+
+El repositorio incluye un harness para ejecutar acciones del backend sin pasar por la UI y un script E2E mínimo.
+
+- Harness: `test/integration_harness_runner.php`
+- E2E: `test/integration_actions_test.php`
+
+Comandos (PowerShell, Windows/XAMPP):
+
+```powershell
+# Ejecutar E2E completo (create -> add -> compact -> download)
+D:\xampp\php\php.exe test\integration_actions_test.php
+
+# Usar el harness manualmente en un XML aislado
+$env:ACTION="create_xml"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+$env:ACTION="add_game"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+$env:EXTRA_JSON='{"game_name":"Pac-Man","description":"Arcade clásico","category":"Arcade","rom_name":["pacman.rom"],"size":["16384"],"crc":["0123ABCD"],"md5":["0123456789abcdef0123456789abcdef"],"sha1":["0123456789abcdef0123456789abcdef01234567"]}'; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+$env:ACTION="compact_xml"; $env:XML_PATH="d:\xampp\htdocs\editor_Xml\uploads\itests\current.xml"; \
+  D:\xampp\php\php.exe test\integration_harness_runner.php
+
+$env:ACTION="download_xml"; $env:XML_PATH="d:\\xampp\\htdocs\\editor_Xml\\uploads\\itests\\current.xml"; \
+  D:\\xampp\\php\\php.exe test\\integration_harness_runner.php > uploads\\itests\\downloaded.xml
+
+# Editar una entrada (índice 0, tipo game)
+$env:ACTION="edit"; $env:XML_PATH="d:\\xampp\\htdocs\\editor_Xml\\uploads\\itests\\current.xml"; \
+$env:EXTRA_JSON='{"index":0,"node_type":"game","game_name":"Pac-Man Plus","description":"Versión mejorada","category":"Arcade","rom_name":["pacmanp.rom"],"size":["32768"],"crc":["89ABCDEF"],"md5":["abcdef0123456789abcdef0123456789"],"sha1":["abcdef0123456789abcdef0123456789abcdef0123"]}'; \
+  D:\\xampp\\php\\php.exe test\\integration_harness_runner.php
+
+# Eliminar una entrada (índice 0, tipo game)
+$env:ACTION="delete"; $env:XML_PATH="d:\\xampp\\htdocs\\editor_Xml\\uploads\\itests\\current.xml"; \
+$env:EXTRA_JSON='{"index":0,"node_type":"game"}'; \
+  D:\\xampp\\php\\php.exe test\\integration_harness_runner.php
+```
+
+Notas:
+
+- Usar rutas bajo `uploads/itests*/` para evitar tocar `uploads/current.xml` real.
+- `EXTRA_JSON` permite inyectar parámetros para acciones que lo requieran (`add_game`, `edit`, `create_xml`).
+
 ### Actualización 2025-08-27 — Refactor Fase 2 (helpers MAME y limpieza de acciones)
 
 - Centralización: se consolidan funciones helper específicas de MAME en `inc/mame-filters.php`:
