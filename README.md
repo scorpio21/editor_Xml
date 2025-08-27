@@ -35,7 +35,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 
 - 🚀 Edición rápida de juegos y máquinas (soporte multi‑ROM)
 - 🔍 Búsqueda y filtros (incluye eliminación masiva con dry‑run)
-- 🕹️ MAME: pestaña <strong>MAME (buscar)</strong> solo para búsqueda; eliminación individual y masiva deshabilitadas
+- 🕹️ MAME: pestaña **MAME (buscar)** solo para búsqueda; eliminación individual y masiva deshabilitadas
 - 🧭 Interfaz por pestañas accesible (por defecto) con navegación por teclado y ARIA
 - 💾 Persistencia de pestaña activa y posición de scroll por panel (sessionStorage)
 - 🧰 Mantenimiento seguro: backups automáticos y restauración desde `.bak`
@@ -105,7 +105,8 @@ editor_Xml/
 ├─ inc/
 │  ├─ acciones.php         # Procesa todas las acciones POST (edit, delete, bulk_delete, compact_xml, etc.)
 │  ├─ csrf-helper.php      # Helpers de CSRF: generar/verificar token y campo oculto
-│  └─ xml-helpers.php      # Helpers: asegurarCarpetaUploads, guardar con backup, limpiar espacios DOM
+│  ├─ xml-helpers.php      # Helpers: asegurarCarpetaUploads, guardar con backup, limpiar espacios DOM
+│  └─ mame-filters.php     # Lógica específica de MAME: filtros, procesamiento y helpers de búsqueda
 ├─ partials/
 │  ├─ header-file.php      # Cabecera de archivo actual y acciones relacionadas
 │  ├─ games-list.php       # Render de la lista unificada de juegos y máquinas (paginada)

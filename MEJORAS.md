@@ -48,3 +48,14 @@ Siguientes líneas de trabajo sugeridas:
 - Seguridad: mantiene verificación **CSRF** en el flujo de exportación y finaliza con `exit` tras enviar cabeceras/archivo.
 - Documentación: actualizado `README.md` (uso y características) y `CHANGELOG.md` (historial).
 - Estado: cierra issue de exportación filtrada y errores XML.
+
+### Actualización 2025-08-27 — Refactor Fase 2 (helpers MAME y limpieza de acciones)
+
+- Centralización: se consolidan funciones helper específicas de MAME en `inc/mame-filters.php`:
+  - `aplicarFiltrosMame()`
+  - `sanitizarTexto()`
+  - `procesarFiltrosMame()`
+  - `obtenerTextoParaBusqueda()` (soporta `DOMElement` y `SimpleXMLElement`)
+- Limpieza: `inc/acciones.php` se reduce a un shim que delega en `inc/router-acciones.php`, eliminando código muerto y duplicado.
+- Sin cambios funcionales: solo reorganización para mejorar mantenibilidad y futuras pruebas unitarias.
+- Documentación: `README.md` actualizado para reflejar la nueva estructura y el módulo `inc/mame-filters.php`.
