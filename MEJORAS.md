@@ -11,6 +11,15 @@ Este documento ahora actúa como índice hacia los Issues y el Project. El plan 
 
 Para el historial de cambios, consulta `CHANGELOG.md`. El detalle de tareas y planificación está en GitHub (Issues/Milestones/Project).
 
+## Próximos pasos (v0.8.2)
+
+- **i18n completa**: cubrir textos restantes en `partials/` y `js/*.js`, centralizando claves en `inc/i18n.php`.
+- **Accesibilidad**: revisión con lector de pantalla, navegación por teclado completa y contraste AA; roles/atributos ARIA en `index.php` y `partials/`.
+- **Búsqueda externa**: mejorar manejo de `429/Retry-After` con reintentos exponenciales y tests en `test/`.
+- **Rendimiento**: optimizar operaciones DOM en `inc/EditorXml.php` para XML grandes; medir tiempos y memoria en acciones críticas.
+- **QA**: añadir verificación de `markdownlint` y pruebas unitarias adicionales (helpers XML y acciones) en `test/`.
+- **Docs**: ampliar capturas/ayuda en `README.md` y `partials/modal-help.php` si cambia el flujo.
+
 ## Actualización 2025-08-23
 
 - Documentación actualizada (`README.md`, `CHANGELOG.md`).
