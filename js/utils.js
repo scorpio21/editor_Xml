@@ -28,6 +28,30 @@
     parseAjaxJson: parseAjaxJson
   };
   
+  // Persistencia simple de idioma (localStorage) respetando el backend (sesión)
+  afterLoad(function(){
+    try {
+      // Guardar preferencia al hacer clic en las banderas
+      var esLink = document.querySelector('a[href*="?lang=es"]');
+      var enLink = document.querySelector('a[href*="?lang=en"]');
+      if (esLink) esLink.addEventListener('click', function(){ try { localStorage.setItem('lang','es'); } catch(_){} });
+      if (enLink) enLink.addEventListener('click', function(){ try { localStorage.setItem('lang','en'); } catch(_){} });
+
+      // Si hay preferencia almacenada y no viene ?lang en la URL, redirigir para sincronizar sesión
+      var params = new URLSearchParams(window.location.search);
+      var urlHasLang = params.has('lang');
+      var stored = null;
+      try { stored = localStorage.getItem('lang'); } catch(_) { stored = null; }
+      var htmlLang = (document.documentElement.getAttribute('lang')||'').toLowerCase();
+      if (!urlHasLang && (stored === 'es' || stored === 'en') && stored !== htmlLang) {
+        params.set('lang', stored);
+        var newUrl = window.location.pathname + '?' + params.toString();
+        window.location.replace(newUrl);
+        return; // detener más trabajo en esta carga
+      }
+    } catch(_) { /* no-op */ }
+  });
+  
   // Auto-ocultado de mensajes flash accesibles
   // Oculta suavemente el bloque .flash-message tras unos segundos sin interferir con lectores de pantalla
   afterLoad(function(){
