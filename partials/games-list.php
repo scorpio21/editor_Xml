@@ -105,7 +105,7 @@ declare(strict_types=1);
     }
     $___tFilter = $___timing ? microtime(true) : 0.0;
 ?>
-<h2>Lista de juegos/máquinas (<?= count($entries) ?>)</h2>
+<h2><?= htmlspecialchars(t('games_list.h2')) ?> (<?= count($entries) ?>)</h2>
 
 <?php
     // Parámetros de paginación (GET)
@@ -133,11 +133,11 @@ declare(strict_types=1);
 
 <!-- Buscador -->
 <form method="get" class="search-form">
-    <label for="q">Buscar</label>
-    <input id="q" name="q" type="text" value="<?= htmlspecialchars($q) ?>" placeholder="Nombre (juego/máquina), ROM o hash">
+    <label for="q"><?= htmlspecialchars(t('search.label')) ?></label>
+    <input id="q" name="q" type="text" value="<?= htmlspecialchars($q) ?>" placeholder="<?= htmlspecialchars(t('search.placeholder')) ?>">
     <div class="search-options">
-        <label><input type="checkbox" name="q_in_roms" value="1" <?= $qInRoms ? 'checked' : '' ?>> Buscar en ROMs</label>
-        <label><input type="checkbox" name="q_in_hashes" value="1" <?= $qInHashes ? 'checked' : '' ?>> Buscar en hashes (CRC/MD5/SHA1)</label>
+        <label><input type="checkbox" name="q_in_roms" value="1" <?= $qInRoms ? 'checked' : '' ?>> <?= htmlspecialchars(t('search.in_roms')) ?></label>
+        <label><input type="checkbox" name="q_in_hashes" value="1" <?= $qInHashes ? 'checked' : '' ?>> <?= htmlspecialchars(t('search.in_hashes')) ?></label>
     </div>
 
 <?php if ($___timing):
@@ -158,7 +158,7 @@ declare(strict_types=1);
     ]);
 endif; ?>
     <?php if ($perPage !== 10): ?><input type="hidden" name="per_page" value="<?= $perPage ?>"><?php endif; ?>
-    <button type="submit">Buscar</button>
+    <button type="submit"><?= htmlspecialchars(t('search.button')) ?></button>
 </form>
 
 <!-- Exportar resultados filtrados a XML -->
@@ -168,19 +168,19 @@ endif; ?>
     <?php if ($qInRoms): ?><input type="hidden" name="q_in_roms" value="1"><?php endif; ?>
     <?php if ($qInHashes): ?><input type="hidden" name="q_in_hashes" value="1"><?php endif; ?>
     <?= campoCSRF() ?>
-    <button type="submit" class="secondary">Exportar resultados (XML)</button>
-    <small class="hint">Exporta los resultados actuales, sin duplicados, en un nuevo XML.</small>
+    <button type="submit" class="secondary"><?= htmlspecialchars(t('export_xml.button')) ?></button>
+    <small class="hint"><?= htmlspecialchars(t('export_xml.hint')) ?></small>
     </form>
 
 <form method="get" class="per-page-form">
-    <label for="per_page">Mostrar</label>
+    <label for="per_page"><?= htmlspecialchars(t('per_page.label')) ?></label>
     <select id="per_page" name="per_page" onchange="this.form.submit()">
         <option value="10" <?= $perPage === 10 ? 'selected' : '' ?>>10</option>
         <option value="25" <?= $perPage === 25 ? 'selected' : '' ?>>25</option>
         <option value="50" <?= $perPage === 50 ? 'selected' : '' ?>>50</option>
         <option value="100" <?= $perPage === 100 ? 'selected' : '' ?>>100</option>
     </select>
-    <noscript><button type="submit">Aplicar</button></noscript>
+    <noscript><button type="submit"><?= htmlspecialchars(t('per_page.apply')) ?></button></noscript>
     <?php if ($page > 1): ?><input type="hidden" name="page" value="<?= $page ?>"><?php endif; ?>
     <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
     <?php if ($qInRoms): ?><input type="hidden" name="q_in_roms" value="1"><?php endif; ?>
@@ -188,27 +188,27 @@ endif; ?>
 </form>
 
 <!-- Cabecera del fichero: debajo del buscador -->
-<h2>Cabecera del fichero</h2>
+<h2><?= htmlspecialchars(t('header_file.h2')) ?></h2>
 <div class="game">
     <?php if (isset($xml->header)): ?>
-        <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)($xml->header->name ?? '')) ?: 'N/A' ?></div>
-        <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)($xml->header->description ?? '')) ?: 'N/A' ?></div>
-        <div class="game-info"><strong>Versión:</strong> <?= htmlspecialchars((string)($xml->header->version ?? '')) ?: 'N/A' ?></div>
-        <div class="game-info"><strong>Fecha:</strong> <?= htmlspecialchars((string)($xml->header->date ?? '')) ?: 'N/A' ?></div>
-        <div class="game-info"><strong>Autor:</strong> <?= htmlspecialchars((string)($xml->header->author ?? '')) ?: 'N/A' ?></div>
-        <div class="game-info"><strong>Web:</strong>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.name')) ?></strong> <?= htmlspecialchars((string)($xml->header->name ?? '')) ?: htmlspecialchars(t('header.na')) ?></div>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.description')) ?></strong> <?= htmlspecialchars((string)($xml->header->description ?? '')) ?: htmlspecialchars(t('header.na')) ?></div>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.version')) ?></strong> <?= htmlspecialchars((string)($xml->header->version ?? '')) ?: htmlspecialchars(t('header.na')) ?></div>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.date')) ?></strong> <?= htmlspecialchars((string)($xml->header->date ?? '')) ?: htmlspecialchars(t('header.na')) ?></div>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.author')) ?></strong> <?= htmlspecialchars((string)($xml->header->author ?? '')) ?: htmlspecialchars(t('header.na')) ?></div>
+        <div class="game-info"><strong><?= htmlspecialchars(t('header.web')) ?></strong>
             <?php if (!empty((string)($xml->header->url ?? ''))): ?>
-                <a href="<?= htmlspecialchars((string)($xml->header->url ?? '')) ?>" target="_blank"><?= htmlspecialchars((string)($xml->header->homepage ?? 'Enlace')) ?></a>
+                <a href="<?= htmlspecialchars((string)($xml->header->url ?? '')) ?>" target="_blank">&<?= 'nbsp;' ?><?= htmlspecialchars((string)($xml->header->homepage ?? t('header.link'))) ?></a>
             <?php else: ?>
-                N/A
+                <?= htmlspecialchars(t('header.na')) ?>
             <?php endif; ?>
         </div>
     <?php else: ?>
-        <div class="game-info">No hay información de cabecera disponible</div>
+        <div class="game-info"><?= htmlspecialchars(t('header.none')) ?></div>
     <?php endif; ?>
 </div>
 
-<div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
+<div class="list-meta"><?= htmlspecialchars(t('list.showing.prefix')) ?> <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> <?= htmlspecialchars(t('list.of')) ?> <?= $total ?></div>
 <div class="game-grid">
     <?php $gameIdx = $preGame; $machineIdx = $preMachine; foreach ($pageEntries as $entry): ?>
         <?php $node = $entry['el']; $isMachine = ($entry['type'] === 'machine'); ?>
@@ -240,53 +240,53 @@ endif; ?>
              data-crc="<?= $firstRom ? htmlspecialchars((string)$firstRom['crc']) : '' ?>"
              data-md5="<?= $firstRom ? htmlspecialchars((string)$firstRom['md5']) : '' ?>"
              data-sha1="<?= $firstRom ? htmlspecialchars((string)$firstRom['sha1']) : '' ?>">
-            <div class="game-info"><strong>Tipo:</strong> <?= $isMachine ? 'machine' : 'game' ?></div>
-            <div class="game-info"><strong>Nombre:</strong> <?= htmlspecialchars((string)$node['name']) ?></div>
-            <div class="game-info"><strong>Descripción:</strong> <?= htmlspecialchars((string)$node->description) ?></div>
+            <div class="game-info"><strong><?= htmlspecialchars(t('item.type')) ?></strong> <?= $isMachine ? htmlspecialchars(t('item.type.machine')) : htmlspecialchars(t('item.type.game')) ?></div>
+            <div class="game-info"><strong><?= htmlspecialchars(t('item.name')) ?></strong> <?= htmlspecialchars((string)$node['name']) ?></div>
+            <div class="game-info"><strong><?= htmlspecialchars(t('item.description')) ?></strong> <?= htmlspecialchars((string)$node->description) ?></div>
             <?php if ($isMachine): ?>
-                <div class="game-info"><strong>Año:</strong> <?= htmlspecialchars((string)$node->year) ?></div>
-                <div class="game-info"><strong>Fabricante:</strong> <?= htmlspecialchars((string)$node->manufacturer) ?></div>
+                <div class="game-info"><strong><?= htmlspecialchars(t('item.year')) ?></strong> <?= htmlspecialchars((string)$node->year) ?></div>
+                <div class="game-info"><strong><?= htmlspecialchars(t('item.manufacturer')) ?></strong> <?= htmlspecialchars((string)$node->manufacturer) ?></div>
             <?php endif; ?>
-            <div class="game-info"><strong>Categoría:</strong> <?= $isMachine ? '—' : htmlspecialchars((string)$node->category) ?></div>
+            <div class="game-info"><strong><?= htmlspecialchars(t('item.category')) ?></strong> <?= $isMachine ? '—' : htmlspecialchars((string)$node->category) ?></div>
             <?php if (count($node->rom) > 0): ?>
                 <div class="game-roms">
-                    <strong>ROMs:</strong>
+                    <strong><?= htmlspecialchars(t('roms.title')) ?></strong>
                     <ul>
                         <?php foreach ($node->rom as $rom): ?>
                             <li>
-                                <div><strong>Nombre:</strong> <?= htmlspecialchars((string)$rom['name']) ?></div>
-                                <div><strong>Tamaño:</strong> <?= htmlspecialchars((string)$rom['size']) ?></div>
-                                <div><strong>CRC:</strong> <?= htmlspecialchars((string)$rom['crc']) ?></div>
-                                <div><strong>MD5:</strong> <?= htmlspecialchars((string)$rom['md5']) ?></div>
-                                <div><strong>SHA1:</strong> <?= htmlspecialchars((string)$rom['sha1']) ?></div>
+                                <div><strong><?= htmlspecialchars(t('roms.name')) ?></strong> <?= htmlspecialchars((string)$rom['name']) ?></div>
+                                <div><strong><?= htmlspecialchars(t('roms.size')) ?></strong> <?= htmlspecialchars((string)$rom['size']) ?></div>
+                                <div><strong><?= htmlspecialchars(t('roms.crc')) ?></strong> <?= htmlspecialchars((string)$rom['crc']) ?></div>
+                                <div><strong><?= htmlspecialchars(t('roms.md5')) ?></strong> <?= htmlspecialchars((string)$rom['md5']) ?></div>
+                                <div><strong><?= htmlspecialchars(t('roms.sha1')) ?></strong> <?= htmlspecialchars((string)$rom['sha1']) ?></div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
             <?php else: ?>
-                <div class="game-info"><strong>ROMs:</strong> N/A</div>
+                <div class="game-info"><strong><?= htmlspecialchars(t('roms.title')) ?></strong> <?= htmlspecialchars(t('roms.na')) ?></div>
             <?php endif; ?>
 
             <div class="game-actions">
                 <?php if (!$isMachine): ?>
-                    <button onclick="openEditModal(<?= $gameIdx ?>)">Editar</button>
+                    <button onclick="openEditModal(<?= $gameIdx ?>)"><?= htmlspecialchars(t('actions.edit')) ?></button>
                     <?php if (empty($isMame)): ?>
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="index" value="<?= $absIndex ?>">
                         <?= campoCSRF() ?>
-                        <button type="submit" onclick="return confirm('¿Eliminar este juego?')">Eliminar</button>
+                        <button type="submit" onclick="return confirm('<?= htmlspecialchars(t('confirm.delete.game'), ENT_QUOTES) ?>')"><?= htmlspecialchars(t('actions.delete')) ?></button>
                     </form>
                     <?php endif; ?>
                 <?php else: ?>
-                    <button onclick="openEditModalMachine(<?= $machineIdx ?>)">Editar</button>
+                    <button onclick="openEditModalMachine(<?= $machineIdx ?>)"><?= htmlspecialchars(t('actions.edit')) ?></button>
                     <?php if (empty($isMame)): ?>
                     <form method="post" class="inline-form">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="node_type" value="machine">
                         <input type="hidden" name="index" value="<?= $absIndex ?>">
                         <?= campoCSRF() ?>
-                        <button type="submit" onclick="return confirm('¿Eliminar esta máquina?')">Eliminar</button>
+                        <button type="submit" onclick="return confirm('<?= htmlspecialchars(t('confirm.delete.machine'), ENT_QUOTES) ?>')"><?= htmlspecialchars(t('actions.delete')) ?></button>
                     </form>
                     <?php endif; ?>
                 <?php endif; ?>
@@ -297,17 +297,17 @@ endif; ?>
 
 <div class="pagination">
     <?php if ($page > 1): ?>
-        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>">&laquo; Anterior</a>
+        <a class="page-link" href="?page=<?= $page - 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>">&laquo; <?= htmlspecialchars(t('pagination.prev')) ?></a>
     <?php endif; ?>
-    <span class="page-info">Página <?= $page ?> de <?= $pages ?></span>
+    <span class="page-info"><?= htmlspecialchars(t('pagination.page')) ?> <?= $page ?> <?= htmlspecialchars(t('pagination.of')) ?> <?= $pages ?></span>
     <form method="get" class="page-jump">
         <input type="hidden" name="per_page" value="<?= $perPage ?>">
         <?php if ($q !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
-        <label for="goto">Ir a</label>
+        <label for="goto"><?= htmlspecialchars(t('pagination.goto.label')) ?></label>
         <input id="goto" name="page" type="number" min="1" max="<?= $pages ?>" value="<?= $page ?>">
-        <button type="submit">Ir</button>
+        <button type="submit"><?= htmlspecialchars(t('pagination.goto.button')) ?></button>
     </form>
     <?php if ($page < $pages): ?>
-        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>">Siguiente &raquo;</a>
+        <a class="page-link" href="?page=<?= $page + 1 ?>&per_page=<?= $perPage ?><?= $q !== '' ? '&q='.urlencode($q) : '' ?>"><?= htmlspecialchars(t('pagination.next')) ?> &raquo;</a>
     <?php endif; ?>
 </div>

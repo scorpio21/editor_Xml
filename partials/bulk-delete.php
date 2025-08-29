@@ -3,8 +3,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/csrf-helper.php';
 ?>
 <div class="bulk-delete">
-    <h2>Eliminación masiva por filtros</h2>
-    <button type="button" class="toggle-bulk" aria-expanded="true" aria-controls="bulk-delete-form">Ocultar sección</button>
+    <h2><?= htmlspecialchars(t('bulk.h2')) ?></h2>
+    <button type="button" class="toggle-bulk" aria-expanded="true" aria-controls="bulk-delete-form" data-text-hide="<?= htmlspecialchars(t('bulk.toggle')) ?>" data-text-show="<?= htmlspecialchars(t('bulk.show')) ?>"><?= htmlspecialchars(t('bulk.toggle')) ?></button>
     <?php 
         $bf = $_SESSION['bulk_filters'] ?? [
             'include'=>'','exclude'=>'','include_regions'=>[],'exclude_langs'=>[],
@@ -18,16 +18,16 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
     <form method="post" class="bulk-delete-form" id="bulk-delete-form">
         <?= campoCSRF() ?>
         <div class="fields">
-            <label>Regiones/países a incluir</label>
-            <div class="multi-select" data-ms-name="include_regions[]">
+            <label><?= htmlspecialchars(t('bulk.include_regions_label')) ?></label>
+            <div class="multi-select" data-ms-name="include_regions[]" data-selected-suffix="<?= htmlspecialchars(t('js.selected_suffix')) ?>">
                 <button type="button" class="ms-trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="ms-label">Seleccionar regiones</span>
+                    <span class="ms-label"><?= htmlspecialchars(t('bulk.select_regions')) ?></span>
                     <span class="ms-caret">▾</span>
                 </button>
                 <div class="ms-panel" role="listbox">
                     <div class="ms-actions">
-                        <button type="button" class="ms-all" data-action="all">Todos</button>
-                        <button type="button" class="ms-none" data-action="none">Ninguno</button>
+                        <button type="button" class="ms-all" data-action="all"><?= htmlspecialchars(t('bulk.all')) ?></button>
+                        <button type="button" class="ms-none" data-action="none"><?= htmlspecialchars(t('bulk.none')) ?></button>
                     </div>
                     <div class="ms-options">
                         <?php 
@@ -46,16 +46,16 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
 
         <div class="fields">
-            <label>Idiomas a excluir</label>
-            <div class="multi-select" data-ms-name="exclude_langs[]">
+            <label><?= htmlspecialchars(t('bulk.exclude_langs_label')) ?></label>
+            <div class="multi-select" data-ms-name="exclude_langs[]" data-selected-suffix="<?= htmlspecialchars(t('js.selected_suffix')) ?>">
                 <button type="button" class="ms-trigger" aria-haspopup="listbox" aria-expanded="false">
-                    <span class="ms-label">Seleccionar idiomas</span>
+                    <span class="ms-label"><?= htmlspecialchars(t('bulk.select_langs')) ?></span>
                     <span class="ms-caret">▾</span>
                 </button>
                 <div class="ms-panel" role="listbox">
                     <div class="ms-actions">
-                        <button type="button" class="ms-all" data-action="all">Todos</button>
-                        <button type="button" class="ms-none" data-action="none">Ninguno</button>
+                        <button type="button" class="ms-all" data-action="all"><?= htmlspecialchars(t('bulk.all')) ?></button>
+                        <button type="button" class="ms-none" data-action="none"><?= htmlspecialchars(t('bulk.none')) ?></button>
                     </div>
                     <div class="ms-options">
                         <?php 
@@ -79,17 +79,14 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
         
         <div class="actions">
-            <button type="button" class="secondary" id="clear-filters">Limpiar filtros</button>
-            <button type="submit" name="action" value="reset_filters" class="secondary">Restablecer filtros</button>
-            <button type="submit" name="action" value="bulk_count" class="secondary">Contar coincidencias</button>
-            <button type="submit" name="action" value="bulk_delete" class="danger" onclick="return confirm('¿Seguro que deseas eliminar los juegos que coincidan con estos filtros? Esta acción no se puede deshacer.');">Eliminar filtrados</button>
+            <button type="button" class="secondary" id="clear-filters"><?= htmlspecialchars(t('bulk.clear_filters')) ?></button>
+            <button type="submit" name="action" value="reset_filters" class="secondary"><?= htmlspecialchars(t('bulk.reset_filters')) ?></button>
+            <button type="submit" name="action" value="bulk_count" class="secondary"><?= htmlspecialchars(t('bulk.count_matches')) ?></button>
+            <button type="submit" name="action" value="bulk_delete" class="danger" onclick="return confirm('<?= htmlspecialchars(t('bulk.confirm_delete'), ENT_QUOTES) ?>');"><?= htmlspecialchars(t('bulk.delete_filtered')) ?></button>
         </div>
-        <p class="hint">Se buscará en nombre y descripción. Además:
-            • en juegos (game): también en categoría.
-            • en máquinas (machine): también en año y fabricante.
-            Coincidencia insensible a mayúsculas/minúsculas.</p>
+        <p class="hint"><?= htmlspecialchars(t('bulk.hint.lines')) ?></p>
         <div id="count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>
     </form>
 
-    <div class="hint" aria-live="polite">La herramienta de <strong>eliminación de duplicados por región</strong> se ha movido a la pestaña "Eliminar duplicados".</div>
+    <div class="hint" aria-live="polite"><?= htmlspecialchars(t('bulk.moved_hint')) ?></div>
 </div>

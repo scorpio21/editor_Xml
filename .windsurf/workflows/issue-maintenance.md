@@ -1,5 +1,6 @@
 ---
 description: Mantenimiento de issues con GitHub CLI (listar, cerrar, comentar, etiquetar, milestones)
+auto_execution_mode: 3
 ---
 
 # Mantenimiento de issues con GitHub CLI

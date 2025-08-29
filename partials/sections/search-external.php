@@ -3,7 +3,23 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../inc/csrf-helper.php';
 require_once __DIR__ . '/../../inc/i18n.php';
 ?>
-<div id="search-external" class="search-external" aria-labelledby="tab-btn-6">
+<div id="search-external" class="search-external" aria-labelledby="tab-btn-6"
+     data-archive-found="<?= htmlspecialchars(t('js.archive.found')) ?>"
+     data-archive-not-found="<?= htmlspecialchars(t('js.archive.not_found')) ?>"
+     data-archive-view="<?= htmlspecialchars(t('js.archive.view')) ?>"
+     data-se-md5-invalid="<?= htmlspecialchars(t('js.se.md5_invalid')) ?>"
+     data-se-sha1-invalid="<?= htmlspecialchars(t('js.se.sha1_invalid')) ?>"
+     data-se-crc-invalid="<?= htmlspecialchars(t('js.se.crc_invalid')) ?>"
+     data-se-require-one="<?= htmlspecialchars(t('js.se.require_one')) ?>"
+     data-se-no-links="<?= htmlspecialchars(t('js.se.no_links')) ?>"
+     data-se-invalid-response="<?= htmlspecialchars(t('js.se.invalid_response')) ?>"
+     data-se-no-response="<?= htmlspecialchars(t('js.se.no_response')) ?>"
+     data-se-already-running="<?= htmlspecialchars(t('js.se.already_running')) ?>"
+     data-se-wait-seconds="<?= htmlspecialchars(t('js.se.wait_seconds')) ?>"
+     data-se-checking="<?= htmlspecialchars(t('js.se.checking')) ?>"
+     data-se-too-many="<?= htmlspecialchars(t('js.se.too_many')) ?>"
+     data-se-could-not-query="<?= htmlspecialchars(t('js.se.could_not_query')) ?>"
+     data-se-could-not-query-org="<?= htmlspecialchars(t('js.se.could_not_query_org')) ?>">
   <p class="hint"><?= htmlspecialchars(t('search_external.hint')) ?></p>
 
   <form id="search-external-form" class="search-external-form" onsubmit="return false" novalidate>

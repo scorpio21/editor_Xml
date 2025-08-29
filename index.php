@@ -45,14 +45,22 @@ if ($xml) {
             <?= htmlspecialchars(date('d/m/Y H:i')) ?>
         </span>
     </div>
-    <div class="lang-flags" role="group" aria-label="<?= htmlspecialchars(t('lang.label')) ?>">
-        <a href="?lang=es" title="<?= htmlspecialchars(t('lang.es')) ?>" aria-label="<?= htmlspecialchars(t('lang.es')) ?>">
-            <img src="img/flags/es.svg" alt="<?= htmlspecialchars(t('lang.es')) ?>" width="20" height="14">
-        </a>
-        <a href="?lang=en" title="<?= htmlspecialchars(t('lang.en')) ?>" aria-label="<?= htmlspecialchars(t('lang.en')) ?>">
-            <img src="img/flags/gb.svg" alt="<?= htmlspecialchars(t('lang.en')) ?>" width="20" height="14">
-        </a>
-    </div>
+    <div class="lang-select" id="lang-dropdown" data-current="<?= htmlspecialchars(lang()) ?>">
+        <button type="button" id="lang-dd-trigger" class="ls-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="<?= htmlspecialchars(t('lang.label')) ?>">
+            <img src="img/flags/<?= lang()==='en' ? 'gb' : 'es' ?>.svg" alt="" width="20" height="14" aria-hidden="true">
+            <span class="ls-text"><?= htmlspecialchars(lang()==='en' ? t('lang.en') : t('lang.es')) ?></span>
+            <span class="ls-caret" aria-hidden="true">▾</span>
+        </button>
+        <ul class="ls-panel" id="lang-dd-panel" role="listbox" aria-label="<?= htmlspecialchars(t('lang.label')) ?>">
+            <li role="option" tabindex="0" data-lang="es" aria-selected="<?= lang()==='es' ? 'true' : 'false' ?>">
+                <img src="img/flags/es.svg" alt="" width="20" height="14" aria-hidden="true">
+                <span><?= htmlspecialchars(t('lang.es')) ?></span>
+            </li>
+            <li role="option" tabindex="0" data-lang="en" aria-selected="<?= lang()==='en' ? 'true' : 'false' ?>">
+                <img src="img/flags/gb.svg" alt="" width="20" height="14" aria-hidden="true">
+                <span><?= htmlspecialchars(t('lang.en')) ?></span>
+            </li>
+        </ul>
     </div>
 
 <?php if (isset($_SESSION['error'])): ?>
@@ -183,6 +191,7 @@ if ($xml) {
 <script src="js/bulk.js"></script>
 <script src="js/dedupe.js"></script>
 <script src="js/search-external.js"></script>
+<script src="js/lang-selector.js"></script>
 
 </body>
 </html>

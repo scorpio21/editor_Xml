@@ -14,7 +14,7 @@
       var checks = w.querySelectorAll('input[type="checkbox"]');
       var btnAll = w.querySelector('.ms-all');
       var btnNone = w.querySelector('.ms-none');
-      var placeholder = label && label.textContent ? label.textContent : 'Seleccionar';
+      var placeholder = label && label.textContent ? label.textContent : 'Select';
       if (label && !label.getAttribute('data-placeholder')) {
         label.setAttribute('data-placeholder', placeholder);
       }
@@ -27,12 +27,14 @@
         if (selected.length === 0) {
           label.textContent = placeholder;
         } else if (selected.length === checks.length) {
-          label.textContent = 'Todos (' + selected.length + ')';
+          var allTxt = (btnAll && btnAll.textContent) ? btnAll.textContent : 'All';
+          label.textContent = allTxt + ' (' + selected.length + ')';
         } else if (selected.length <= 2) {
           var names = selected.map(function (c) { return c.nextElementSibling ? c.nextElementSibling.textContent : c.value; });
           label.textContent = names.join(', ');
         } else {
-          label.textContent = selected.length + ' seleccionados';
+          var suf = w.getAttribute('data-selected-suffix') || w.dataset.selectedSuffix || 'selected';
+          label.textContent = selected.length + ' ' + suf;
         }
       }
 
@@ -89,7 +91,7 @@
         Array.prototype.forEach.call(checks, function (c) { c.checked = false; });
         var label = w.querySelector('.ms-label');
         if (label) {
-          var ph = label.getAttribute('data-placeholder') || 'Seleccionar';
+          var ph = label.getAttribute('data-placeholder') || label.textContent || 'Select';
           label.textContent = ph;
         }
         var trigger = w.querySelector('.ms-trigger');
@@ -110,7 +112,9 @@
         if (!container) return;
         container.classList.toggle('collapsed', !!isCollapsed);
         bulkToggle.setAttribute('aria-expanded', String(!isCollapsed));
-        bulkToggle.textContent = isCollapsed ? 'Mostrar sección' : 'Ocultar sección';
+        var showTxt = bulkToggle.getAttribute('data-text-show') || 'Show section';
+        var hideTxt = bulkToggle.getAttribute('data-text-hide') || 'Hide section';
+        bulkToggle.textContent = isCollapsed ? showTxt : hideTxt;
       }
       applyState(collapsed);
       if (bulkToggle) {

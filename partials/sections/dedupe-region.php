@@ -9,10 +9,10 @@ $regionsAll = ['Japon','Europa','USA','Asia','Australia','Escandinavia','Corea',
 <form method="post" class="dedupe-form" id="dedupe-region-form">
   <?= campoCSRF() ?>
   <div class="fields mame-filters">
-    <h3>Eliminar duplicados por región</h3>
-    <p class="hint">Mantendrá solo una entrada por juego, conservando la versión de la región seleccionada (si existe). No afecta a máquinas.</p>
+    <h3><?= htmlspecialchars(t('dedupe.h3')) ?></h3>
+    <p class="hint"><?= htmlspecialchars(t('dedupe.hint')) ?></p>
 
-    <label for="prefer_region">Conservar región:</label>
+    <label for="prefer_region"><?= htmlspecialchars(t('dedupe.label.keep_region')) ?></label>
     <select name="prefer_region" id="prefer_region" required>
       <?php foreach ($regionsAll as $r): ?>
         <option value="<?= htmlspecialchars($r) ?>"><?= htmlspecialchars($r) ?></option>
@@ -22,16 +22,16 @@ $regionsAll = ['Japon','Europa','USA','Asia','Australia','Escandinavia','Corea',
     <div class="option-row">
       <label>
         <input type="checkbox" name="keep_europe" id="keep_europe" value="1">
-        Conservar también Europa
+        <?= htmlspecialchars(t('dedupe.checkbox.keep_europe')) ?>
       </label>
-      <p class="hint">Si se marca, además de la región preferida se conservarán también las variantes de Europa.</p>
+      <p class="hint"><?= htmlspecialchars(t('dedupe.checkbox.keep_europe_hint')) ?></p>
     </div>
   </div>
 
   <div class="actions">
-    <button type="submit" name="action" value="dedupe_region_count" class="secondary">Contar duplicados</button>
-    <button type="submit" name="action" value="dedupe_region_export_csv" class="secondary" id="btn-dedupe-export" disabled>Exportar duplicados (CSV)</button>
-    <button type="submit" name="action" value="dedupe_region" class="danger" id="btn-dedupe" disabled onclick="return confirm('¿Eliminar duplicados y conservar solo la región seleccionada cuando exista?');">Eliminar duplicados</button>
+    <button type="submit" name="action" value="dedupe_region_count" class="secondary"><?= htmlspecialchars(t('dedupe.btn.count')) ?></button>
+    <button type="submit" name="action" value="dedupe_region_export_csv" class="secondary" id="btn-dedupe-export" disabled><?= htmlspecialchars(t('dedupe.btn.export_csv')) ?></button>
+    <button type="submit" name="action" value="dedupe_region" class="danger" id="btn-dedupe" disabled onclick="return confirm('<?= htmlspecialchars(t('dedupe.confirm.remove'), ENT_QUOTES) ?>');"><?= htmlspecialchars(t('dedupe.btn.remove')) ?></button>
   </div>
 
   <div id="dedupe-count-result" class="sr-live" role="status" aria-live="polite" aria-atomic="true"></div>

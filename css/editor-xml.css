@@ -39,6 +39,113 @@
 .lang-flags a:hover img { filter: saturate(1.1); box-shadow: var(--shadow-sm); }
 .lang-flags a:focus-visible img { outline: 3px solid rgba(52, 152, 219, 0.35); outline-offset: 2px; }
 
+/* Selector de idioma (reemplazo de banderas) */
+.lang-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  position: relative; /* para el panel desplegable */
+}
+.lang-select select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
+.lang-select select:focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.35);
+  outline-offset: 2px;
+}
+
+/* Dropdown personalizado (banderas) */
+.lang-select .ls-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: #111827; /* asegurar contraste; evita heredar color blanco de button */
+  cursor: pointer;
+  min-width: auto;
+  max-width: 160px; /* compactar ancho */
+  justify-content: flex-start; /* dejamos que .ls-text ocupe el espacio */
+}
+.lang-select .ls-trigger img { flex: 0 0 auto; display: block; }
+.lang-select .ls-trigger .ls-text {
+  flex: 1 1 auto; /* permite recortar con ellipsis */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  font-size: 14px;
+  color: #111827;
+}
+.lang-select .ls-trigger .ls-caret { margin-left: 8px; }
+.lang-select .ls-trigger:focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.35);
+  outline-offset: 2px;
+}
+.lang-select .ls-trigger:hover {
+  background: #fff; /* neutralizar hover global de button */
+}
+.lang-select .ls-caret {
+  margin-left: 4px;
+  color: var(--muted);
+}
+.lang-select .ls-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 100%; /* igualar ancho del trigger */
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: 6px 0;
+  display: none;
+  z-index: 1200;
+}
+.lang-select .ls-panel.open { display: block; }
+.lang-select .ls-panel {
+  list-style: none;
+}
+.lang-select .ls-panel li[role="option"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.lang-select .ls-panel li[role="option"]:hover {
+  background: #f9fafb;
+}
+.lang-select .ls-panel li[role="option"][aria-selected="true"] {
+  background: #e5e7eb; /* similar a la captura */
+  font-weight: 600;
+}
+.lang-select .ls-panel li[role="option"]:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.30);
+  outline-offset: 0;
+}
+
+/* Solo oculto visual, accesible para lectores de pantalla */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 /* Acciones superiores (botones visibles al inicio) */
 .top-actions {
   margin-bottom: var(--space-l);

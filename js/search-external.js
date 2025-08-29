@@ -20,6 +20,23 @@
   const csrfInput = $('#se-csrf');
   const archiveBox = $('#se-archive-check');
   const archiveStatus = $('#se-archive-status');
+  const container = document.getElementById('search-external');
+  const TXT_FOUND = (container && container.getAttribute('data-archive-found')) || 'Found: ';
+  const TXT_NOT_FOUND = (container && container.getAttribute('data-archive-not-found')) || 'Not found.';
+  const TXT_VIEW = (container && container.getAttribute('data-archive-view')) || 'View on Archive';
+  const SE_MD5_INVALID = (container && container.getAttribute('data-se-md5-invalid')) || 'MD5 must be 32 hexadecimal characters.';
+  const SE_SHA1_INVALID = (container && container.getAttribute('data-se-sha1-invalid')) || 'SHA1 must be 40 hexadecimal characters.';
+  const SE_CRC_INVALID  = (container && container.getAttribute('data-se-crc-invalid')) || 'CRC must be 8 hexadecimal characters.';
+  const SE_REQUIRE_ONE  = (container && container.getAttribute('data-se-require-one')) || 'Enter at least one: Name, MD5, SHA1 or CRC.';
+  const SE_NO_LINKS     = (container && container.getAttribute('data-se-no-links')) || 'No links were generated.';
+  const SE_INVALID_RESP = (container && container.getAttribute('data-se-invalid-response')) || 'Invalid response.';
+  const SE_NO_RESPONSE  = (container && container.getAttribute('data-se-no-response')) || 'No response';
+  const SE_ALREADY_RUN  = (container && container.getAttribute('data-se-already-running')) || 'A check is already in progress…';
+  const SE_WAIT_SECONDS = (container && container.getAttribute('data-se-wait-seconds')) || 'Wait {s}s to try again.';
+  const SE_CHECKING     = (container && container.getAttribute('data-se-checking')) || 'Checking…';
+  const SE_TOO_MANY     = (container && container.getAttribute('data-se-too-many')) || 'Too many requests. Try again later.';
+  const SE_COULDNT      = (container && container.getAttribute('data-se-could-not-query')) || 'Could not query Archive.';
+  const SE_COULDNT_ORG  = (container && container.getAttribute('data-se-could-not-query-org')) || 'Could not query Archive.org.';
 
   const HEX32 = /^[0-9a-fA-F]{32}$/;
   const HEX40 = /^[0-9a-fA-F]{40}$/;
@@ -52,12 +69,12 @@
 
     // Validaciones suaves
     const errs = [];
-    if (md5 && !HEX32.test(md5)) errs.push('MD5 debe tener 32 caracteres hexadecimales.');
-    if (sha1 && !HEX40.test(sha1)) errs.push('SHA1 debe tener 40 caracteres hexadecimales.');
-    if (crc && !HEX8.test(crc)) errs.push('CRC debe tener 8 caracteres hexadecimales.');
+    if (md5 && !HEX32.test(md5)) errs.push(SE_MD5_INVALID);
+    if (sha1 && !HEX40.test(sha1)) errs.push(SE_SHA1_INVALID);
+    if (crc && !HEX8.test(crc)) errs.push(SE_CRC_INVALID);
 
     if (!name && !md5 && !sha1 && !crc) {
-      errs.push('Introduce al menos un dato: Nombre, MD5, SHA1 o CRC.');
+      errs.push(SE_REQUIRE_ONE);
     }
 
     if (errs.length) {
@@ -119,7 +136,7 @@
       results.hidden = false;
       btnOpenAll.disabled = false;
     } else {
-      errorsEl.textContent = 'No se generaron enlaces.';
+      errorsEl.textContent = SE_NO_LINKS;
     }
   }
 
@@ -134,19 +151,19 @@
     if (window.AppUtils && typeof window.AppUtils.parseAjaxJson === 'function') {
       return window.AppUtils.parseAjaxJson(text);
     }
-    try { return JSON.parse(text); } catch(_) { return { ok:false, message:'Respuesta no válida.' }; }
+    try { return JSON.parse(text); } catch(_) { return { ok:false, message: SE_INVALID_RESP }; }
   }
 
   function comprobarArchive() {
     // Throttle/cooldown en UI
     const ahora = Date.now();
     if (enCurso) {
-      if (archiveStatus) archiveStatus.textContent = 'Ya hay una comprobación en curso…';
+      if (archiveStatus) archiveStatus.textContent = SE_ALREADY_RUN;
       return;
     }
     if (ahora < cooldownHasta) {
       const faltan = Math.ceil((cooldownHasta - ahora) / 1000);
-      if (archiveStatus) archiveStatus.textContent = `Espera ${faltan}s para volver a intentar.`;
+      if (archiveStatus) archiveStatus.textContent = (SE_WAIT_SECONDS || '').replace('{s}', String(faltan));
       return;
     }
     const name = normalizarTexto(nameInput.value);
@@ -155,19 +172,19 @@
     const crc = normalizarTexto(crcInput.value);
 
     const errs = [];
-    if (md5 && !HEX32.test(md5)) errs.push('MD5 debe tener 32 caracteres hexadecimales.');
-    if (sha1 && !HEX40.test(sha1)) errs.push('SHA1 debe tener 40 caracteres hexadecimales.');
-    if (crc && !HEX8.test(crc)) errs.push('CRC debe tener 8 caracteres hexadecimales.');
-    if (!name && !md5 && !sha1 && !crc) errs.push('Introduce al menos un dato: Nombre, MD5, SHA1 o CRC.');
+    if (md5 && !HEX32.test(md5)) errs.push(SE_MD5_INVALID);
+    if (sha1 && !HEX40.test(sha1)) errs.push(SE_SHA1_INVALID);
+    if (crc && !HEX8.test(crc)) errs.push(SE_CRC_INVALID);
+    if (!name && !md5 && !sha1 && !crc) errs.push(SE_REQUIRE_ONE);
     if (errs.length) { errorsEl.textContent = errs.join(' '); return; }
 
     if (archiveBox) { archiveBox.hidden = false; }
-    if (archiveStatus) { archiveStatus.textContent = 'Comprobando…'; }
+    if (archiveStatus) { archiveStatus.textContent = SE_CHECKING; }
     // Deshabilitar botón mientras se consulta
     enCurso = true;
     if (btnCheckArchive) {
       btnCheckArchive.disabled = true;
-      btnCheckArchive.textContent = 'Comprobando…';
+      btnCheckArchive.textContent = SE_CHECKING;
       btnCheckArchive.setAttribute('aria-busy', 'true');
     }
 
@@ -183,33 +200,33 @@
     fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
       .then(r => r.text().then(t => ({ status: r.status, text: t, retry: r.headers.get('Retry-After') })))
       .then(resp => {
-        const data = parseAjax(resp.text) || { ok:false, message:'Sin respuesta' };
+        const data = parseAjax(resp.text) || { ok:false, message: SE_NO_RESPONSE };
         if (resp.status === 429) {
           const retryNum = parseInt(resp.retry || '0', 10);
           const retryMs = isNaN(retryNum) ? COOLDOWN_MS : Math.max(1000, retryNum * 1000);
           cooldownHasta = Date.now() + retryMs;
-          if (archiveStatus) archiveStatus.textContent = (data.message || 'Demasiadas solicitudes. Intenta más tarde.');
+          if (archiveStatus) archiveStatus.textContent = (data.message || SE_TOO_MANY);
         } else if (data.ok === false) {
-          if (archiveStatus) archiveStatus.textContent = 'Error: ' + (data.message || 'No se pudo consultar Archive.');
+          if (archiveStatus) archiveStatus.textContent = 'Error: ' + (data.message || SE_COULDNT);
         } else if (data.found) {
           if (archiveStatus) {
             const a = document.createElement('a');
             a.href = data.link;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
-            a.textContent = data.title || data.identifier || 'Ver en Archive';
-            archiveStatus.textContent = 'Encontrado: ';
+            a.textContent = data.title || data.identifier || TXT_VIEW;
+            archiveStatus.textContent = TXT_FOUND;
             archiveStatus.appendChild(a);
           }
           // Cooldown tras éxito
           cooldownHasta = Date.now() + COOLDOWN_MS;
         } else {
-          if (archiveStatus) archiveStatus.textContent = 'No encontrado.';
+          if (archiveStatus) archiveStatus.textContent = TXT_NOT_FOUND;
           cooldownHasta = Date.now() + COOLDOWN_MS;
         }
       })
       .catch(() => {
-        if (archiveStatus) archiveStatus.textContent = 'No se pudo consultar Archive.org.';
+        if (archiveStatus) archiveStatus.textContent = SE_COULDNT_ORG;
         cooldownHasta = Date.now() + COOLDOWN_MS;
       })
       .finally(() => {
