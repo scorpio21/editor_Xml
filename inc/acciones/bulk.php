@@ -43,7 +43,11 @@ if ($action === 'bulk_count' && isset($xml) && $xml instanceof SimpleXMLElement)
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
     $machines = $xpath->query('/datafile/machine');
@@ -161,7 +165,11 @@ if ($action === 'bulk_delete' && isset($xml) && $xml instanceof SimpleXMLElement
     }
 
     $dom = new DOMDocument();
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
     $machines = $xpath->query('/datafile/machine');

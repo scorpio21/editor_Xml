@@ -2,6 +2,16 @@
 
 Todas las modificaciones notables de este proyecto se documentarán en este archivo.
 
+## 2025-08-29
+
+### Security — 2025-08-29
+
+- Saneado automático de `<!DOCTYPE>` en cargas de XML para mantener mitigaciones XXE sin bloquear al usuario.
+  - `inc/xml-helpers.php:cargarXmlSiDisponible`: detecta y elimina `DOCTYPE` (con o sin subset interno) antes de parsear.
+  - Carga protegida con `LIBXML_NONET` y persistencia del XML saneado mediante `guardarDomConBackup()`.
+  - Registro de advertencia en logs y aviso en UI solo una vez por sesión.
+  - Documentado en `partials/modal-help.php` (sección "Primeros pasos").
+
 ## 2025-08-27
 
 ### Added — 2025-08-27
@@ -40,6 +50,14 @@ Notas:
 - Flujo protegido con CSRF y finalizado con `exit` tras envío de cabeceras y contenido.
 - "Compactar XML" sobrescribe el archivo actual y crea `.bak`. Para obtener un fichero nuevo, usa "Descargar XML".
 - Cierra #25.
+
+### Security — 2025-08-27
+
+- Mitigación XXE aplicada en todas las cargas de XML.
+  - `SimpleXML`: `LIBXML_NONET` y rechazo proactivo de `<!DOCTYPE>` en `inc/xml-helpers.php` (`cargarXmlSiDisponible`).
+  - `DOMDocument::loadXML`: `LIBXML_NONET` y desactivadas `resolveExternals`, `substituteEntities`, `validateOnParse` en `inc/acciones/crud.php`, `inc/acciones/dedupe.php`, `inc/acciones/bulk.php`.
+- Tests: añadido `test/xxe_security_test.php` (verifica rechazo de DOCTYPE y no expansión de entidades externas).
+- Documentación: `MEJORAS.md` actualizado con sección de Seguridad XML (XXE).
 
 ## 2025-08-25
 

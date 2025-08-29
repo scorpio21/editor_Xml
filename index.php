@@ -71,7 +71,7 @@ if ($xml) {
 
 <?php if ($uiTabs): ?>
   <div class="tabs" id="app-tabs">
-    <div role="tablist" aria-label="Secciones del editor">
+    <div role="tablist" aria-label="Secciones del editor" aria-orientation="horizontal">
       <button role="tab" id="tab-btn-1" aria-selected="true" aria-controls="tab-panel-1">
         <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.welcome')) ?></span>
       </button>

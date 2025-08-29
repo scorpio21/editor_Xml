@@ -126,3 +126,11 @@ Checklist de cierre F3:
 - Búsqueda externa Fase 2: añade botón "Comprobar Archive" que consulta la API de Archive.org para ofrecer enlace directo cuando hay coincidencias.
   - Sin scraping, protegido con CSRF, y sin exponer claves.
   - Se generan enlaces para myrient, vimm y archive.org por nombre y hashes (MD5/SHA1/CRC).
+
+### Actualización 2025-08-27 — Seguridad XML (XXE)
+
+- Endurecimiento completo de cargas XML para mitigar XXE:
+  - `SimpleXML`: `simplexml_load_file(..., 'SimpleXMLElement', LIBXML_NONET)` en `inc/xml-helpers.php` y `inc/acciones/crud.php` (descarga/exportación).
+  - `DOMDocument::loadXML()`: deshabilitar `resolveExternals`, `substituteEntities`, `validateOnParse` y usar `LIBXML_NONET` en `inc/acciones/crud.php`, `inc/acciones/dedupe.php` y `inc/acciones/bulk.php`.
+- Pruebas: añadido `test/xxe_security_test.php` con XML malicioso (DOCTYPE + entidad externa). Verifica que se bloquea el acceso de red y la expansión de entidades.
+- Notas: se mantiene el manejo de errores con `libxml_use_internal_errors(true)` en helpers. No hay cambios de lógica de negocio.

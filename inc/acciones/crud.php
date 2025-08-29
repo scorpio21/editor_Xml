@@ -48,7 +48,11 @@ if ($action === 'compact_xml') {
         }
         $dom = new DOMDocument();
         $dom->preserveWhiteSpace = false;
-        if (@$dom->loadXML($raw) === false) {
+        // Seguridad XXE
+        $dom->resolveExternals = false;
+        $dom->substituteEntities = false;
+        $dom->validateOnParse = false;
+        if (@$dom->loadXML($raw, LIBXML_NONET) === false) {
             registrarError('crud.php:compact_xml', 'XML inválido. Falló loadXML al compactar.', []);
             $_SESSION['error'] = 'El XML no es válido y no se pudo compactar.';
             header('Location: ' . $_SERVER['PHP_SELF']);
@@ -79,7 +83,8 @@ if ($action === 'download_xml') {
         $filesize = @filesize($xmlFile);
         // Calcular conteo actual (games + machines)
         $countNow = 0;
-        $sx = @simplexml_load_file($xmlFile);
+        // Seguridad XXE
+        $sx = @simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
         if ($sx instanceof SimpleXMLElement) {
             $games = $sx->xpath('/datafile/game');
             $machines = $sx->xpath('/datafile/machine');
@@ -131,7 +136,8 @@ if ($action === 'export_filtered_xml') {
     $qInRoms = isset($_POST['q_in_roms']) && (string)$_POST['q_in_roms'] === '1';
     $qInHashes = isset($_POST['q_in_hashes']) && (string)$_POST['q_in_hashes'] === '1';
 
-    $sx = @simplexml_load_file($xmlFile);
+    // Seguridad XXE
+    $sx = @simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
     if (!($sx instanceof SimpleXMLElement)) {
         registrarError('crud.php:export_filtered_xml', 'Fallo al cargar XML para exportar filtrado.', [ 'file' => $xmlFile ]);
         $_SESSION['error'] = 'No se pudo cargar el XML para exportar.';
@@ -454,7 +460,11 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    if (@$dom->loadXML($xml->asXML()) === false) {
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    if (@$dom->loadXML($xml->asXML(), LIBXML_NONET) === false) {
         registrarError('crud.php:add_game', 'Falló loadXML al preparar DOM para añadir juego.', []);
         $_SESSION['error'] = 'No se pudo cargar el XML en memoria.';
         header('Location: ' . $_SERVER['PHP_SELF']);
@@ -614,7 +624,11 @@ if ($action === 'edit' && isset($xml) && $xml instanceof SimpleXMLElement) {
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $nodes = $xpath->query('/datafile/' . $nodeType);
     if ($index >= 0 && $nodes && $index < $nodes->length) {
@@ -705,7 +719,11 @@ if ($action === 'delete' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $nodeType = ($nodeType === 'machine') ? 'machine' : 'game';
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $nodes = $xpath->query('/datafile/' . $nodeType);
     if ($nodes && $index >= 0 && $index < $nodes->length) {

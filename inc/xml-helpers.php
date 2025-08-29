@@ -21,7 +21,54 @@ function asegurarCarpetaUploads(string $dir): void {
 function cargarXmlSiDisponible(string $xmlFile): ?SimpleXMLElement {
     if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)) {
         $prev = libxml_use_internal_errors(true);
-        $xml = simplexml_load_file($xmlFile);
+        // Seguridad XXE: deshabilitar acceso a red y sanear DOCTYPE automáticamente
+        $content = @file_get_contents($xmlFile);
+        if ($content === false) {
+            libxml_use_internal_errors($prev);
+            registrarError('xml-helpers.php:cargarXmlSiDisponible', 'No se pudo leer el archivo XML', [ 'xmlFile' => $xmlFile ]);
+            $_SESSION['error'] = 'No se pudo leer el archivo XML.';
+            unset($_SESSION['xml_uploaded']);
+            return null;
+        }
+
+        $hadDoctype = stripos($content, '<!DOCTYPE') !== false;
+        if ($hadDoctype) {
+            $origLen = strlen($content);
+            // Eliminar DOCTYPE con o sin subset interno
+            $san = preg_replace('/<!DOCTYPE[^>]*\[[\s\S]*?\]\s*>/i', '', $content);
+            if ($san === null) { $san = $content; }
+            $san = preg_replace('/<!DOCTYPE[^>]*>/i', '', (string)$san);
+            if ($san === null) { $san = $content; }
+            $removed = $origLen - strlen((string)$san);
+            if ($removed > 0) {
+                registrarAdvertencia('xml-helpers.php:cargarXmlSiDisponible', 'DOCTYPE eliminado por seguridad', [ 'xmlFile' => $xmlFile, 'bytes_eliminados' => $removed ]);
+                // Mensaje informativo para la UI (solo una vez)
+                if (empty($_SESSION['doctype_sanitized_notice_shown'])) {
+                    $_SESSION['message'] = 'Se ha eliminado una declaración DOCTYPE del XML por seguridad.';
+                    $_SESSION['doctype_sanitized_notice_shown'] = 1;
+                }
+            }
+            // Cargar desde cadena saneada
+            $xml = simplexml_load_string((string)$san, 'SimpleXMLElement', LIBXML_NONET);
+            // Persistir el XML saneado en disco para evitar futuros avisos y relecturas del DOCTYPE
+            if ($xml !== false) {
+                $dom = new DOMDocument();
+                $dom->preserveWhiteSpace = false;
+                $dom->resolveExternals = false;
+                $dom->substituteEntities = false;
+                $dom->validateOnParse = false;
+                if (@$dom->loadXML((string)$san, LIBXML_NONET)) {
+                    if (guardarDomConBackup($dom, $xmlFile)) {
+                        registrarInfo('xml-helpers.php:cargarXmlSiDisponible', 'XML saneado persistido sin DOCTYPE', [ 'xmlFile' => $xmlFile ]);
+                    } else {
+                        registrarAdvertencia('xml-helpers.php:cargarXmlSiDisponible', 'No se pudo persistir el XML saneado; se continuará en memoria', [ 'xmlFile' => $xmlFile ]);
+                    }
+                }
+            }
+        } else {
+            // Carga segura desde archivo
+            $xml = simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
+        }
         if ($xml === false) {
             $errors = libxml_get_errors();
             libxml_clear_errors();

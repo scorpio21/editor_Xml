@@ -33,7 +33,11 @@ if ($action === 'dedupe_region_count' && isset($xml) && $xml instanceof SimpleXM
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
 
@@ -120,7 +124,11 @@ if ($action === 'dedupe_region' && isset($xml) && $xml instanceof SimpleXMLEleme
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
 
@@ -215,7 +223,11 @@ if ($action === 'dedupe_region_export_csv' && isset($xml) && $xml instanceof Sim
 
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
-    $dom->loadXML($xml->asXML());
+    // Seguridad XXE
+    $dom->resolveExternals = false;
+    $dom->substituteEntities = false;
+    $dom->validateOnParse = false;
+    $dom->loadXML($xml->asXML(), LIBXML_NONET);
     $xpath = new DOMXPath($dom);
     $games = $xpath->query('/datafile/game');
 

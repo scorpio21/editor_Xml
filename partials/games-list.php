@@ -3,6 +3,9 @@ declare(strict_types=1);
 ?>
 <?php
     // Construir lista completa con índice absoluto por tipo en una sola pasada
+    $___timing = (isset($_GET['debug']) && $_GET['debug'] === 'timing');
+    if ($___timing) { @require_once __DIR__ . '/../inc/logger.php'; }
+    $___t0 = $___timing ? microtime(true) : 0.0;
     $children = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
     $all = [];
     $absGame = 0; $absMachine = 0;
@@ -14,6 +17,7 @@ declare(strict_types=1);
             'absIndex' => $isMachine ? $absMachine++ : $absGame++,
         ];
     }
+    $___tBuild = $___timing ? microtime(true) : 0.0;
 
     // Filtro de búsqueda por nombre/descripcion/categoría (GET q) y extensiones a ROMs/hashes
     $q = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
@@ -23,10 +27,11 @@ declare(strict_types=1);
     if ($q !== '') {
         $qUpper = mb_strtoupper($q, 'UTF-8');
         $terms = array_values(array_filter(preg_split('/\s+/', $q)));
+        $termsUpper = array_map(static function($t){ return mb_strtoupper((string)$t, 'UTF-8'); }, $terms);
         $hasSpace = mb_strpos($qUpper, ' ', 0, 'UTF-8') !== false;
         // Normalización para hashes (quitar separadores comunes)
         $qHash = strtoupper(str_replace([' ', '-', '_'], '', $q));
-        $entries = array_values(array_filter($all, static function($item) use ($terms, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
+        $entries = array_values(array_filter($all, static function($item) use ($termsUpper, $qUpper, $hasSpace, $qInRoms, $qInHashes, $qHash) {
             $e = $item['el'];
             // Coincidencia base por nombre
             $name = (string)($e['name'] ?? '');
@@ -35,50 +40,46 @@ declare(strict_types=1);
             if ($hasSpace) {
                 if (mb_strpos($hayName, $qUpper, 0, 'UTF-8') !== false) { $matchBase = true; }
                 if (!$matchBase) {
-                    $all = true;
-                    foreach ($terms as $t) {
-                        $t = mb_strtoupper((string)$t, 'UTF-8');
-                        if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                    $allOk = true;
+                    foreach ($termsUpper as $t) {
+                        if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $allOk = false; break; }
                     }
-                    $matchBase = $all;
+                    $matchBase = $allOk;
                 }
             } else {
-                $all = true;
-                foreach ($terms as $t) {
-                    $t = mb_strtoupper((string)$t, 'UTF-8');
-                    if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                $allOk = true;
+                foreach ($termsUpper as $t) {
+                    if ($t === '' || mb_strpos($hayName, $t, 0, 'UTF-8') === false) { $allOk = false; break; }
                 }
-                $matchBase = $all;
+                $matchBase = $allOk;
             }
 
             // Coincidencia en ROMs por nombre
             $matchRoms = false;
-            if ($qInRoms && isset($e->rom)) {
+            if (!$matchBase && $qInRoms && isset($e->rom)) {
                 foreach ($e->rom as $rom) {
                     $romName = (string)($rom['name'] ?? '');
                     $hayRom = mb_strtoupper($romName, 'UTF-8');
                     if ($hasSpace) {
                         if (mb_strpos($hayRom, $qUpper, 0, 'UTF-8') !== false) { $matchRoms = true; break; }
-                        $all = true;
-                        foreach ($terms as $t) {
-                            $t = mb_strtoupper((string)$t, 'UTF-8');
-                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        $allOk = true;
+                        foreach ($termsUpper as $t) {
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $allOk = false; break; }
                         }
-                        if ($all) { $matchRoms = true; break; }
+                        if ($allOk) { $matchRoms = true; break; }
                     } else {
-                        $all = true;
-                        foreach ($terms as $t) {
-                            $t = mb_strtoupper((string)$t, 'UTF-8');
-                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $all = false; break; }
+                        $allOk = true;
+                        foreach ($termsUpper as $t) {
+                            if ($t === '' || mb_strpos($hayRom, $t, 0, 'UTF-8') === false) { $allOk = false; break; }
                         }
-                        if ($all) { $matchRoms = true; break; }
+                        if ($allOk) { $matchRoms = true; break; }
                     }
                 }
             }
 
             // Coincidencia en hashes: CRC/MD5/SHA1 (subcadena normalizada)
             $matchHashes = false;
-            if ($qInHashes && isset($e->rom)) {
+            if (!$matchBase && !$matchRoms && $qInHashes && isset($e->rom)) {
                 foreach ($e->rom as $rom) {
                     $crc  = strtoupper((string)($rom['crc'] ?? ''));
                     $md5  = strtoupper((string)($rom['md5'] ?? ''));
@@ -102,15 +103,7 @@ declare(strict_types=1);
             return true;
         }));
     }
-?>
-<?php
-    // Mapear índices absolutos por tipo (game/machine) para operaciones que requieren índice del XML completo
-    $allGames = $xml->xpath('/datafile/game') ?: [];
-    $allMachines = $xml->xpath('/datafile/machine') ?: [];
-    $mapGame = [];
-    foreach ($allGames as $i => $g) { $mapGame[spl_object_id($g)] = $i; }
-    $mapMachine = [];
-    foreach ($allMachines as $i => $m) { $mapMachine[spl_object_id($m)] = $i; }
+    $___tFilter = $___timing ? microtime(true) : 0.0;
 ?>
 <h2>Lista de juegos/máquinas (<?= count($entries) ?>)</h2>
 
@@ -124,6 +117,18 @@ declare(strict_types=1);
     if ($page > $pages) { $page = $pages; }
     $start = ($page - 1) * $perPage;
     $end = min($total - 1, $start + $perPage - 1);
+    // Precalcular contadores por tipo antes de la página actual para ids consistentes
+    $preGame = 0; $preMachine = 0;
+    if ($start > 0 && $total > 0) {
+        $limit = min($start, $total);
+        for ($i = 0; $i < $limit; $i++) {
+            if (($entries[$i]['type'] ?? '') === 'machine') { $preMachine++; }
+            else { $preGame++; }
+        }
+    }
+    // Cortar a los elementos de la página
+    $pageEntries = array_slice($entries, $start, $perPage);
+    $___tPage = $___timing ? microtime(true) : 0.0;
 ?>
 
 <!-- Buscador -->
@@ -134,6 +139,24 @@ declare(strict_types=1);
         <label><input type="checkbox" name="q_in_roms" value="1" <?= $qInRoms ? 'checked' : '' ?>> Buscar en ROMs</label>
         <label><input type="checkbox" name="q_in_hashes" value="1" <?= $qInHashes ? 'checked' : '' ?>> Buscar en hashes (CRC/MD5/SHA1)</label>
     </div>
+
+<?php if ($___timing):
+    $___tEnd = microtime(true);
+    $durBuildMs = (int)round(($___tBuild - $___t0) * 1000);
+    $durFilterMs = (int)round(($___tFilter - $___tBuild) * 1000);
+    $durPageMs = (int)round(($___tPage - $___tFilter) * 1000);
+    $durTotalMs = (int)round(($___tEnd - $___t0) * 1000);
+    @registrarInfo('games-list', 'timing render', [
+        'total_ms' => $durTotalMs,
+        'build_ms' => $durBuildMs,
+        'filter_ms' => $durFilterMs,
+        'paginate_ms' => $durPageMs,
+        'total_items' => count($all),
+        'filtered' => count($entries),
+        'page' => $page,
+        'per_page' => $perPage,
+    ]);
+endif; ?>
     <?php if ($perPage !== 10): ?><input type="hidden" name="per_page" value="<?= $perPage ?>"><?php endif; ?>
     <button type="submit">Buscar</button>
 </form>
@@ -187,10 +210,8 @@ declare(strict_types=1);
 
 <div class="list-meta">Mostrando <?= $total > 0 ? ($start + 1) : 0 ?>–<?= $total > 0 ? ($end + 1) : 0 ?> de <?= $total ?></div>
 <div class="game-grid">
-    <?php $idx = 0; $gameIdx = 0; $machineIdx = 0; foreach ($entries as $entry): ?>
+    <?php $gameIdx = $preGame; $machineIdx = $preMachine; foreach ($pageEntries as $entry): ?>
         <?php $node = $entry['el']; $isMachine = ($entry['type'] === 'machine'); ?>
-        <?php if ($idx < $start) { $idx++; if (!$isMachine) { $gameIdx++; } else { $machineIdx++; } continue; } ?>
-        <?php if ($idx > $end) { break; } ?>
         <?php $firstRom = $node->rom[0] ?? null; ?>
         <?php
             // Construir JSON de ROMs para data-roms
@@ -271,7 +292,7 @@ declare(strict_types=1);
                 <?php endif; ?>
             </div>
         </div>
-    <?php $idx++; if ($isMachine) { $machineIdx++; } else { $gameIdx++; } endforeach; ?>
+    <?php if ($isMachine) { $machineIdx++; } else { $gameIdx++; } endforeach; ?>
 </div>
 
 <div class="pagination">

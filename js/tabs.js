@@ -22,6 +22,50 @@
     }
     function dbgLog(){ if (!dbgEnabled()) return; try { console.log.apply(console, arguments); } catch(_) {} }
 
+    function getTabIdxFromUrl(){
+      try {
+        var usp = new URLSearchParams(window.location.search);
+        var val = usp.get('tab');
+        if (!val) return -1;
+        // 1) si es un id de tab
+        var byId = document.getElementById(val);
+        if (byId) {
+          var idxId = tabs.indexOf(byId);
+          if (idxId >= 0) return idxId;
+        }
+        // 2) si es id de panel, resolver via aria-labelledby
+        var panel = document.getElementById(val);
+        if (panel) {
+          var labelId = panel.getAttribute('aria-labelledby');
+          if (labelId) {
+            var tabEl = document.getElementById(labelId);
+            if (tabEl) {
+              var idxPanel = tabs.indexOf(tabEl);
+              if (idxPanel >= 0) return idxPanel;
+            }
+          }
+        }
+        // 3) numérico: 1-based o 0-based
+        var n = parseInt(val, 10);
+        if (!isNaN(n)) {
+          if (n >= 1 && n <= tabs.length) return n - 1;
+          if (n >= 0 && n < tabs.length) return n;
+        }
+      } catch(_) {}
+      return -1;
+    }
+
+    function setUrlTabParam(idx, push){
+      try {
+        var usp = new URLSearchParams(window.location.search);
+        var tabId = tabs[idx] && tabs[idx].id ? tabs[idx].id : String(idx);
+        usp.set('tab', tabId);
+        var newUrl = window.location.pathname + '?' + usp.toString() + window.location.hash;
+        if (push) { history.pushState({tabIdx: idx}, '', newUrl); }
+        else { history.replaceState({tabIdx: idx}, '', newUrl); }
+      } catch(_) {}
+    }
+
     function selectTab(idx, focus){
       // Guardar scroll del panel actual antes de cambiar
       if (currentIdx >= 0 && panels[currentIdx]) {
@@ -30,6 +74,8 @@
       tabs.forEach(function(tab, i){
         var selected = (i === idx);
         tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+        // Roving tabindex: solo la pestaña activa es tabulable
+        tab.setAttribute('tabindex', selected ? '0' : '-1');
         var panel = panels[i];
         if (panel) {
           if (selected) { panel.removeAttribute('hidden'); }
@@ -51,7 +97,18 @@
           }
         } catch (_) {}
       }
+      // Sincronizar URL (no crear entradas extra al restaurar)
+      setUrlTabParam(idx, false);
     }
+
+    // ARIA: orientación por defecto horizontal si falta
+    if (!tablist.hasAttribute('aria-orientation')) {
+      tablist.setAttribute('aria-orientation', 'horizontal');
+    }
+
+    // Inicializar roving tabindex según estado marcado en HTML
+    var htmlSelectedIdxInit = tabs.findIndex(function(t){ return t.getAttribute('aria-selected') === 'true'; });
+    tabs.forEach(function(tab, i){ tab.setAttribute('tabindex', (i === htmlSelectedIdxInit || (htmlSelectedIdxInit < 0 && i === 0)) ? '0' : '-1'); });
 
     // Activar con click/enter/space
     tabs.forEach(function(tab, i){
@@ -92,19 +149,36 @@
 
     // Selección inicial respetando sessionStorage
     var initialIdx = 0;
-    // si hay alguna marcada en HTML, úsala
-    var htmlSelectedIdx = tabs.findIndex(function(t){ return t.getAttribute('aria-selected') === 'true'; });
-    if (htmlSelectedIdx >= 0) { initialIdx = htmlSelectedIdx; }
+    // 1) URL (?tab=...)
+    var urlIdx = getTabIdxFromUrl();
+    if (urlIdx >= 0) { initialIdx = urlIdx; }
+    // 2) HTML marcado
+    if (urlIdx < 0) {
+      var htmlSelectedIdx = tabs.findIndex(function(t){ return t.getAttribute('aria-selected') === 'true'; });
+      if (htmlSelectedIdx >= 0) { initialIdx = htmlSelectedIdx; }
+    }
+    // 3) SessionStorage
     try {
-      var saved = sessionStorage.getItem(storageKey);
-      if (saved != null) {
-        var n = parseInt(saved, 10);
-        if (!isNaN(n) && n >= 0 && n < tabs.length) { initialIdx = n; }
+      if (urlIdx < 0) {
+        var saved = sessionStorage.getItem(storageKey);
+        if (saved != null) {
+          var n = parseInt(saved, 10);
+          if (!isNaN(n) && n >= 0 && n < tabs.length) { initialIdx = n; }
+        }
       }
     } catch (_) {}
     currentIdx = initialIdx;
     selectTab(initialIdx, false);
     dbgLog('[tabs] init -> initialIdx=%d id=%s', initialIdx, tabs[initialIdx] && tabs[initialIdx].id);
+
+    // Responder a navegación del historial (back/forward)
+    window.addEventListener('popstate', function(){
+      var pIdx = getTabIdxFromUrl();
+      if (pIdx >= 0 && pIdx !== currentIdx) {
+        dbgLog('[tabs] popstate -> idx=%d', pIdx);
+        selectTab(pIdx, false);
+      }
+    });
   }
 
   afterLoad(function(){

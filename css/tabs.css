@@ -48,6 +48,12 @@
   outline-offset: 2px;
 }
 
+/* Resalte cuando el contenido del panel recibe foco (teclado) */
+.tabs [role="tabpanel"]:focus-within {
+  outline: 2px dashed rgba(52, 152, 219, 0.35);
+  outline-offset: 4px;
+}
+
 /* Utilidades */
 .hidden { display: none !important; }
 

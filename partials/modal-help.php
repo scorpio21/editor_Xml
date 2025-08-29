@@ -41,6 +41,9 @@ declare(strict_types=1);
         <li>Pulsa <strong>Cargar XML/DAT</strong>.</li>
         <li>Si es válido, se mostrará la <strong>cabecera</strong> y el <strong>listado paginado</strong>.</li>
       </ol>
+      <p><small>
+        Seguridad: si el archivo contiene una declaración <code>&lt;!DOCTYPE ...&gt;</code>, el editor la <strong>eliminará automáticamente</strong> por seguridad (mitigación XXE) y guardará el XML saneado. Se mostrará un aviso solo la primera vez.
+      </small></p>
       <p><small>Consejo: tras cambios masivos, usa <em>Guardar / Compactar XML</em> para mantener el archivo limpio.</small></p>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
@@ -150,6 +153,13 @@ declare(strict_types=1);
         <li>Para colecciones grandes, reduce los elementos por página para una navegación fluida.</li>
         <li>Si detectas espacios o líneas en blanco, ejecuta <strong>Guardar / Compactar XML</strong>.</li>
         <li>Si la sesión expira o el navegador bloquea cookies, vuelve a cargar la página y reintenta.</li>
+        <li><strong>Atajos de teclado (Pestañas)</strong>:
+          <ul>
+            <li><kbd>Flecha derecha</kbd>/<kbd>Flecha izquierda</kbd>: mover el foco a la pestaña siguiente/anterior.</li>
+            <li><kbd>Home</kbd>/<kbd>End</kbd>: saltar a la primera/última pestaña.</li>
+            <li><kbd>Enter</kbd> o <kbd>Espacio</kbd>: activar la pestaña enfocada.</li>
+          </ul>
+        </li>
       </ul>
       <p><a href="#helpTitle">Volver al índice</a></p>
     </section>
