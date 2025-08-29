@@ -14,6 +14,43 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
         header('Content-Type: application/json; charset=utf-8');
 
+        // Rate limit sencillo por sesión para proteger API externa y UX
+        // - Intervalo mínimo entre peticiones: 3s
+        // - Máximo en ventana deslizante de 10 minutos: 10
+        $now = microtime(true);
+        $rl = $_SESSION['rl_archive'] ?? [
+            'last_at' => 0.0,
+            'win_start' => $now,
+            'win_count' => 0,
+        ];
+        $minInterval = 3.0; // segundos
+        $winSecs = 600.0;   // 10 minutos
+        $winMax = 10;       // máximo en ventana
+
+        // Reiniciar ventana si pasó el periodo
+        if (($now - (float)$rl['win_start']) > $winSecs) {
+            $rl['win_start'] = $now;
+            $rl['win_count'] = 0;
+        }
+        // Enforce intervalo mínimo
+        $since = $now - (float)$rl['last_at'];
+        if ($since < $minInterval) {
+            $retry = (int)ceil($minInterval - $since);
+            http_response_code(429);
+            header('Retry-After: ' . $retry);
+            echo json_encode(['ok' => false, 'message' => 'Demasiadas solicitudes. Inténtalo de nuevo en ' . $retry . ' s.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        // Enforce máximo en ventana
+        if ((int)$rl['win_count'] >= $winMax) {
+            $elapsed = $now - (float)$rl['win_start'];
+            $retry = (int)max(1, ceil($winSecs - $elapsed));
+            http_response_code(429);
+            header('Retry-After: ' . $retry);
+            echo json_encode(['ok' => false, 'message' => 'Has alcanzado el límite temporal. Inténtalo en ' . $retry . ' s.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         // Entradas
         $name = trim((string)($_POST['name'] ?? ''));
         $md5  = trim((string)($_POST['md5'] ?? ''));
@@ -72,10 +109,35 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             ]
         ]);
 
+        // Actualizar contadores ANTES de realizar la petición externa para aplicar el límite
+        $rl['last_at'] = $now;
+        $rl['win_count'] = (int)$rl['win_count'] + 1;
+        $_SESSION['rl_archive'] = $rl;
+
         try {
             $resp = @file_get_contents($url, false, $ctx);
             if ($resp === false) {
                 echo json_encode(['ok' => false, 'message' => 'No se pudo consultar Archive.org.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            // Interpretar cabeceras HTTP para detectar límites o errores de servidor
+            $status = 200;
+            if (isset($http_response_header[0]) && preg_match('~\s(\d{3})\s~', (string)$http_response_header[0], $m)) {
+                $status = (int)$m[1];
+            }
+            if ($status === 429) {
+                $retry = 5;
+                // Buscar Retry-After si existe
+                foreach ($http_response_header as $h) {
+                    if (stripos($h, 'Retry-After:') === 0) { $retry = (int)trim(substr($h, 12)); break; }
+                }
+                http_response_code(429);
+                header('Retry-After: ' . $retry);
+                echo json_encode(['ok' => false, 'message' => 'Archive.org limitó las solicitudes. Reintenta en ' . $retry . ' s.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+            if ($status >= 500) {
+                echo json_encode(['ok' => false, 'message' => 'Servicio de Archive.org no disponible (intenta más tarde).'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
             $data = json_decode($resp, true);

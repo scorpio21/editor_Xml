@@ -25,6 +25,12 @@
   const HEX40 = /^[0-9a-fA-F]{40}$/;
   const HEX8  = /^[0-9a-fA-F]{8}$/;
 
+  // Control de estado para rate limit en UI (frontend)
+  let enCurso = false;
+  let cooldownHasta = 0; // timestamp ms
+  const COOLDOWN_MS = 3000; // Debe estar alineado con backend (3s)
+  const textoOriginalBtn = btnCheckArchive?.textContent || 'Comprobar Archive';
+
   function limpiar() {
     errorsEl.textContent = '';
     linksList.innerHTML = '';
@@ -132,6 +138,17 @@
   }
 
   function comprobarArchive() {
+    // Throttle/cooldown en UI
+    const ahora = Date.now();
+    if (enCurso) {
+      if (archiveStatus) archiveStatus.textContent = 'Ya hay una comprobación en curso…';
+      return;
+    }
+    if (ahora < cooldownHasta) {
+      const faltan = Math.ceil((cooldownHasta - ahora) / 1000);
+      if (archiveStatus) archiveStatus.textContent = `Espera ${faltan}s para volver a intentar.`;
+      return;
+    }
     const name = normalizarTexto(nameInput.value);
     const md5 = normalizarTexto(md5Input.value);
     const sha1 = normalizarTexto(sha1Input.value);
@@ -146,6 +163,13 @@
 
     if (archiveBox) { archiveBox.hidden = false; }
     if (archiveStatus) { archiveStatus.textContent = 'Comprobando…'; }
+    // Deshabilitar botón mientras se consulta
+    enCurso = true;
+    if (btnCheckArchive) {
+      btnCheckArchive.disabled = true;
+      btnCheckArchive.textContent = 'Comprobando…';
+      btnCheckArchive.setAttribute('aria-busy', 'true');
+    }
 
     const fd = new FormData();
     fd.set('action', 'search_archive');
@@ -157,14 +181,17 @@
     if (crc) fd.set('crc', crc);
 
     fetch('./inc/acciones.php', { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(r => r.text().then(t => ({ status: r.status, text: t })))
+      .then(r => r.text().then(t => ({ status: r.status, text: t, retry: r.headers.get('Retry-After') })))
       .then(resp => {
         const data = parseAjax(resp.text) || { ok:false, message:'Sin respuesta' };
-        if (data.ok === false) {
+        if (resp.status === 429) {
+          const retryNum = parseInt(resp.retry || '0', 10);
+          const retryMs = isNaN(retryNum) ? COOLDOWN_MS : Math.max(1000, retryNum * 1000);
+          cooldownHasta = Date.now() + retryMs;
+          if (archiveStatus) archiveStatus.textContent = (data.message || 'Demasiadas solicitudes. Intenta más tarde.');
+        } else if (data.ok === false) {
           if (archiveStatus) archiveStatus.textContent = 'Error: ' + (data.message || 'No se pudo consultar Archive.');
-          return;
-        }
-        if (data.found) {
+        } else if (data.found) {
           if (archiveStatus) {
             const a = document.createElement('a');
             a.href = data.link;
@@ -174,11 +201,25 @@
             archiveStatus.textContent = 'Encontrado: ';
             archiveStatus.appendChild(a);
           }
+          // Cooldown tras éxito
+          cooldownHasta = Date.now() + COOLDOWN_MS;
         } else {
           if (archiveStatus) archiveStatus.textContent = 'No encontrado.';
+          cooldownHasta = Date.now() + COOLDOWN_MS;
         }
       })
-      .catch(() => { if (archiveStatus) archiveStatus.textContent = 'No se pudo consultar Archive.org.'; });
+      .catch(() => {
+        if (archiveStatus) archiveStatus.textContent = 'No se pudo consultar Archive.org.';
+        cooldownHasta = Date.now() + COOLDOWN_MS;
+      })
+      .finally(() => {
+        enCurso = false;
+        if (btnCheckArchive) {
+          btnCheckArchive.disabled = false;
+          btnCheckArchive.textContent = textoOriginalBtn;
+          btnCheckArchive.removeAttribute('aria-busy');
+        }
+      });
   }
 
   btnBuild?.addEventListener('click', construirEnlaces);
