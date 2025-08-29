@@ -398,6 +398,17 @@ textarea:focus {
   border-radius: var(--radius-sm);
 }
 
+/* Mensaje flash genérico (avisos informativos) */
+.flash-message {
+  margin: 10px 0 16px;
+  padding: 12px 14px;
+  background: #f0f9ff; /* azul muy claro */
+  border: 1px solid #bae6fd;
+  color: #0c4a6e;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
 .error {
   padding: 15px;
   background-color: #f44336;
