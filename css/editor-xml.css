@@ -344,15 +344,17 @@ textarea:focus {
 /* Evitar que las etiquetas se partan en varias líneas */
 .game-info strong {
   white-space: nowrap;
+  color: #374151; /* mejorar contraste de etiquetas */
+  font-weight: 600;
 }
 
 .game-actions {
-  margin-top: 15px;
+  margin-top: 18px; /* un poco más de separación del contenido previo */
 }
 
 /* Estilos para ROMs */
 .game-roms {
-  margin: 12px 0;
+  margin: 14px 0; /* coherente con spacing general */
 }
 
 .game-roms ul {
@@ -538,6 +540,18 @@ textarea:focus {
   gap: var(--space-xl);
 }
 
+/* Grid responsivo para tarjetas de juegos */
+@media (min-width: 960px) {
+  .game-grid {
+    grid-template-columns: 1fr 1fr; /* dos columnas */
+  }
+}
+@media (min-width: 1320px) {
+  .game-grid {
+    grid-template-columns: 1fr 1fr 1fr; /* tres columnas en anchos grandes */
+  }
+}
+
 /* Formularios mostrados en línea junto a botones */
 .inline-form {
   display: inline;
@@ -691,6 +705,7 @@ textarea:focus {
 .secondary:hover,
 .secondary:focus-visible {
   background: #d1d5db;
+  border-color: #9ca3af; /* borde más definido en hover/focus */
 }
 
 .list-meta {
