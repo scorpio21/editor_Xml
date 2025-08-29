@@ -48,6 +48,17 @@ function cargarXmlSiDisponible(string $xmlFile): ?SimpleXMLElement {
                     $_SESSION['doctype_sanitized_notice_shown'] = 1;
                 }
             }
+            // Tras eliminar DOCTYPE, es posible que queden referencias a entidades no declaradas (p.ej. &xxe;)
+            // Para evitar error de parseo, escapamos entidades no estándar a texto literal (& -> &amp;)
+            $matches = [];
+            if (preg_match_all('/&(?!amp;|lt;|gt;|quot;|apos;)([A-Za-z0-9._:-]+);/', (string)$san, $matches)) {
+                $san = preg_replace('/&(?!amp;|lt;|gt;|quot;|apos;)([A-Za-z0-9._:-]+);/', '&amp;$1;', (string)$san);
+                if ($san === null) { $san = $content; }
+                $count = is_array($matches) && isset($matches[0]) ? count($matches[0]) : 0;
+                if ($count > 0) {
+                    registrarAdvertencia('xml-helpers.php:cargarXmlSiDisponible', 'Entidades no declaradas escapadas tras saneado de DOCTYPE', [ 'xmlFile' => $xmlFile, 'entidades' => $count ]);
+                }
+            }
             // Cargar desde cadena saneada
             $xml = simplexml_load_string((string)$san, 'SimpleXMLElement', LIBXML_NONET);
             // Persistir el XML saneado en disco para evitar futuros avisos y relecturas del DOCTYPE

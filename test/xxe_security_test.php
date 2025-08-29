@@ -34,13 +34,14 @@ $malicious = <<<XML
 <datafile><header><name>&xxe;</name></header></datafile>
 XML;
 
-// 1) Verificar que cargarXmlSiDisponible() rechaza DOCTYPE y no permite acceso a red
+// 1) Verificar que cargarXmlSiDisponible() sanea DOCTYPE, carga con éxito y persiste sin DOCTYPE
 $_SESSION['xml_uploaded'] = true;
 $path = crearArchivoTemporal($malicious);
 $xml = cargarXmlSiDisponible($path);
-assertTrue($xml === null, 'cargarXmlSiDisponible() rechaza XML con DOCTYPE (retorna null)');
-assertTrue(isset($_SESSION['error']) && is_string($_SESSION['error']), 'cargarXmlSiDisponible() informa error en sesión ante DOCTYPE/XXE');
-unset($_SESSION['error']);
+assertTrue($xml instanceof SimpleXMLElement, 'cargarXmlSiDisponible() sanea DOCTYPE y devuelve SimpleXMLElement');
+// El archivo en disco debe haber sido persistido sin DOCTYPE
+$persisted = @file_get_contents($path) ?: '';
+assertTrue(stripos($persisted, '<!DOCTYPE') === false, 'El archivo persistido no contiene DOCTYPE tras saneado');
 
 // 2) Verificar que DOMDocument con banderas seguras no resuelve entidad externa (sin acceso a red)
 $dom = new DOMDocument();
