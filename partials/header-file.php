@@ -6,6 +6,12 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
     <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
     <button type="button" onclick="openCreateModal()">Crear XML</button>
   </div>
+<?php if (!empty($_SESSION['message'])): ?>
+  <div class="flash-message" role="status" aria-live="polite">
+    <?= htmlspecialchars((string)$_SESSION['message']) ?>
+  </div>
+  <?php unset($_SESSION['message']); ?>
+<?php endif; ?>
 <?php if (isset($_SESSION['xml_uploaded']) && file_exists($xmlFile)): ?>
     <div class="current-file">
         <h3>Archivo actual: current.xml</h3>

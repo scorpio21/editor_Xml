@@ -23,6 +23,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 - [Notas técnicas](#notas-técnicas)
 - [Buenas prácticas seguidas](#buenas-prácticas-seguidas)
 - [Seguridad (pendiente/mejorable)](#seguridad-pendientemejorable)
+- [Seguridad XML (XXE)](#seguridad-xml-xxe)
 - [Limitaciones actuales](#limitaciones-actuales)
 - [Roadmap](#roadmap)
 - [Changelog](#changelog)
@@ -300,6 +301,15 @@ export LOG_LEVEL_MIN=INFO
 - La eliminación masiva soporta un conteo previo por AJAX y contempla nodos `<game>` y `<machine>`.
 - Reloj en UI: elementos con `data-clock` muestran la hora actual del navegador, actualizada cada minuto. “Última modificación” en cabecera usa `filemtime` del XML y la zona horaria de PHP.
 - Centralización de helpers XML: las acciones usan `EditorXml::<método>()` (por ejemplo, `guardarDomConBackup`, `limpiarEspaciosEnBlancoDom`, `tokenizar`) que delegan en `inc/xml-helpers.php`.
+
+## Seguridad XML (XXE)
+
+- Saneado automático de `<!DOCTYPE>` (con o sin subset interno) al cargar XML en `inc/xml-helpers.php::cargarXmlSiDisponible()`.
+- Escapado de entidades no declaradas tras eliminar la DTD para evitar errores de parseo (por ejemplo, `&xxe;` → `&amp;xxe;`).
+- Carga sin red usando `LIBXML_NONET` en SimpleXML y DOM.
+- Flags seguros en DOM: `resolveExternals = false`, `substituteEntities = false`, `validateOnParse = false`.
+- Persistencia del XML saneado sin DOCTYPE en disco para evitar avisos repetidos, con aviso único en la UI por sesión.
+- Referencias: `CHANGELOG.md` (2025-08-29), `partials/modal-help.php`, `test/xxe_security_test.php`.
 
 ## Pruebas de integración
 
