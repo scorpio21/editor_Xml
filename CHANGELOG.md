@@ -18,6 +18,11 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
   - Saneado automático de DOCTYPE y persistencia del XML saneado.
   - Escapado de entidades no declaradas tras retirar DTD.
   - Uso de `LIBXML_NONET` y flags seguros en DOM (`resolveExternals=false`, `substituteEntities=false`, `validateOnParse=false`).
+- `README.md`: sección "Capturas" actualizada con ejemplos de:
+
+  - Selector de idioma (ES/EN por banderas)
+  - Buscador externo y "Comprobar Archive"
+  - Exportar resultados a XML
 
 ### UX — 2025-08-29
 

@@ -8,7 +8,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
 
 1. Verificar autenticación y remoto
    - Comprobar sesión y protocolo Git
-   
+ 
    ```powershell
    gh auth status
    git remote -v
@@ -16,7 +16,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
 
 2. Listar issues
    - Abiertos por defecto y cerrados si se necesita
-   
+ 
    ```powershell
    # Abiertos
    gh issue list -R scorpio21/editor_Xml -s open
@@ -26,20 +26,20 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
 
 3. Cerrar un issue con comentario de referencia
    - Sustituye `NUM` y el texto entre comillas por el mensaje que quieras
-   
+ 
    ```powershell
    gh issue close <NUM> -R scorpio21/editor_Xml -c "Cerrado por commit <SHA> (ver CHANGELOG 2025-08-29)."
    ```
 
 4. Comentar en un issue (sin cerrarlo)
-   
+ 
    ```powershell
    gh issue comment <NUM> -R scorpio21/editor_Xml -b "Mensaje de seguimiento o referencia de commit."
    ```
 
 5. Crear etiquetas (labels) comunes
    - Ejecutar una vez por etiqueta. Si ya existen, `gh` lo indicará.
-   
+ 
    ```powershell
    gh label create "security" -R scorpio21/editor_Xml -c "#ef4444" -d "Cambios de seguridad"
    gh label create "docs"     -R scorpio21/editor_Xml -c "#3b82f6" -d "Documentación"
@@ -50,7 +50,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
 
 6. Etiquetar issues existentes
    - Añadir o quitar etiquetas según convenga
-   
+ 
    ```powershell
    # Añadir
    gh issue edit <NUM> -R scorpio21/editor_Xml --add-label "docs,ux"
@@ -59,7 +59,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
    ```
 
 7. Crear milestone y asignarlo a issues
-   
+ 
    ```powershell
    # Crear milestone (ejemplo: versión o fecha)
    gh milestone create -R scorpio21/editor_Xml "2025-09"
@@ -71,7 +71,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
 
 8. Cerrar varios issues por filtro (opcional)
    - Usa el filtro `--search` para listar y cierra los relevantes manualmente
-   
+ 
    ```powershell
    # Buscar issues con texto "flash message" abiertos
    gh issue list -R scorpio21/editor_Xml -s open --search "flash message"
@@ -80,7 +80,7 @@ Este workflow guía tareas comunes de mantenimiento de issues en `scorpio21/edit
    ```
 
 9. Verificar resultado
-   
+ 
    ```powershell
    gh issue view <NUM> -R scorpio21/editor_Xml
    gh issue list -R scorpio21/editor_Xml -s closed
