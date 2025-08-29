@@ -27,6 +27,28 @@
     afterLoad: afterLoad,
     parseAjaxJson: parseAjaxJson
   };
+  
+  // Auto-ocultado de mensajes flash accesibles
+  // Oculta suavemente el bloque .flash-message tras unos segundos sin interferir con lectores de pantalla
+  afterLoad(function(){
+    try {
+      var flash = document.querySelector('.flash-message');
+      if (!flash) return;
+      // Permitir desactivar el auto-hide con data-persist="1" si fuera necesario en el futuro
+      if (flash.getAttribute('data-persist') === '1') return;
+      var DURACION_MS = 6000; // 6s visibles
+      setTimeout(function(){
+        // Transición suave de opacidad y luego retirada del DOM
+        flash.style.transition = 'opacity .3s ease';
+        flash.style.opacity = '0';
+        setTimeout(function(){
+          if (flash && flash.parentNode) {
+            flash.parentNode.removeChild(flash);
+          }
+        }, 350);
+      }, DURACION_MS);
+    } catch(_) { /* no-op */ }
+  });
   // Diagnóstico opcional de assets y estructura de UI
   function hasDebugFlag(){
     try {
