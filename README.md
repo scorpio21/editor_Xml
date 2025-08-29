@@ -494,7 +494,26 @@ Se recomienda usar tags en Git para marcar versiones estables.
 
 ## Capturas
 
-Puedes añadir capturas en la carpeta `img/` y referenciarlas aquí. Ejemplos:
+Las capturas se guardan en `img/`.
 
-![Pantalla principal](img/captura-pantalla-principal.png)
-![Modal de ayuda](img/captura-modal-ayuda.png)
+- **Pantalla principal**
+
+  ![Pantalla principal](img/captura-pantalla-principal.png)
+
+- **Selector de idioma** (ES/EN por banderas, persistencia en localStorage)
+
+  ![Selector de idioma](img/captura-idioma.png)
+
+- **Buscador externo** (nombre y hashes; enlaces y “Comprobar Archive”)
+
+  ![Buscador externo](img/captura-buscador-externo.png)
+
+- **Exportar resultados (XML)**
+
+  ![Exportar resultados](img/captura-exportar.png)
+
+- **Modal de ayuda**
+
+  ![Modal de ayuda](img/captura-modal-ayuda.png)
+
+Nota: si alguna imagen no aparece, súbela a `img/` con el nombre indicado.
