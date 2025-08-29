@@ -308,6 +308,39 @@ Para validar el flujo principal de acciones XML sin afectar datos reales, el pro
 - **Script E2E**: `test/integration_actions_test.php` (flujo: create_xml → add_game → compact_xml → download_xml).
 - **Harness**: `test/integration_harness_runner.php` para invocar acciones individuales con variables de entorno.
 
+### Ejecutar tests
+
+Ejemplos rápidos para Windows. Ajusta rutas según tu instalación (XAMPP en `D:\xampp`).
+
+PowerShell (recomendado):
+
+```powershell
+# Test unitario de seguridad XXE
+D:\xampp\php\php.exe -d display_errors=1 -d error_reporting=E_ALL test\xxe_security_test.php
+
+# Runner de integración: compactar XML temporal
+$env:ACTION="compact_xml"; $env:XML_PATH="$env:TEMP\current.xml"; D:\xampp\php\php.exe test\integration_harness_runner.php
+
+# Runner: descargar XML a archivo
+$env:ACTION="download_xml"; $env:XML_PATH="$env:TEMP\current.xml"; D:\xampp\php\php.exe test\integration_harness_runner.php > downloaded.xml
+```
+
+cmd (símbolo del sistema):
+
+```cmd
+:: Test unitario de seguridad XXE
+D:\xampp\php\php.exe -d display_errors=1 -d error_reporting=E_ALL test\xxe_security_test.php
+
+:: Runner de integración con variables de entorno
+set ACTION=compact_xml& set XML_PATH=%TEMP%\current.xml & D:\xampp\php\php.exe test\integration_harness_runner.php
+```
+
+Con `php` en PATH (opcional):
+
+```powershell
+php -d display_errors=1 -d error_reporting=E_ALL test/xxe_security_test.php
+```
+
 Ejecutar prueba E2E (Windows/XAMPP):
 
 ```powershell
