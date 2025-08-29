@@ -462,6 +462,16 @@ Revisa [`MEJORAS.md`](./MEJORAS.md) para el roadmap detallado, mejoras planifica
 
 Consulta el historial de cambios en [`CHANGELOG.md`](./CHANGELOG.md).
 
+## Wiki
+
+Documentación extendida, guías y decisiones de diseño en el Wiki de GitHub:
+
+- [Wiki de GitHub](https://github.com/scorpio21/editor_Xml/wiki)
+
+Borradores locales para copiar/pegar en el Wiki:
+
+- Carpeta `docs/wiki/` dentro del repositorio.
+
 ## Contribuir
 
 1. Crea un fork y una rama feature: `feature/mi-mejora`.
