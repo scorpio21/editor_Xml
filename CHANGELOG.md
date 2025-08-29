@@ -12,6 +12,19 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
   - Registro de advertencia en logs y aviso en UI solo una vez por sesión.
   - Documentado en `partials/modal-help.php` (sección "Primeros pasos").
 
+### Docs — 2025-08-29
+
+- `README.md`: nueva sección "Seguridad XML (XXE)" que documenta:
+  - Saneado automático de DOCTYPE y persistencia del XML saneado.
+  - Escapado de entidades no declaradas tras retirar DTD.
+  - Uso de `LIBXML_NONET` y flags seguros en DOM (`resolveExternals=false`, `substituteEntities=false`, `validateOnParse=false`).
+
+### UX — 2025-08-29
+
+- Mensaje de aviso convertido en "flash message" accesible:
+  - `partials/header-file.php`: imprime `$_SESSION['message']` y hace `unset()` tras render.
+  - Accesibilidad: `role="status"` y `aria-live="polite"`.
+
 ## 2025-08-27
 
 ### Added — 2025-08-27
