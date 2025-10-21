@@ -4,7 +4,7 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
-Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Nueva solapa "Categorías": contar, eliminar y exportar por categoría; ajustes menores en documentación).
+Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Solapa "Categorías": categorías dinámicas desde el XML, contar/eliminar/exportar; nombre de export alineado con descripción y extensión original; header reordenado; editor de descripción; mejoras UX de selección; fixes de sanitización/buffers).
 
 ## Tabla de contenidos
 
@@ -46,7 +46,9 @@ Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Nueva solapa "Categorías": cont
 - 🔐 Protección CSRF en todas las acciones POST
 - ⬇️ Exportación a XML de resultados filtrados (sin duplicados)
 - 🌐 Búsqueda externa (myrient, vimm, archive.org) por nombre y hashes (MD5/SHA1/CRC). Fase 2: botón "Comprobar Archive" con enlace directo cuando hay coincidencia.
-- 🗂️ Operaciones por categorías: contar, eliminar en el XML cargado y exportar coincidencias a nuevo XML
+- 🗂️ Operaciones por categorías: categorías dinámicas desde el XML; contar, eliminar en el XML cargado y exportar coincidencias a nuevo XML (nombre y header consistentes)
+  - UX: botones "Seleccionar todo", "Ninguno", "Invertir"
+  - Editor de descripción: bloque para editar `header/description` con sugerencia
 
 ## Características
 
@@ -267,6 +269,14 @@ export LOG_LEVEL_MIN=INFO
 - Se descargará un nuevo XML solo con las entradas filtradas y deduplicadas.
 - Los contenidos de texto (por ejemplo `description`, `category`, `manufacturer`) se escapan correctamente para evitar errores de entidades XML.
 - El nombre del archivo se sanea para ser válido en Windows.
+
+1. **Exportar por categorías** (pestaña "Categorías"):
+
+- Selecciona una o varias categorías detectadas automáticamente del fichero.
+- "Contar coincidencias" para previsualizar, "Eliminar por categoría" para borrar del XML cargado, y "Exportar coincidencias a XML" para descargar.
+- El nombre de exportación sigue el patrón: `<Plataforma> - Datfile (N) (YYYY-MM-DD HH-mm-ss).ext` usando la extensión original (`.xml`/`.dat`).
+- El `header` del XML exportado se reconstruye en orden: `name`, `description`, `version`, `date`, seguido de otros campos (`author`, `homepage`, `url`).
+- En la misma pestaña puedes editar `header/description`; se propone una sugerencia con base + conteo + fecha.
 
 1. **Buscar juego (externo)**:
 
