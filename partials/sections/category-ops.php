@@ -5,6 +5,23 @@ require_once __DIR__ . '/../../inc/csrf-helper.php';
 <div class="category-ops">
   <p class="hint">Selecciona una o varias categorías para operar sobre ellas.</p>
   <?php 
+    // Mostrar el nombre del fichero (header/name) o, en su defecto, el nombre original subido
+    $fileNameDisplay = '';
+    if (isset($xml) && $xml instanceof SimpleXMLElement) {
+      $hdrName = $xml->xpath('/datafile/header/name');
+      if (is_array($hdrName) && isset($hdrName[0])) {
+        $fileNameDisplay = trim((string)$hdrName[0]);
+      }
+    }
+    if ($fileNameDisplay === '' && isset($_SESSION['original_filename'])) {
+      $of = (string)$_SESSION['original_filename'];
+      $fileNameDisplay = preg_replace('/\.[^.]+$/', '', $of) ?? '';
+    }
+  ?>
+  <?php if ($fileNameDisplay !== ''): ?>
+    <p class="hint"><strong>Archivo:</strong> <?= htmlspecialchars($fileNameDisplay) ?></p>
+  <?php endif; ?>
+  <?php 
     // Construir lista de categorías únicas a partir del XML cargado
     $catOptions = [];
     if (isset($xml) && $xml instanceof SimpleXMLElement) {

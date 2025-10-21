@@ -144,8 +144,33 @@ if (in_array($action, ['category_count','category_delete','category_export_xml']
             }
         }
 
-        $dateStr = date('Y-m-d H-i-s');
-        $filename = 'categorias_export (' . $count . ') (' . $dateStr . ').xml';
+        // Si hay nombre original de subida, usarlo tal cual (sin añadir sufijos)
+        $orig = (string)($_SESSION['original_filename'] ?? '');
+        if ($orig !== '') {
+            // Saneado mínimo por seguridad en cabecera; conservar extensión
+            $origSanitized = preg_replace('/[\\\/:\*\?\"<>\|]/', ' ', $orig);
+            $origSanitized = trim((string)$origSanitized);
+            $filename = ($origSanitized !== '' ? $origSanitized : 'datafile.xml');
+        } else {
+            // Construir nombre: preferir header/name, si es 'datafile' usar basename
+            $base = '';
+            if (isset($xml) && $xml instanceof SimpleXMLElement) {
+                $hdr = $xml->xpath('/datafile/header/name');
+                if (is_array($hdr) && isset($hdr[0])) {
+                    $base = trim((string)$hdr[0]);
+                    if (strtoupper($base) === 'DATAFILE') { $base = ''; }
+                }
+            }
+            if ($base === '' && isset($xmlFile) && is_string($xmlFile) && $xmlFile !== '') {
+                $bn = basename($xmlFile);
+                $base = preg_replace('/\.[^.]+$/', '', $bn) ?? '';
+            }
+            // Sanear base y formar con conteo y fecha
+            $base = preg_replace('/[\\\/:\*\?\"<>\|]/', ' ', (string)$base);
+            $base = trim((string)$base);
+            $dateStr = date('Y-m-d H-i-s');
+            $filename = sprintf('%s (%d) (%s).xml', ($base !== '' ? $base : 'datafile'), $count, $dateStr);
+        }
         header('Content-Type: application/xml; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('X-Content-Type-Options: nosniff');
