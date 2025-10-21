@@ -52,5 +52,6 @@ require_once __DIR__ . '/acciones/bulk.php';
 require_once __DIR__ . '/acciones/dedupe.php';
 require_once __DIR__ . '/acciones/crud.php';
 require_once __DIR__ . '/acciones/search_external.php';
+require_once __DIR__ . '/acciones/category.php';
 
 // Si ninguna acción coincidió, el flujo continúa y la página puede renderizar normalmente.

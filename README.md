@@ -4,7 +4,7 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
-Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados filtrados y corrección de caracteres especiales en DOM).
+Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Nueva solapa "Categorías": contar, eliminar y exportar por categoría; ajustes menores en documentación).
 
 ## Tabla de contenidos
 
@@ -46,6 +46,7 @@ Actualizado: 2025-08-27 — ver `CHANGELOG.md` (Exportación a XML de resultados
 - 🔐 Protección CSRF en todas las acciones POST
 - ⬇️ Exportación a XML de resultados filtrados (sin duplicados)
 - 🌐 Búsqueda externa (myrient, vimm, archive.org) por nombre y hashes (MD5/SHA1/CRC). Fase 2: botón "Comprobar Archive" con enlace directo cuando hay coincidencia.
+- 🗂️ Operaciones por categorías: contar, eliminar en el XML cargado y exportar coincidencias a nuevo XML
 
 ## Características
 
@@ -115,6 +116,7 @@ editor_Xml/
 │  │  ├─ bulk.php              # Acciones de eliminación masiva y helpers
 │  │  ├─ common.php            # Utilidades compartidas de acciones
 │  │  ├─ crud.php              # Operaciones CRUD
+│  │  ├─ category.php          # Acciones por categorías (contar/eliminar/exportar)
 │  │  └─ ...                   # Otras acciones
 │  └─ ...                      # Otros helpers (CSRF, XML, logger, etc.)
 ├─ partials/
@@ -124,7 +126,8 @@ editor_Xml/
 │  ├─ sections/
 │  │  ├─ mame-filters.php      # Controles/filtros específicos de MAME
 │  │  ├─ dedupe-region.php     # Formulario de deduplicados por región
-│  │  └─ search-external.php   # Buscador externo por nombre y hashes
+│  │  ├─ search-external.php   # Buscador externo por nombre y hashes
+│  │  └─ category-ops.php      # UI de operaciones por categorías
 │  └─ ...
 ├─ img/
 │  ├─ flags/                   # Banderas de idioma (i18n)

@@ -102,6 +102,9 @@ if ($xml) {
       <button role="tab" id="tab-btn-6" aria-selected="false" aria-controls="tab-panel-6">
         <img class="tab-ico" src="img/ico-home.svg" alt="" aria-hidden="true"><span class="tab-text"><?= htmlspecialchars(t('tabs.search_external')) ?></span>
       </button>
+      <button role="tab" id="tab-btn-7" aria-selected="false" aria-controls="tab-panel-7">
+        <img class="tab-ico" src="img/ico-bulk.svg" alt="" aria-hidden="true"><span class="tab-text">Categorías</span>
+      </button>
     </div>
 
     <section role="tabpanel" id="tab-panel-1" aria-labelledby="tab-btn-1">
@@ -159,6 +162,15 @@ if ($xml) {
     <section role="tabpanel" id="tab-panel-6" aria-labelledby="tab-btn-6" hidden>
       <h3><?= htmlspecialchars(t('search_external.h3')) ?></h3>
       <?php include __DIR__ . '/partials/sections/search-external.php'; ?>
+    </section>
+
+    <section role="tabpanel" id="tab-panel-7" aria-labelledby="tab-btn-7" hidden>
+      <h3>Categorías</h3>
+      <?php if ($xml): ?>
+        <?php include __DIR__ . '/partials/sections/category-ops.php'; ?>
+      <?php else: ?>
+        <p class="hint">Primero carga un XML para usar esta herramienta.</p>
+      <?php endif; ?>
     </section>
   </div>
 <?php else: ?>
