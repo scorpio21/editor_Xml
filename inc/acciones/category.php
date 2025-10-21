@@ -10,26 +10,24 @@ require_once __DIR__ . '/../EditorXml.php';
 
 $action = $_POST['action'] ?? '';
 
-// Utilidad: obtener prefijos de categorías normalizados
-function obtenerPrefijosCategorias(): array {
-    return [
-        'ADD-ONS',
-        'APPLICATIONS',
-        'BONUS DISCS',
-        'COVERDISCS',
-        'DEMOS',
-        'PREPRODUCTION'
-    ];
+function normalizar(string $s): string {
+    // Mayúsculas, recorte y normalización simple de separadores/':'
+    $s = strtoupper(trim($s));
+    // Colapsar espacios múltiples
+    $s = preg_replace('/\s+/', ' ', $s) ?? $s;
+    // Quitar dos puntos finales opcionales ("GAMES:" -> "GAMES")
+    $s = rtrim($s, ": \t\r\n");
+    return $s;
 }
-
-function normalizar(string $s): string { return strtoupper(trim($s)); }
 
 function categoriaCoincide(?string $cat, array $seleccionadas): bool {
     if ($cat === null) { return false; }
     $catN = normalizar($cat);
     foreach ($seleccionadas as $pref) {
         $p = normalizar($pref);
-        if ($p !== '' && str_starts_with($catN, $p)) { return true; }
+        if ($p === '') { continue; }
+        // Coincidencia exacta tras normalización (ignora mayúsculas, espacios y ':' finales)
+        if ($catN === $p) { return true; }
     }
     return false;
 }
