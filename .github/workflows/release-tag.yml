@@ -1,0 +1,37 @@
+name: Crear tag y release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versión (sin la v, por ejemplo 0.8.3)"
+        required: true
+        default: "0.8.3"
+
+jobs:
+  tag_and_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Crear tag
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Crear release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          release_name: v${{ github.event.inputs.version }}
+          draft: false
+          prerelease: false
