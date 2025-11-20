@@ -38,3 +38,5 @@ jobs:
           release_name: v${{ github.event.inputs.version }}
           draft: false
           prerelease: false
+          body: |
+            Consulta el archivo CHANGELOG.md del repositorio para ver el detalle completo de cambios de esta versión.
