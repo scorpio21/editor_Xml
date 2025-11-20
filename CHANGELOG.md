@@ -2,6 +2,32 @@
 
 Todas las modificaciones notables de este proyecto se documentarán en este archivo.
 
+## 2025-11-20
+
+### Added — 2025-11-20
+
+- Pestaña **Categorías** mejorada:
+  - Editor de `header/description` con sugerencia automática basada en nombre base, número de entradas y fecha/hora actual.
+  - Exportación de coincidencias a XML con cabecera reconstruida: `name` (plataforma), `description` con conteo real exportado, `version` y `date` actualizados, preservando `author`, `homepage` y `url`.
+- Nueva pestaña **Regiones**:
+  - Selector de una o varias regiones (Japon, Europa, Francia, etc.) usando el mapeo existente de `mapearRegionesIdiomas`.
+  - Acción `export_region_count` para contar coincidencias sin modificar el XML.
+  - Acción `export_region_xml` para generar un nuevo `datafile` con solo las entradas de las regiones seleccionadas y header coherente.
+  - Acción `export_region_csv` para descargar un CSV (UTF‑8 con BOM) con columnas `tipo`, `nombre`, `descripcion`, `extra` (categoría o año+fabricante).
+
+### Changed — 2025-11-20
+
+- Exportación por categorías y por región:
+  - Nombres de archivo alineados con la plataforma y el conteo exportado, conservando la extensión original (`.xml` o `.dat`) cuando aplica.
+  - Cabeceras `<header>` reconstruidas para reflejar el número real de entradas exportadas y la fecha actual, evitando copiar descripciones antiguas (`(N) (fecha)` equivocadas).
+- Descargas (XML/CSV):
+  - Uso de helpers de saneado (`sanearNombreWindowsCrud`) para todos los nombres de archivo generados, evitando expresiones regulares frágiles.
+
+### Fixed — 2025-11-20
+
+- Eliminados warnings de `preg_replace(): Unknown modifier ':'` que se colaban al inicio de algunos XML/CSV exportados.
+- Limpieza de buffers de salida antes de enviar cabeceras y contenido en exportaciones críticas para evitar texto basura o HTML previo a los datos.
+
 ## 2025-08-29
 
 ### Security — 2025-08-29

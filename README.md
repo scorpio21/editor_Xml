@@ -4,7 +4,7 @@
 
 Aplicación web en PHP para visualizar, editar y mantener ficheros XML/DAT de catálogos de juegos y máquinas (formatos tipo `datafile`, compatibles con No-Intro y MAME). Optimizada para XAMPP en Windows, compatible con cualquier servidor web con PHP 8+ y extensión DOM.
 
-Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Solapa "Categorías": categorías dinámicas desde el XML, contar/eliminar/exportar; nombre de export alineado con descripción y extensión original; header reordenado; editor de descripción; mejoras UX de selección; fixes de sanitización/buffers).
+Actualizado: 2025-11-20 — ver `CHANGELOG.md` (Solapa "Categorías" afinada: nombre/header/archivo alineados; nueva solapa "Regiones" con conteo/export XML/CSV por región; fixes adicionales de sanitización y cabeceras en descargas).
 
 ## Tabla de contenidos
 
@@ -49,6 +49,10 @@ Actualizado: 2025-10-21 — ver `CHANGELOG.md` (Solapa "Categorías": categoría
 - 🗂️ Operaciones por categorías: categorías dinámicas desde el XML; contar, eliminar en el XML cargado y exportar coincidencias a nuevo XML (nombre y header consistentes)
   - UX: botones "Seleccionar todo", "Ninguno", "Invertir"
   - Editor de descripción: bloque para editar `header/description` con sugerencia
+- 🌍 Solapa **Regiones**: seleccionar una o varias regiones (Japon, Europa, Francia, etc.) y:
+  - Contar coincidencias
+  - Exportar a XML solo con esas entradas (cabecera y nombre del archivo coherentes)
+  - Exportar a CSV para análisis externo (tipo, nombre, descripción, extra)
 
 ## Características
 
@@ -277,6 +281,13 @@ export LOG_LEVEL_MIN=INFO
 - El nombre de exportación sigue el patrón: `<Plataforma> - Datfile (N) (YYYY-MM-DD HH-mm-ss).ext` usando la extensión original (`.xml`/`.dat`).
 - El `header` del XML exportado se reconstruye en orden: `name`, `description`, `version`, `date`, seguido de otros campos (`author`, `homepage`, `url`).
 - En la misma pestaña puedes editar `header/description`; se propone una sugerencia con base + conteo + fecha.
+
+1. **Exportar por regiones** (pestaña "Regiones"):
+
+- Selecciona una o varias regiones (Japon, Europa, Francia, USA, etc.).
+- "Contar coincidencias" muestra cuántas entradas pertenecen a esas regiones.
+- "Exportar por región (XML)" genera un nuevo `datafile` con solo esas entradas y un `header` actualizado (`name`, `description` con conteo real, `version`, `date`, y los campos de autor/página originales).
+- "Exportar por región (CSV)" descarga un CSV (UTF-8 con BOM) con columnas `tipo`, `nombre`, `descripcion` y `extra` (categoría o año+fabricante), ideal para abrir en Excel.
 
 1. **Buscar juego (externo)**:
 

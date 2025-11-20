@@ -4,6 +4,14 @@ declare(strict_types=1);
 // Módulo: acciones CRUD y utilitarias del XML (crear, editar, eliminar, descargar, restaurar, compactar, subir, reset filtros)
 // Requisitos previos: require de common.php, xml-helpers.php y variables $xmlFile, $xml
 
+// Helper local para sanear nombres de archivo en Windows sin regex complejas
+function sanearNombreWindowsCrud(string $s): string {
+    $s = trim($s);
+    $s = str_replace(["\\","/",":","*","?","\"","<",">","|"], ' ', $s);
+    $s = preg_replace('/\s+/', ' ', $s) ?? $s;
+    return trim($s);
+}
+
 // Subida de fichero (no depende de action) — proteger con CSRF
 if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['xmlFile']['error'] === UPLOAD_ERR_OK) {
     requireValidCsrf();
@@ -76,6 +84,332 @@ if ($action === 'compact_xml') {
     exit;
 }
 
+// Conteo previo para exportación por región (sin modificar archivos)
+if ($action === 'export_region_count') {
+    requireValidCsrf();
+    if (!file_exists($xmlFile)) {
+        $_SESSION['error'] = 'No hay XML disponible para contar por región.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    require_once __DIR__ . '/../mame-filters.php'; // obtenerTextoParaBusqueda
+
+    $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
+    if (count($includeRegions) === 0) {
+        $_SESSION['error'] = 'Debes seleccionar al menos una región para contar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $sx = @simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
+    if (!($sx instanceof SimpleXMLElement)) {
+        registrarError('crud.php:export_region_count', 'Fallo al cargar XML para conteo por región.', [ 'file' => $xmlFile ]);
+        $_SESSION['error'] = 'No se pudo cargar el XML para contar por región.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $children = $sx->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    $entries = [];
+    foreach ($children as $node) {
+        $entries[] = [ 'el' => $node, 'type' => $node->getName() === 'machine' ? 'machine' : 'game' ];
+    }
+
+    $includeTerms = [];
+    $excludeTerms = [];
+    EditorXml::mapearRegionesIdiomas($includeRegions, [], $includeTerms, $excludeTerms);
+
+    if (count($includeTerms) === 0) {
+        $_SESSION['error'] = 'No se pudieron mapear términos para las regiones seleccionadas.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $entries = array_values(array_filter($entries, static function($item) use ($includeTerms) {
+        $el = $item['el'];
+        $type = $item['type'];
+        $haystack = obtenerTextoParaBusqueda($el, $type);
+        $haystackUpper = strtoupper($haystack);
+        $tokens = EditorXml::tokenizar($haystackUpper);
+        return EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms);
+    }));
+
+    $count = count($entries);
+    $_SESSION['message'] = $count > 0
+        ? ('Coincidencias por región encontradas: ' . $count . '.')
+        : 'No se encontraron entradas para las regiones seleccionadas.';
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Exportar por región a un nuevo XML (usa mapeo de regiones existente)
+if ($action === 'export_region_xml') {
+    requireValidCsrf();
+    if (!file_exists($xmlFile)) {
+        $_SESSION['error'] = 'No hay XML disponible para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    require_once __DIR__ . '/../mame-filters.php'; // obtenerTextoParaBusqueda
+
+    $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
+    if (count($includeRegions) === 0) {
+        $_SESSION['error'] = 'Debes seleccionar al menos una región para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Seguridad XXE
+    $sx = @simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
+    if (!($sx instanceof SimpleXMLElement)) {
+        registrarError('crud.php:export_region_xml', 'Fallo al cargar XML para exportar por región.', [ 'file' => $xmlFile ]);
+        $_SESSION['error'] = 'No se pudo cargar el XML para exportar por región.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Recopilar entradas game/machine en orden
+    $children = $sx->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    $entries = [];
+    foreach ($children as $node) {
+        $entries[] = [ 'el' => $node, 'type' => $node->getName() === 'machine' ? 'machine' : 'game' ];
+    }
+
+    // Construir términos de región
+    $includeTerms = [];
+    $excludeTerms = [];
+    EditorXml::mapearRegionesIdiomas($includeRegions, [], $includeTerms, $excludeTerms);
+
+    if (count($includeTerms) === 0) {
+        $_SESSION['error'] = 'No se pudieron mapear términos para las regiones seleccionadas.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Filtrar por región usando obtenerTextoParaBusqueda
+    $entries = array_values(array_filter($entries, static function($item) use ($includeTerms) {
+        $el = $item['el'];
+        $type = $item['type'];
+        $haystack = obtenerTextoParaBusqueda($el, $type);
+        $haystackUpper = strtoupper($haystack);
+        $tokens = EditorXml::tokenizar($haystackUpper);
+        return EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms);
+    }));
+
+    // Si no hay coincidencias, informar y volver
+    if (count($entries) === 0) {
+        $_SESSION['message'] = 'No se encontraron entradas para las regiones seleccionadas.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Construir DOM de salida
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    $datafile = $dom->createElement('datafile');
+
+    // Reconstruir cabecera: name/description/version/date actualizados, resto preservado
+    $platformBase = '';
+    if (isset($sx->header->name)) {
+        $platformBase = trim((string)$sx->header->name);
+    } elseif (isset($sx->header->description)) {
+        $platformBase = trim((string)$sx->header->description);
+    }
+    // Limpiar sufijos tipo " - Datfile/Discs ..." y " (n) (fecha)"
+    if ($platformBase !== '') {
+        if (preg_match('/^(.*)\s\(\d+\)\s\([^)]*\)$/', $platformBase, $m)) {
+            $platformBase = trim((string)$m[1]);
+        }
+        if (preg_match('/^(.*?)\s-\s(?:Datfile|Discs)\b.*$/i', $platformBase, $m2)) {
+            $platformBase = trim((string)$m2[1]);
+        }
+    }
+    $platformBase = trim($platformBase);
+    $exportCount = count($entries);
+    $dateNow = date('Y-m-d H-i-s');
+    $descText = sprintf('%s - Datfile (%d) (%s)', ($platformBase !== '' ? $platformBase : 'datafile'), $exportCount, $dateNow);
+
+    $header = $dom->createElement('header');
+    // name, description, version, date
+    $header->appendChild($dom->createElement('name', $platformBase !== '' ? $platformBase : 'datafile'));
+    $header->appendChild($dom->createElement('description', $descText));
+    $header->appendChild($dom->createElement('version', $dateNow));
+    $header->appendChild($dom->createElement('date', $dateNow));
+
+    // Preservar author, homepage, url si existen
+    if (isset($sx->header)) {
+        foreach (['author','homepage','url'] as $f) {
+            if (isset($sx->header->{$f}) && (string)$sx->header->{$f} !== '') {
+                $safeVal = htmlspecialchars((string)$sx->header->{$f}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $header->appendChild($dom->createElement($f, $safeVal));
+            }
+        }
+    }
+    $datafile->appendChild($header);
+
+    // Añadir entradas filtradas por región
+    foreach ($entries as $it) {
+        $e = $it['el'];
+        $type = $it['type'];
+        $node = $dom->createElement($type);
+        $node->setAttribute('name', (string)($e['name'] ?? ''));
+        if ($type === 'game') {
+            if (isset($e->description)) {
+                $safeDesc = htmlspecialchars((string)$e->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('description', $safeDesc));
+            }
+            if (isset($e->category) && (string)$e->category !== '') {
+                $safeCat = htmlspecialchars((string)$e->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('category', $safeCat));
+            }
+        } else { // machine
+            if (isset($e->description)) {
+                $safeDesc = htmlspecialchars((string)$e->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('description', $safeDesc));
+            }
+            if (isset($e->year) && (string)$e->year !== '') {
+                $safeYear = htmlspecialchars((string)$e->year, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('year', $safeYear));
+            }
+            if (isset($e->manufacturer) && (string)$e->manufacturer !== '') {
+                $safeMan = htmlspecialchars((string)$e->manufacturer, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $node->appendChild($dom->createElement('manufacturer', $safeMan));
+            }
+        }
+        if (isset($e->rom)) {
+            foreach ($e->rom as $rom) {
+                $romEl = $dom->createElement('rom');
+                foreach (['name','size','crc','md5','sha1'] as $attr) {
+                    if (isset($rom[$attr]) && (string)$rom[$attr] !== '') {
+                        $romEl->setAttribute($attr, (string)$rom[$attr]);
+                    }
+                }
+                $node->appendChild($romEl);
+            }
+        }
+        $datafile->appendChild($node);
+    }
+
+    $dom->appendChild($datafile);
+    $dom->normalizeDocument();
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
+
+    // Nombre de archivo: base + regiones + conteo
+    $base = 'region';
+    if (isset($_SESSION['original_filename'])) {
+        $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
+        $base = sanearNombreWindowsCrud((string)$origNoExt);
+    }
+    $regStr = implode('+', array_map(static function($r){ return preg_replace('/\s+/', '_', strtoupper((string)$r)); }, $includeRegions));
+    $dateStr = date('Y-m-d H-i-s');
+    $filename = sprintf('%s [REGION %s] (%d) (%s).xml', $base !== '' ? $base : 'datafile', $regStr, count($entries), $dateStr);
+
+    header('Content-Type: application/xml; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    echo $dom->saveXML();
+    exit;
+}
+
+// Exportar por región a CSV (listado simple de coincidencias)
+if ($action === 'export_region_csv') {
+    requireValidCsrf();
+    if (!file_exists($xmlFile)) {
+        $_SESSION['error'] = 'No hay XML disponible para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    require_once __DIR__ . '/../mame-filters.php'; // obtenerTextoParaBusqueda
+
+    $includeRegions = isset($_POST['include_regions']) && is_array($_POST['include_regions']) ? $_POST['include_regions'] : [];
+    if (count($includeRegions) === 0) {
+        $_SESSION['error'] = 'Debes seleccionar al menos una región para exportar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $sx = @simplexml_load_file($xmlFile, 'SimpleXMLElement', LIBXML_NONET);
+    if (!($sx instanceof SimpleXMLElement)) {
+        registrarError('crud.php:export_region_csv', 'Fallo al cargar XML para exportar CSV por región.', [ 'file' => $xmlFile ]);
+        $_SESSION['error'] = 'No se pudo cargar el XML para exportar CSV por región.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $children = $sx->xpath('/datafile/*[self::game or self::machine]') ?: [];
+    $entries = [];
+    foreach ($children as $node) {
+        $entries[] = [ 'el' => $node, 'type' => $node->getName() === 'machine' ? 'machine' : 'game' ];
+    }
+
+    $includeTerms = [];
+    $excludeTerms = [];
+    EditorXml::mapearRegionesIdiomas($includeRegions, [], $includeTerms, $excludeTerms);
+
+    if (count($includeTerms) === 0) {
+        $_SESSION['error'] = 'No se pudieron mapear términos para las regiones seleccionadas.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $entries = array_values(array_filter($entries, static function($item) use ($includeTerms) {
+        $el = $item['el'];
+        $type = $item['type'];
+        $haystack = obtenerTextoParaBusqueda($el, $type);
+        $haystackUpper = strtoupper($haystack);
+        $tokens = EditorXml::tokenizar($haystackUpper);
+        return EditorXml::anyTermMatch($tokens, $haystackUpper, $includeTerms);
+    }));
+
+    if (count($entries) === 0) {
+        $_SESSION['message'] = 'No se encontraron entradas para las regiones seleccionadas.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Preparar descarga CSV
+    $base = 'region';
+    if (isset($_SESSION['original_filename'])) {
+        $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
+        $base = sanearNombreWindowsCrud((string)$origNoExt);
+    }
+    $regStr = implode('+', array_map(static function($r){ return preg_replace('/\s+/', '_', strtoupper((string)$r)); }, $includeRegions));
+    $dateStr = date('Ymd_His');
+    $filename = sprintf('%s_region_%s_%s.csv', $base !== '' ? $base : 'datafile', $regStr, $dateStr);
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    // BOM UTF-8 para Excel
+    echo "\xEF\xBB\xBF";
+    $out = fopen('php://output', 'w');
+    // Cabecera de columnas
+    fputcsv($out, ['tipo','nombre','descripcion','extra']);
+    foreach ($entries as $it) {
+        $el = $it['el'];
+        $type = $it['type'];
+        if ($type === 'game') {
+            $name = (string)$el['name'];
+            $desc = (string)$el->description;
+            $extra = (string)$el->category;
+        } else {
+            $name = (string)$el['name'];
+            $desc = (string)$el->description;
+            $year = (string)$el['year'];
+            $manu = (string)$el['manufacturer'];
+            $extra = trim($year . ' ' . $manu);
+        }
+        fputcsv($out, [$type, $name, $desc, $extra]);
+    }
+    fclose($out);
+    exit;
+}
+
 // Descargar/exportar el XML actual
 if ($action === 'download_xml') {
     requireValidCsrf();
@@ -99,7 +433,7 @@ if ($action === 'download_xml') {
             $base = trim($m[1]);
         }
         // Sanear base para nombre de archivo en Windows
-        $base = preg_replace('/[\\\\\/:\*\?\"<>\|]/', ' ', $base);
+        $base = sanearNombreWindowsCrud($base);
         $dateStr = date('Y-m-d H-i-s');
         $filename = sprintf('%s (%d) (%s).xml', $base !== '' ? $base : 'datafile', $countNow, $dateStr);
         // Cabeceras para descarga
@@ -302,7 +636,7 @@ if ($action === 'export_filtered_xml') {
     $base = 'filtered';
     if (isset($_SESSION['original_filename'])) {
         $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
-        $base = preg_replace('/[\\\/:\*\?\"<>\|]/', ' ', (string)$origNoExt);
+        $base = sanearNombreWindowsCrud((string)$origNoExt);
     }
     $dateStr = date('Y-m-d H-i-s');
     $filename = sprintf('%s (filtered) (%d) (%s).xml', $base !== '' ? $base : 'datafile', count($entries), $dateStr);

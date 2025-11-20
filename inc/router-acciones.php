@@ -27,6 +27,8 @@ $handledActions = [
     // crud/utilitarias
     'compact_xml',
     'download_xml',
+    'export_region_xml',
+    'export_region_csv',
     'create_xml',
     'reset_filters',
     'restore_backup',

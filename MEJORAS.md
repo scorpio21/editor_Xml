@@ -143,3 +143,17 @@ Checklist de cierre F3:
   - `DOMDocument::loadXML()`: deshabilitar `resolveExternals`, `substituteEntities`, `validateOnParse` y usar `LIBXML_NONET` en `inc/acciones/crud.php`, `inc/acciones/dedupe.php` y `inc/acciones/bulk.php`.
 - Pruebas: añadido `test/xxe_security_test.php` con XML malicioso (DOCTYPE + entidad externa). Verifica que se bloquea el acceso de red y la expansión de entidades.
 - Notas: se mantiene el manejo de errores con `libxml_use_internal_errors(true)` en helpers. No hay cambios de lógica de negocio.
+
+## Actualización 2025-11-20
+
+- **Pestaña Categorías**:
+  - Exportación de coincidencias a XML con nombre de archivo alineado con el header (`<name>`/`<description>`) y extensión original (`.xml`/`.dat`).
+  - Cabecera del fichero exportado reconstruida: `name` (plataforma), `description` con conteo real de entradas y fecha/hora, `version`/`date` actualizados, preservando `author/homepage/url`.
+  - Editor de `header/description` en la pestaña Categorías con sugerencia basada en nombre + conteo + fecha.
+  - Arreglos de sanitización y buffers para evitar avisos y texto basura al inicio de las descargas.
+- **Nueva pestaña Regiones**:
+  - Selector de regiones reutilizando el mapeo existente (`mapearRegionesIdiomas`): Japon, Europa, USA, Francia, etc.
+  - Botón de **conteo de coincidencias** por región (no modifica el XML).
+  - Exportación **por región a XML**: genera un `datafile` con solo las entradas de esas regiones y un header coherente (mismo patrón que categorías).
+  - Exportación **por región a CSV**: listado plano (`tipo`, `nombre`, `descripcion`, `extra`) en UTF‑8 con BOM para abrir en Excel.
+  - Saneado consistente de nombres de archivo en todas las exportaciones (helper `sanearNombreWindowsCrud`).
