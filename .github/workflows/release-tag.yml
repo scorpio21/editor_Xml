@@ -26,6 +26,10 @@ jobs:
       - name: Crear tag
         run: |
           TAG="v${{ github.event.inputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "El tag $TAG ya existe. Aborta sin cambios."
+            exit 1
+          fi
           git tag "$TAG"
           git push origin "$TAG"
 
