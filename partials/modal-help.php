@@ -117,6 +117,13 @@ require_once __DIR__ . '/../inc/i18n.php';
         <li><?= t('help.s8.li1') ?></li>
         <li><?= t('help.s8.li2') ?></li>
       </ul>
+      <p><strong>Categorías:</strong> en la pestaña "Categorías" puedes seleccionar una o varias categorías detectadas del XML, contar coincidencias y exportar solo esas entradas a un nuevo XML. El fichero resultante ajusta el nombre y la cabecera (`name`/`description`/`version`/`date`) al contenido exportado.</p>
+      <p><strong>Regiones:</strong> en la pestaña "Regiones" puedes elegir una o varias regiones (Japon, Europa, Francia, etc.), contar cuántas entradas pertenecen a esas regiones y exportarlas:
+      <ul>
+        <li>Como XML, generando un `datafile` con solo esas entradas y cabecera actualizada.</li>
+        <li>Como CSV, con columnas básicas (`tipo`, `nombre`, `descripcion`, `extra`) para análisis en Excel u otras herramientas.</li>
+      </ul>
+      </p>
       <p><a href="#helpTitle"><?= htmlspecialchars(t('help.back_to_index')) ?></a></p>
     </section>
 
