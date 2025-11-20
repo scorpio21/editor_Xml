@@ -2,6 +2,25 @@
 
 Todas las modificaciones notables de este proyecto se documentarán en este archivo.
 
+## 2025-11-20 — v0.8.4
+
+### Added — 2025-11-20
+
+- **CI / GitHub Actions**:
+  - Nuevo workflow manual `release-tag.yml` para crear tags y releases desde la pestaña *Actions*.
+  - Input `version` (sin la `v`) que genera automáticamente el tag `vX.Y.Z` y lo sube al remoto.
+  - Creación automática del release asociado con título `vX.Y.Z`.
+
+### Changed — 2025-11-20
+
+- Releases en GitHub:
+  - El cuerpo del release se genera ahora a partir de la primera sección de `CHANGELOG.md` (la más reciente), evitando tener que copiar/pegar notas de versión a mano.
+  - El workflow dispone de permisos `contents: write` para poder crear tags y releases de forma segura usando el token de GitHub Actions.
+
+### Notes
+
+- Este cambio no afecta al runtime de la aplicación (PHP/JS), solo al flujo de publicación de versiones.
+
 ## 2025-11-20
 
 ### Added — 2025-11-20
