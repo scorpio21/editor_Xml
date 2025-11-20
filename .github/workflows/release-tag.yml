@@ -29,6 +29,15 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
+      - name: Extraer notas desde CHANGELOG.md
+        id: changelog
+        run: |
+          section=$(awk 'BEGIN{flag=0} /^## /{ if(flag){exit}; flag=1 } flag{print}' CHANGELOG.md)
+          section="${section//'%'/'%25'}"
+          section="${section//$'\n'/'%0A'}"
+          section="${section//$'\r'/'%0D'}"
+          echo "body=$section" >> "$GITHUB_OUTPUT"
+
       - name: Crear release
         uses: actions/create-release@v1
         env:
@@ -38,5 +47,4 @@ jobs:
           release_name: v${{ github.event.inputs.version }}
           draft: false
           prerelease: false
-          body: |
-            Consulta el archivo CHANGELOG.md del repositorio para ver el detalle completo de cambios de esta versión.
+          body: ${{ steps.changelog.outputs.body }}
