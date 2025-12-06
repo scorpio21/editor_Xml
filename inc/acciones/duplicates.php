@@ -239,31 +239,52 @@ if ($action === 'export_xml_without_duplicates') {
     }
 
     // Copiar y actualizar cabecera
+    $newDateStr = date('Y-m-d H-i-s');
+    $newVersionDate = date('Y-m-d H:i:s');
+
+    // Intentar extraer el nombre base del archivo original (ej: "Microsoft - Xbox")
+    // Se asume formato: "Nombre Base - Datfile (Num) (Date).xml" o similar
+    $nombreBaseArchivo = 'Datfile';
+    if (isset($_SESSION['original_filename'])) {
+        $origName = (string) $_SESSION['original_filename'];
+        // Buscar patrón " - Datfile ("
+        $pos = strpos($origName, ' - Datfile (');
+        if ($pos !== false) {
+            $nombreBaseArchivo = substr($origName, 0, $pos);
+        } else {
+            // Si no sigue el patrón exacto, intentamos limpiar la extensión y lo que parezca fecha/número al final
+            $nombreBaseArchivo = preg_replace('/\s-\sDatfile.*$/', '', $origName);
+            $nombreBaseArchivo = preg_replace('/\s\(\d+\).*$/', '', $nombreBaseArchivo);
+            $nombreBaseArchivo = str_replace('.xml', '', $nombreBaseArchivo);
+        }
+    }
+
+    $newFilename = sprintf('%s - Datfile (%d) (%s).xml', $nombreBaseArchivo, $kept, $newDateStr);
+
     if (isset($xml->header)) {
         $header = $dom->createElement('header');
 
-        // Actualizar description con el nuevo número
-        if (isset($xml->header->description)) {
-            $origDesc = (string) $xml->header->description;
-            // Reemplazar el número antiguo con el nuevo
-            $newDesc = preg_replace('/\(\d+\)/', '(' . $kept . ')', $origDesc);
-            $safeDesc = htmlspecialchars($newDesc, ENT_XML1 | ENT_COMPAT, 'UTF-8');
-            $header->appendChild($dom->createElement('description', $safeDesc));
-        }
-
-        // Actualizar name si existe
+        // Name
         if (isset($xml->header->name)) {
             $safeVal = htmlspecialchars((string) $xml->header->name, ENT_XML1 | ENT_COMPAT, 'UTF-8');
             $header->appendChild($dom->createElement('name', $safeVal));
         }
 
-        // Actualizar version y date con fecha actual
-        $newDate = date('Y-m-d H:i:s');
-        $header->appendChild($dom->createElement('version', $newDate));
-        $header->appendChild($dom->createElement('date', $newDate));
+        // Description: debe coincidir con el nombre nuevo del archivo
+        $header->appendChild($dom->createElement('description', $newFilename));
 
-        // Copiar author, homepage, url sin cambios
-        foreach (['author', 'homepage', 'url'] as $f) {
+        // Categoría (si existía)
+        if (isset($xml->header->category)) {
+            $safeVal = htmlspecialchars((string) $xml->header->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            $header->appendChild($dom->createElement('category', $safeVal));
+        }
+
+        // Version y Date
+        $header->appendChild($dom->createElement('version', $newVersionDate));
+        $header->appendChild($dom->createElement('date', $newVersionDate));
+
+        // Copiar author, homepage, url, comment, clrmamepro, romcenter
+        foreach (['author', 'homepage', 'url', 'comment', 'clrmamepro', 'romcenter'] as $f) {
             if (isset($xml->header->{$f}) && (string) $xml->header->{$f} !== '') {
                 $safeVal = htmlspecialchars((string) $xml->header->{$f}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $header->appendChild($dom->createElement($f, $safeVal));
@@ -274,7 +295,7 @@ if ($action === 'export_xml_without_duplicates') {
     }
 
     // Añadir entradas que NO están en la lista de eliminación
-    $kept = 0;
+    $kept = 0; // Reiniciar contador para el bucle (aunque ya sabemos cuantos son)
     foreach ($children as $idx => $node) {
         if (in_array($idx, $toDelete, true)) {
             continue; // Saltar los marcados para eliminar
@@ -283,6 +304,13 @@ if ($action === 'export_xml_without_duplicates') {
         $type = $node->getName() === 'machine' ? 'machine' : 'game';
         $gameNode = $dom->createElement($type);
         $gameNode->setAttribute('name', (string) ($node['name'] ?? ''));
+
+        // Atributos extra de game/machine
+        foreach (['sourcefile', 'cloneof', 'romof', 'sampleof', 'isbios'] as $attr) {
+            if (isset($node[$attr])) {
+                $gameNode->setAttribute($attr, (string) $node[$attr]);
+            }
+        }
 
         if ($type === 'game') {
             if (isset($node->description)) {
@@ -293,30 +321,47 @@ if ($action === 'export_xml_without_duplicates') {
                 $safeCat = htmlspecialchars((string) $node->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('category', $safeCat));
             }
+            // Otros campos comunes
+            foreach (['year', 'manufacturer', 'publisher', 'genre'] as $tag) {
+                if (isset($node->{$tag})) {
+                    $safeVal = htmlspecialchars((string) $node->{$tag}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                    $gameNode->appendChild($dom->createElement($tag, $safeVal));
+                }
+            }
         } else {
+            // Lógica para 'machine'
             if (isset($node->description)) {
                 $safeDesc = htmlspecialchars((string) $node->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('description', $safeDesc));
             }
-            if (isset($node->year) && (string) $node->year !== '') {
+            if (isset($node->year)) {
                 $safeYear = htmlspecialchars((string) $node->year, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('year', $safeYear));
             }
-            if (isset($node->manufacturer) && (string) $node->manufacturer !== '') {
+            if (isset($node->manufacturer)) {
                 $safeMan = htmlspecialchars((string) $node->manufacturer, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('manufacturer', $safeMan));
             }
         }
 
+        // Copiar ROMs, Disks, Samples
         if (isset($node->rom)) {
             foreach ($node->rom as $rom) {
                 $romEl = $dom->createElement('rom');
-                foreach (['name', 'size', 'crc', 'md5', 'sha1'] as $attr) {
-                    if (isset($rom[$attr]) && (string) $rom[$attr] !== '') {
-                        $romEl->setAttribute($attr, (string) $rom[$attr]);
-                    }
+                foreach ($rom->attributes() as $k => $v) {
+                    $romEl->setAttribute($k, (string) $v);
                 }
                 $gameNode->appendChild($romEl);
+            }
+        }
+        // Copiar Disk
+        if (isset($node->disk)) {
+            foreach ($node->disk as $disk) {
+                $diskEl = $dom->createElement('disk');
+                foreach ($disk->attributes() as $k => $v) {
+                    $diskEl->setAttribute($k, (string) $v);
+                }
+                $gameNode->appendChild($diskEl);
             }
         }
 
@@ -328,14 +373,8 @@ if ($action === 'export_xml_without_duplicates') {
     $dom->normalizeDocument();
     EditorXml::limpiarEspaciosEnBlancoDom($dom);
 
-    // Nombre de archivo
-    $base = 'sin_duplicados';
-    if (isset($_SESSION['original_filename'])) {
-        $origNoExt = preg_replace('/\.[^.]+$/', '', (string) $_SESSION['original_filename']) ?? 'current';
-        $base = preg_replace('/[\\\\\\/:*?"<>|]/', '_', $origNoExt);
-    }
-    $dateStr = date('Y-m-d H-i-s');
-    $filename = sprintf('%s (sin duplicados) (%d) (%s).xml', $base, $kept, $dateStr);
+    // Nombre de archivo final (ya calculado arriba)
+    $filename = $newFilename;
 
     // Limpiar buffer de salida
     while (ob_get_level()) {
