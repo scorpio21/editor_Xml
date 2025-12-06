@@ -11,39 +11,40 @@ declare(strict_types=1);
  * @param string $nombreCompleto Nombre completo del juego
  * @return array ['base' => nombre legible, 'key' => clave normalizada, 'region' => ..., 'languages' => [...], 'revision' => ...]
  */
-function normalizarNombreParaDuplicados(string $nombreCompleto): array {
+function normalizarNombreParaDuplicados(string $nombreCompleto): array
+{
     $original = trim($nombreCompleto);
     $trabajando = $original;
-    
+
     // Extraer región
     $region = null;
     if (preg_match('/\((?:Europe|USA|Japan|World|France|Germany|Spain|Italy|Australia|Asia|Brazil|Korea|China|Canada|Netherlands|Sweden|Denmark|Norway|Finland|Russia|Poland|UK|Ireland|Scotland|Wales)\)/iu', $trabajando, $m)) {
         $region = trim($m[0], '()');
     }
-    
+
     // Extraer idiomas (formato: (En,Fr,De,Es) o (En) o similar)
     $languages = [];
     if (preg_match('/\(([A-Z][a-z](?:,[A-Z][a-z])*)\)/u', $trabajando, $m)) {
         $languages = array_map('trim', explode(',', $m[1]));
     }
-    
+
     // Extraer revisión (Rev 1, Rev 2, etc.)
     $revision = null;
     if (preg_match('/\(Rev\s*(\d+)\)/iu', $trabajando, $m)) {
-        $revision = (int)$m[1];
+        $revision = (int) $m[1];
     }
-    
+
     // Eliminar todo lo que está entre paréntesis al final
     $nombreBase = preg_replace('/\s*\([^)]*\)\s*$/u', '', $trabajando);
     while (preg_match('/\s*\([^)]*\)\s*$/u', $nombreBase)) {
         $nombreBase = preg_replace('/\s*\([^)]*\)\s*$/u', '', $nombreBase);
     }
     $nombreBase = trim($nombreBase);
-    
+
     // Generar clave normalizada (sin espacios, sin puntuación, mayúsculas)
     $clave = strtoupper($nombreBase);
     $clave = preg_replace('/[^A-Z0-9]/u', '', $clave);
-    
+
     return [
         'base' => $nombreBase,
         'key' => $clave,
@@ -60,24 +61,25 @@ function normalizarNombreParaDuplicados(string $nombreCompleto): array {
  * @param SimpleXMLElement $xml XML cargado
  * @return array Array de grupos de duplicados
  */
-function detectarGruposDuplicados(SimpleXMLElement $xml): array {
+function detectarGruposDuplicados(SimpleXMLElement $xml): array
+{
     $children = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
-    
+
     $grupos = [];
     $index = 0;
-    
+
     foreach ($children as $node) {
         $type = $node->getName() === 'machine' ? 'machine' : 'game';
-        $nombreCompleto = (string)($node['name'] ?? '');
-        
+        $nombreCompleto = (string) ($node['name'] ?? '');
+
         if ($nombreCompleto === '') {
             $index++;
             continue;
         }
-        
+
         $info = normalizarNombreParaDuplicados($nombreCompleto);
         $key = $info['key'];
-        
+
         if (!isset($grupos[$key])) {
             $grupos[$key] = [
                 'base' => $info['base'],
@@ -85,7 +87,7 @@ function detectarGruposDuplicados(SimpleXMLElement $xml): array {
                 'entries' => []
             ];
         }
-        
+
         $grupos[$key]['entries'][] = [
             'index' => $index,
             'type' => $type,
@@ -93,45 +95,45 @@ function detectarGruposDuplicados(SimpleXMLElement $xml): array {
             'region' => $info['region'],
             'languages' => $info['languages'],
             'revision' => $info['revision'],
-            'description' => (string)($node->description ?? ''),
-            'category' => $type === 'game' ? (string)($node->category ?? '') : null
+            'description' => (string) ($node->description ?? ''),
+            'category' => $type === 'game' ? (string) ($node->category ?? '') : null
         ];
-        
+
         $index++;
     }
-    
+
     // Filtrar solo grupos con más de una entrada (duplicados reales)
-    $duplicados = array_values(array_filter($grupos, static function($grupo) {
+    $duplicados = array_values(array_filter($grupos, static function ($grupo) {
         return count($grupo['entries']) > 1;
     }));
-    
+
     return $duplicados;
 }
 
 // Acción: detectar duplicados
 if ($action === 'detect_duplicates') {
     requireValidCsrf();
-    
+
     if (!isset($xml) || !($xml instanceof SimpleXMLElement)) {
         http_response_code(400);
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['ok' => false, 'message' => 'No hay XML cargado.']);
         exit;
     }
-    
+
     $grupos = detectarGruposDuplicados($xml);
-    
+
     // Respuesta AJAX
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode([
-            'ok' => true, 
+            'ok' => true,
             'count' => count($grupos),
             'groups' => $grupos
         ]);
         exit;
     }
-    
+
     $_SESSION['message'] = sprintf('Se encontraron %d grupos de duplicados.', count($grupos));
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
@@ -140,43 +142,45 @@ if ($action === 'detect_duplicates') {
 // Acción: exportar duplicados a CSV
 if ($action === 'export_duplicates_csv') {
     requireValidCsrf();
-    
+
     if (!isset($xml) || !($xml instanceof SimpleXMLElement)) {
         $_SESSION['error'] = 'No hay XML cargado.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
-    
+
     $grupos = detectarGruposDuplicados($xml);
-    
+
     if (count($grupos) === 0) {
         $_SESSION['message'] = 'No se encontraron duplicados para exportar.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
-    
+
     $base = 'duplicados';
     if (isset($_SESSION['original_filename'])) {
-        $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
+        $origNoExt = preg_replace('/\.[^.]+$/', '', (string) $_SESSION['original_filename']) ?? 'current';
         $base = preg_replace('/[\\\\\\/:*?"<>|]/', '_', $origNoExt);
     }
     $dateStr = date('Ymd_His');
     $filename = sprintf('%s_duplicados_%s.csv', $base, $dateStr);
-    
+
     // Limpiar buffer de salida
-    while (ob_get_level()) { ob_end_clean(); }
-    
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('X-Content-Type-Options: nosniff');
-    
+
     // BOM UTF-8 para Excel
     echo "\xEF\xBB\xBF";
     $out = fopen('php://output', 'w');
-    
+
     // Cabecera
     fputcsv($out, ['grupo', 'nombre_completo', 'region', 'idiomas', 'revision', 'tipo', 'descripcion']);
-    
+
     foreach ($grupos as $grupo) {
         $grupoNombre = $grupo['base'];
         foreach ($grupo['entries'] as $entry) {
@@ -191,7 +195,7 @@ if ($action === 'export_duplicates_csv') {
             ]);
         }
     }
-    
+
     fclose($out);
     exit;
 }
@@ -199,119 +203,151 @@ if ($action === 'export_duplicates_csv') {
 // Acción: generar XML sin duplicados seleccionados
 if ($action === 'export_xml_without_duplicates') {
     requireValidCsrf();
-    
+
     if (!isset($xml) || !($xml instanceof SimpleXMLElement)) {
         $_SESSION['error'] = 'No hay XML cargado.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
-    
+
     // Recibir índices a eliminar desde POST
-    $toDelete = isset($_POST['delete_indices']) && is_array($_POST['delete_indices']) 
-        ? array_map('intval', $_POST['delete_indices']) 
+    $toDelete = isset($_POST['delete_indices']) && is_array($_POST['delete_indices'])
+        ? array_map('intval', $_POST['delete_indices'])
         : [];
-    
+
     if (count($toDelete) === 0) {
         $_SESSION['error'] = 'No se seleccionó ningún duplicado para eliminar.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
-    
+
     // Cargar todas las entradas
     $children = $xml->xpath('/datafile/*[self::game or self::machine]') ?: [];
-    
+
     // Construir DOM de salida
     $dom = new DOMDocument('1.0', 'UTF-8');
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
     $datafile = $dom->createElement('datafile');
-    
-    // Copiar cabecera
+
+    // Primero contar cuántos se mantendrán para actualizar la cabecera
+    $kept = 0;
+    foreach ($children as $idx => $node) {
+        if (!in_array($idx, $toDelete, true)) {
+            $kept++;
+        }
+    }
+
+    // Copiar y actualizar cabecera
     if (isset($xml->header)) {
         $header = $dom->createElement('header');
-        $fields = ['name','description','version','date','author','homepage','url'];
-        foreach ($fields as $f) {
-            if (isset($xml->header->{$f}) && (string)$xml->header->{$f} !== '') {
-                $safeVal = htmlspecialchars((string)$xml->header->{$f}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+
+        // Actualizar description con el nuevo número
+        if (isset($xml->header->description)) {
+            $origDesc = (string) $xml->header->description;
+            // Reemplazar el número antiguo con el nuevo
+            $newDesc = preg_replace('/\(\d+\)/', '(' . $kept . ')', $origDesc);
+            $safeDesc = htmlspecialchars($newDesc, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            $header->appendChild($dom->createElement('description', $safeDesc));
+        }
+
+        // Actualizar name si existe
+        if (isset($xml->header->name)) {
+            $safeVal = htmlspecialchars((string) $xml->header->name, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            $header->appendChild($dom->createElement('name', $safeVal));
+        }
+
+        // Actualizar version y date con fecha actual
+        $newDate = date('Y-m-d H:i:s');
+        $header->appendChild($dom->createElement('version', $newDate));
+        $header->appendChild($dom->createElement('date', $newDate));
+
+        // Copiar author, homepage, url sin cambios
+        foreach (['author', 'homepage', 'url'] as $f) {
+            if (isset($xml->header->{$f}) && (string) $xml->header->{$f} !== '') {
+                $safeVal = htmlspecialchars((string) $xml->header->{$f}, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $header->appendChild($dom->createElement($f, $safeVal));
             }
         }
+
         $datafile->appendChild($header);
     }
-    
+
     // Añadir entradas que NO están en la lista de eliminación
     $kept = 0;
     foreach ($children as $idx => $node) {
         if (in_array($idx, $toDelete, true)) {
             continue; // Saltar los marcados para eliminar
         }
-        
+
         $type = $node->getName() === 'machine' ? 'machine' : 'game';
         $gameNode = $dom->createElement($type);
-        $gameNode->setAttribute('name', (string)($node['name'] ?? ''));
-        
+        $gameNode->setAttribute('name', (string) ($node['name'] ?? ''));
+
         if ($type === 'game') {
             if (isset($node->description)) {
-                $safeDesc = htmlspecialchars((string)$node->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $safeDesc = htmlspecialchars((string) $node->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('description', $safeDesc));
             }
-            if (isset($node->category) && (string)$node->category !== '') {
-                $safeCat = htmlspecialchars((string)$node->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            if (isset($node->category) && (string) $node->category !== '') {
+                $safeCat = htmlspecialchars((string) $node->category, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('category', $safeCat));
             }
         } else {
             if (isset($node->description)) {
-                $safeDesc = htmlspecialchars((string)$node->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $safeDesc = htmlspecialchars((string) $node->description, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('description', $safeDesc));
             }
-            if (isset($node->year) && (string)$node->year !== '') {
-                $safeYear = htmlspecialchars((string)$node->year, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            if (isset($node->year) && (string) $node->year !== '') {
+                $safeYear = htmlspecialchars((string) $node->year, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('year', $safeYear));
             }
-            if (isset($node->manufacturer) && (string)$node->manufacturer !== '') {
-                $safeMan = htmlspecialchars((string)$node->manufacturer, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+            if (isset($node->manufacturer) && (string) $node->manufacturer !== '') {
+                $safeMan = htmlspecialchars((string) $node->manufacturer, ENT_XML1 | ENT_COMPAT, 'UTF-8');
                 $gameNode->appendChild($dom->createElement('manufacturer', $safeMan));
             }
         }
-        
+
         if (isset($node->rom)) {
             foreach ($node->rom as $rom) {
                 $romEl = $dom->createElement('rom');
-                foreach (['name','size','crc','md5','sha1'] as $attr) {
-                    if (isset($rom[$attr]) && (string)$rom[$attr] !== '') {
-                        $romEl->setAttribute($attr, (string)$rom[$attr]);
+                foreach (['name', 'size', 'crc', 'md5', 'sha1'] as $attr) {
+                    if (isset($rom[$attr]) && (string) $rom[$attr] !== '') {
+                        $romEl->setAttribute($attr, (string) $rom[$attr]);
                     }
                 }
                 $gameNode->appendChild($romEl);
             }
         }
-        
+
         $datafile->appendChild($gameNode);
         $kept++;
     }
-    
+
     $dom->appendChild($datafile);
     $dom->normalizeDocument();
     EditorXml::limpiarEspaciosEnBlancoDom($dom);
-    
+
     // Nombre de archivo
     $base = 'sin_duplicados';
     if (isset($_SESSION['original_filename'])) {
-        $origNoExt = preg_replace('/\.[^.]+$/', '', (string)$_SESSION['original_filename']) ?? 'current';
+        $origNoExt = preg_replace('/\.[^.]+$/', '', (string) $_SESSION['original_filename']) ?? 'current';
         $base = preg_replace('/[\\\\\\/:*?"<>|]/', '_', $origNoExt);
     }
     $dateStr = date('Y-m-d H-i-s');
     $filename = sprintf('%s (sin duplicados) (%d) (%s).xml', $base, $kept, $dateStr);
-    
+
     // Limpiar buffer de salida
-    while (ob_get_level()) { ob_end_clean(); }
-    
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
     header('Content-Type: application/xml; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('X-Content-Type-Options: nosniff');
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Pragma: no-cache');
-    
+
     echo $dom->saveXML();
     exit;
 }
