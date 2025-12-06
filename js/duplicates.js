@@ -268,8 +268,11 @@
                 });
             });
 
+            console.log('DEBUG: Índices a eliminar:', toDelete);
+
             // Eliminar todos los inputs anteriores delete_indices[]
             var oldInputs = duplicatesForm.querySelectorAll('input[name="delete_indices[]"]');
+            console.log('DEBUG: Eliminando inputs anteriores:', oldInputs.length);
             oldInputs.forEach(function (inp) { inp.remove(); });
 
             // Crear nuevos inputs para cada índice
@@ -279,6 +282,14 @@
                 inp.name = 'delete_indices[]';
                 inp.value = String(idx);
                 duplicatesForm.appendChild(inp);
+                console.log('DEBUG: Creado input con valor:', idx);
+            });
+
+            // Verificar que los inputs se crearon
+            var newInputs = duplicatesForm.querySelectorAll('input[name="delete_indices[]"]');
+            console.log('DEBUG: Total inputs creados:', newInputs.length);
+            newInputs.forEach(function (inp, i) {
+                console.log('DEBUG: Input', i, 'value:', inp.value);
             });
 
             // Mostrar sección de exportación
