@@ -268,22 +268,18 @@
                 });
             });
 
-            // Actualizar hidden input
-            var deleteInput = document.getElementById('delete_indices_input');
-            if (deleteInput) {
-                // Eliminar inputs anteriores
-                var oldInputs = duplicatesForm.querySelectorAll('input[name="delete_indices[]"]');
-                oldInputs.forEach(function (inp) { inp.remove(); });
+            // Eliminar todos los inputs anteriores delete_indices[]
+            var oldInputs = duplicatesForm.querySelectorAll('input[name="delete_indices[]"]');
+            oldInputs.forEach(function (inp) { inp.remove(); });
 
-                // Crear nuevos inputs para cada índice
-                toDelete.forEach(function (idx) {
-                    var inp = document.createElement('input');
-                    inp.type = 'hidden';
-                    inp.name = 'delete_indices[]';
-                    inp.value = String(idx);
-                    duplicatesForm.appendChild(inp);
-                });
-            }
+            // Crear nuevos inputs para cada índice
+            toDelete.forEach(function (idx) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'delete_indices[]';
+                inp.value = String(idx);
+                duplicatesForm.appendChild(inp);
+            });
 
             // Mostrar sección de exportación
             if (toDelete.length > 0) {

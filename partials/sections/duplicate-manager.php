@@ -12,7 +12,7 @@
     <form id="duplicates-form" method="post" style="margin-top: 1rem;">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generarTokenCsrf()) ?>">
         <input type="hidden" name="action" value="export_xml_without_duplicates">
-        <input type="hidden" id="delete_indices_input" name="delete_indices[]" value="">
+        <!-- Los delete_indices[] se crearán dinámicamente en JS -->
 
         <div class="duplicate-actions">
             <button type="button" id="detect-duplicates-btn" class="primary">
