@@ -45,8 +45,12 @@
             <p class="hint">
                 <strong id="duplicates-count-text"></strong>
             </p>
-            <button type="submit" class="primary" id="export-xml-btn">
-                Generar XML sin Duplicados Seleccionados
+            <button type="submit" class="primary" id="export-xml-btn" style="margin-right: 1rem;">
+                Generar XML sin Duplicados (Descargar)
+            </button>
+            <button type="submit" class="danger" id="delete-from-current-btn" name="delete_current"
+                onclick="return confirm('¿Estás seguro? Esta acción eliminará los duplicados directamente del archivo cargado en el servidor. Se recomienda exportar una copia de seguridad primero.');">
+                Eliminar Seleccionados del Fichero Actual
             </button>
         </div>
     </form>
@@ -159,5 +163,49 @@
     .item-meta .badge.revision {
         background: #ffc107;
         color: #000;
+    }
+
+    /* Estilos para botones */
+    button.primary,
+    button.secondary,
+    button.danger {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+    }
+
+    button.primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    button.primary:hover {
+        background-color: #0056b3;
+    }
+
+    button.secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    button.secondary:hover {
+        background-color: #545b62;
+    }
+
+    button.danger {
+        background-color: #d9534f;
+        color: white;
+    }
+
+    button.danger:hover {
+        background-color: #c9302c;
+    }
+
+    button:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
     }
 </style>

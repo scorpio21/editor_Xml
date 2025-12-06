@@ -242,21 +242,27 @@ if ($action === 'export_xml_without_duplicates') {
     $newDateStr = date('Y-m-d H-i-s');
     $newVersionDate = date('Y-m-d H:i:s');
 
-    // Intentar extraer el nombre base del archivo original (ej: "Microsoft - Xbox")
-    // Se asume formato: "Nombre Base - Datfile (Num) (Date).xml" o similar
-    $nombreBaseArchivo = 'Datfile';
+    // Intentar extraer el nombre base del archivo original de forma robusta
+    $nombreBaseArchivo = 'Datfile'; // Default
     if (isset($_SESSION['original_filename'])) {
         $origName = (string) $_SESSION['original_filename'];
-        // Buscar patrón " - Datfile ("
-        $pos = strpos($origName, ' - Datfile (');
-        if ($pos !== false) {
-            $nombreBaseArchivo = substr($origName, 0, $pos);
-        } else {
-            // Si no sigue el patrón exacto, intentamos limpiar la extensión y lo que parezca fecha/número al final
-            $nombreBaseArchivo = preg_replace('/\s-\sDatfile.*$/', '', $origName);
-            $nombreBaseArchivo = preg_replace('/\s\(\d+\).*$/', '', $nombreBaseArchivo);
-            $nombreBaseArchivo = str_replace('.xml', '', $nombreBaseArchivo);
+
+        // 1. Eliminar extensión
+        $tempName = preg_replace('/\.xml$/i', '', $origName);
+
+        // 2. Eliminar " (sin duplicados)" en cualquier posición (case insensitive)
+        $tempName = str_ireplace(' (sin duplicados)', '', $tempName);
+
+        // 3. Eliminar patrones de conteo y fecha al final repetidamente: (810) (2025-12-02...)
+        while (preg_match('/\s\([\d\-\s:]+\)$/', $tempName)) {
+            $tempName = preg_replace('/\s\([\d\-\s:]+\)$/', '', $tempName);
         }
+
+        // 4. Si el nombre termina en " - Datfile", lo quitamos para evitar duplicarlo, 
+        // ya que el sprintf de abajo lo añade.
+        $tempName = preg_replace('/\s-\sDatfile$/i', '', $tempName);
+
+        $nombreBaseArchivo = trim($tempName);
     }
 
     $newFilename = sprintf('%s - Datfile (%d) (%s).xml', $nombreBaseArchivo, $kept, $newDateStr);
@@ -388,5 +394,122 @@ if ($action === 'export_xml_without_duplicates') {
     header('Pragma: no-cache');
 
     echo $dom->saveXML();
+    exit;
+}
+
+// Acción: eliminar duplicados del fichero ACTUAL (modificar servidor)
+if ($action === 'delete_duplicates_current') {
+    requireValidCsrf();
+
+    if (!isset($xmlFile) || !file_exists($xmlFile)) {
+        $_SESSION['error'] = 'No hay archivo XML cargado en el servidor.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Recibir índices a eliminar desde POST
+    $toDelete = isset($_POST['delete_indices']) && is_array($_POST['delete_indices'])
+        ? array_map('intval', $_POST['delete_indices'])
+        : [];
+
+    if (count($toDelete) === 0) {
+        $_SESSION['error'] = 'No se seleccionó ningún duplicado para eliminar.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Cargar como DOMDocument para conservar formato y comentarios
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    // LIBXML_PARSEHUGE para archivos grandes
+    if (!$dom->load($xmlFile, LIBXML_PARSEHUGE)) {
+        $_SESSION['error'] = 'Error al cargar el XML para edición.';
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $xpath = new DOMXPath($dom);
+    // IMPORTANTE: Seleccionar SOLO elementos game/machine directos de datafile para coincidir con el índice
+    // Xpath usa índices 1-based, PHP 0-based.
+    // La lista $children en el bloque anterior venía de $xml->xpath('/datafile/*[self::game or self::machine]')
+
+    $nodes = $xpath->query('/datafile/*[self::game or self::machine]');
+
+    // Recolectar nodos a eliminar
+    $nodesToDelete = [];
+    $keptCount = 0;
+
+    foreach ($nodes as $idx => $node) {
+        if (in_array($idx, $toDelete, true)) {
+            $nodesToDelete[] = $node;
+        } else {
+            $keptCount++;
+        }
+    }
+
+    // Eliminar nodos
+    foreach ($nodesToDelete as $node) {
+        $node->parentNode->removeChild($node);
+    }
+
+    // Actualizar cabecera
+    $headerNodes = $xpath->query('/datafile/header');
+    if ($headerNodes->length > 0) {
+        $header = $headerNodes->item(0);
+
+        // Calcular nuevo nombre
+        $origName = $_SESSION['original_filename'] ?? 'current.xml';
+
+        // Limpieza robusta del nombre
+        $tempName = preg_replace('/\.xml$/i', '', $origName);
+        $tempName = str_ireplace(' (sin duplicados)', '', $tempName);
+        while (preg_match('/\s\([\d\-\s:]+\)$/', $tempName)) {
+            $tempName = preg_replace('/\s\([\d\-\s:]+\)$/', '', $tempName);
+        }
+        $baseLimpiado = trim(preg_replace('/\s-\sDatfile$/i', '', $tempName));
+
+        $newDateStr = date('Y-m-d H-i-s');
+        $newFilename = sprintf('%s - Datfile (%d) (%s).xml', $baseLimpiado, $keptCount, $newDateStr);
+
+        // Actualizar Description
+        $descNodes = $header->getElementsByTagName('description');
+        if ($descNodes->length > 0) {
+            $descNodes->item(0)->nodeValue = htmlspecialchars($newFilename, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+        } else {
+            $header->appendChild($dom->createElement('description', htmlspecialchars($newFilename, ENT_XML1 | ENT_COMPAT, 'UTF-8')));
+        }
+
+        // Actualizar Fecha y Versión
+        $verNodes = $header->getElementsByTagName('version');
+        $isoDate = date('Y-m-d H:i:s');
+        if ($verNodes->length > 0)
+            $verNodes->item(0)->nodeValue = $isoDate;
+        else
+            $header->appendChild($dom->createElement('version', $isoDate));
+
+        $dateNodes = $header->getElementsByTagName('date');
+        if ($dateNodes->length > 0)
+            $dateNodes->item(0)->nodeValue = $isoDate;
+        else
+            $header->appendChild($dom->createElement('date', $isoDate));
+    } else {
+        // Si no hay cabecera, usar un default para filename
+        $newFilename = 'current.xml';
+    }
+
+    // Normalizar y guardar
+    $dom->normalizeDocument();
+    EditorXml::limpiarEspaciosEnBlancoDom($dom);
+
+    if ($dom->save($xmlFile)) {
+        // Actualizar sesión
+        $_SESSION['original_filename'] = $newFilename;
+        $_SESSION['message'] = sprintf('Se eliminaron %d duplicados correctamente. Archivo actual: %s', count($nodesToDelete), $newFilename);
+    } else {
+        $_SESSION['error'] = 'Error al guardar los cambios en el archivo XML.';
+    }
+
+    header('Location: ' . $_SERVER['PHP_SELF']);
     exit;
 }
