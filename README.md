@@ -53,6 +53,13 @@ Actualizado: 2025-11-20 — ver `CHANGELOG.md` (Solapa "Categorías" afinada: no
   - Contar coincidencias
   - Exportar a XML solo con esas entradas (cabecera y nombre del archivo coherentes)
   - Exportar a CSV para análisis externo (tipo, nombre, descripción, extra)
+- 🔄 Solapa **Duplicados**: gestión inteligente de juegos duplicados:
+  - Detección automática agrupando por nombre base (ignora región, idiomas, revisiones)
+  - Visualización de grupos con todas las variantes disponibles
+  - Selección manual de qué versión mantener en cada grupo
+  - Sugerencias automáticas: priorizar versiones originales, con español, o última revisión
+  - Exportar lista de duplicados a CSV para revisión
+  - Generar nuevo XML/DAT sin los duplicados seleccionados para eliminar
 
 ## Características
 

@@ -24,11 +24,16 @@ $handledActions = [
     'dedupe_region_count',
     'dedupe_region',
     'dedupe_region_export_csv',
+    // duplicates
+    'detect_duplicates',
+    'export_duplicates_csv',
+    'export_xml_without_duplicates',
     // crud/utilitarias
     'compact_xml',
     'download_xml',
     'export_region_xml',
     'export_region_csv',
+    'export_region_count',
     'create_xml',
     'reset_filters',
     'restore_backup',
@@ -55,5 +60,6 @@ require_once __DIR__ . '/acciones/dedupe.php';
 require_once __DIR__ . '/acciones/crud.php';
 require_once __DIR__ . '/acciones/search_external.php';
 require_once __DIR__ . '/acciones/category.php';
+require_once __DIR__ . '/acciones/duplicates.php';
 
 // Si ninguna acción coincidió, el flujo continúa y la página puede renderizar normalmente.

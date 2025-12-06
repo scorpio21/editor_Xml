@@ -7,12 +7,25 @@
 # Logs de la aplicación
 /logs/
 
+# Archivos de datos (DAT/XML de prueba)
+*.dat
+*.bak
+
+# Archivos de log individuales
+*.log
+
 # Archivos temporales del sistema/IDE
 .DS_Store
 Thumbs.db
 *.tmp
 *.temp
+*.swp
+*~
 
 # Entornos/virtualenvs (por si acaso)
 .venv/
 venv/
+
+# IDE y editores
+.vscode/
+.idea/
