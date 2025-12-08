@@ -240,7 +240,8 @@ if ($xml) {
     <script src="js/dedupe.js"></script>
     <script src="js/search-external.js"></script>
     <script src="js/category.js"></script>
-    <script src="js/duplicates.js"></script>
+    <script
+      src="js/duplicates.js?v=<?= file_exists('js/duplicates.js') ? filemtime('js/duplicates.js') : time() ?>"></script>
     <script src="js/lang-selector.js"></script>
 
 </body>

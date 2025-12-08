@@ -121,23 +121,38 @@
         if (selectSpanishBtn) {
             selectSpanishBtn.addEventListener('click', function () {
                 currentGroups.forEach(function (group, gIdx) {
-                    // Buscar entrada con español
-                    var spanishIdx = -1;
-                    for (var i = 0; i < group.entries.length; i++) {
-                        var langs = group.entries[i].languages || [];
-                        if (langs.includes('Es')) {
-                            spanishIdx = i;
-                            break;
+                    var bestIdx = -1;
+                    var bestScore = -1; // -1: ninguno, 1: Europe (fallback), 2: Spain/Es (prioridad)
+
+                    group.entries.forEach(function (entry, i) {
+                        var score = 0;
+                        var region = (entry.region || '').toLowerCase();
+                        var langs = entry.languages || [];
+
+                        // Criterio 1: Región explícita España o idioma 'Es' listado -> Prioridad Máxima (2)
+                        // A veces la región viene como "Spain" o "Es" dependiendo de la fuente, normalizamos chequeo.
+                        if (region === 'spain' || langs.includes('Es')) {
+                            score = 2;
                         }
-                    }
-                    if (spanishIdx >= 0) {
-                        var radio = document.querySelector('input[name="keep_group_' + gIdx + '"][value="' + spanishIdx + '"]');
-                        if (radio) radio.checked = true;
-                    } else {
-                        // Si no hay español, seleccionar el primero
-                        var radio = document.querySelector('input[name="keep_group_' + gIdx + '"][value="0"]');
-                        if (radio) radio.checked = true;
-                    }
+                        // Criterio 2: Región Europa (suele incluir español) -> Prioridad Media (1)
+                        else if (region.includes('europe')) {
+                            score = 1;
+                        }
+
+                        // Si encontramos uno con mejor puntuación, lo guardamos.
+                        // Si hay empate de puntuación, nos quedamos con el primero que encontramos (o se podría añadir lógica de revisión)
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestIdx = i;
+                        }
+                    });
+
+                    // Si encontramos algún candidato (score 1 o 2), lo seleccionamos.
+                    // Si no (score 0), seleccionamos el primero por defecto (índice 0).
+                    var targetIdx = (bestIdx >= 0 && bestScore > 0) ? bestIdx : 0;
+
+                    var radio = document.querySelector('input[name="keep_group_' + gIdx + '"][value="' + targetIdx + '"]');
+                    if (radio) radio.checked = true;
                 });
                 updateSelection();
             });

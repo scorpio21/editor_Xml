@@ -18,7 +18,7 @@ function normalizarNombreParaDuplicados(string $nombreCompleto): array
 
     // Extraer región
     $region = null;
-    if (preg_match('/\((?:Europe|USA|Japan|World|France|Germany|Spain|Italy|Australia|Asia|Brazil|Korea|China|Canada|Netherlands|Sweden|Denmark|Norway|Finland|Russia|Poland|UK|Ireland|Scotland|Wales)\)/iu', $trabajando, $m)) {
+    if (preg_match('/\((?:Europe|USA|Japan|World|France|Germany|Spain|Italy|Australia|Asia|Brazil|Korea|China|Canada|Netherlands|Sweden|Denmark|Norway|Finland|Russia|Poland|UK|Ireland|Scotland|Wales)(?:,[^)]*)?\)/iu', $trabajando, $m)) {
         $region = trim($m[0], '()');
     }
 
@@ -34,12 +34,31 @@ function normalizarNombreParaDuplicados(string $nombreCompleto): array
         $revision = (int) $m[1];
     }
 
-    // Eliminar todo lo que está entre paréntesis al final
-    $nombreBase = preg_replace('/\s*\([^)]*\)\s*$/u', '', $trabajando);
-    while (preg_match('/\s*\([^)]*\)\s*$/u', $nombreBase)) {
-        $nombreBase = preg_replace('/\s*\([^)]*\)\s*$/u', '', $nombreBase);
+    // Eliminar paréntesis al final, pero conservando etiquetas de discos/partes
+    $nombreBase = $trabajando;
+    $etiquetasConservadas = [];
+
+    // Iteramos eliminando etiquetas del final
+    while (preg_match('/(\s*\(([^)]*)\))\s*$/u', $nombreBase, $m)) {
+        $tagCompleto = $m[1];
+        $contenido = $m[2];
+
+        // Verificar si es una etiqueta de disco/parte que debemos conservar
+        // Ej: (Disk 1), (Disc A), (Side 1), (Tape 1), (Part 1)
+        if (preg_match('/^(?:Disk|Disc|Side|Tape|Part)\s/iu', $contenido)) {
+            array_unshift($etiquetasConservadas, trim($tagCompleto));
+        }
+
+        // Eliminamos la etiqueta del nombre base
+        $nombreBase = substr($nombreBase, 0, -strlen($tagCompleto));
     }
+
     $nombreBase = trim($nombreBase);
+
+    // Reincorporar etiquetas conservadas al nombre base
+    if (!empty($etiquetasConservadas)) {
+        $nombreBase .= ' ' . implode(' ', $etiquetasConservadas);
+    }
 
     // Generar clave normalizada (sin espacios, sin puntuación, mayúsculas)
     $clave = strtoupper($nombreBase);
