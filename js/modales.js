@@ -2,6 +2,9 @@
 (function(){
   'use strict';
 
+  // Evitar que el navegador "abra/navegue" cuando el usuario suelta archivos desde el explorador.
+  // Se aplica solo a drag&drop de ficheros (no a otros drags internos).
+
   var afterLoad = (window.AppUtils && window.AppUtils.afterLoad) ? window.AppUtils.afterLoad : function(cb){
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', cb); } else { cb(); }
   };
@@ -177,6 +180,79 @@
     a11yCloseModal(modal);
   }
 
+  // --- Modal añadir juegos (lote drag&drop) ---
+  function openAddBatchModal() {
+    var modal = document.getElementById('addGameBatchModal');
+    if (!modal) return;
+    a11yOpenModal(modal);
+  }
+  function closeAddBatchModal() {
+    var modal = document.getElementById('addGameBatchModal');
+    if (!modal) return;
+    a11yCloseModal(modal);
+  }
+
+  function isBatchModalOpen() {
+    var modal = document.getElementById('addGameBatchModal');
+    if (!modal) return false;
+    var hidden = modal.getAttribute('aria-hidden');
+    return hidden !== 'true';
+  }
+
+  // Bloqueo global (captura): evita que el navegador navegue/abra/descargue archivos
+  // al soltarlos encima de la página.
+  function bloquearDropDefault(e) {
+    if (!e || !e.dataTransfer) return;
+    if (!isBatchModalOpen()) return;
+    var types = e.dataTransfer.types;
+    var esFichero = false;
+    try {
+      if (types && typeof types.contains === 'function') {
+        esFichero = types.contains('Files');
+      } else if (types && typeof types.length === 'number') {
+        for (var i = 0; i < types.length; i++) {
+          if (types[i] === 'Files') { esFichero = true; break; }
+        }
+      }
+    } catch (_) {
+      esFichero = false;
+    }
+    if (!esFichero) {
+      try {
+        if (e.dataTransfer.items && e.dataTransfer.items.length) {
+          esFichero = (e.dataTransfer.items[0].kind === 'file');
+        } else if (e.dataTransfer.files && e.dataTransfer.files.length) {
+          esFichero = true;
+        }
+      } catch (_) {
+        esFichero = false;
+      }
+    }
+    if (!esFichero) return;
+
+    // Si el drop/drag cae dentro del dropzone, dejamos que el handler del dropzone
+    // procese los ficheros (solo prevenimos la navegación por defecto del navegador).
+    var dentroDropzone = false;
+    try {
+      var t = e.target;
+      if (t && typeof t.closest === 'function') {
+        dentroDropzone = !!t.closest('#ag-batch-dropzone');
+      }
+    } catch (_) {
+      dentroDropzone = false;
+    }
+
+    e.preventDefault();
+    if (!dentroDropzone) {
+      try { e.stopPropagation(); } catch (_) {}
+    }
+    try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+  }
+
+  window.addEventListener('dragenter', bloquearDropDefault, true);
+  window.addEventListener('dragover', bloquearDropDefault, true);
+  window.addEventListener('drop', bloquearDropDefault, true);
+
   // Eventos globales para cerrar modales con clic fuera o ESC
   afterLoad(function(){
     window.addEventListener('click', function (event) {
@@ -203,6 +279,8 @@
   afterLoad(function(){
     var romsContainer = document.getElementById('roms-container');
     var addRomBtn = document.getElementById('ag_add_rom_btn');
+    var addForm = document.getElementById('add-game-form');
+
     function updateRemoveButtons() {
       if (!romsContainer) return;
       var rows = romsContainer.querySelectorAll('.rom-row');
@@ -271,7 +349,96 @@
       });
     }
     updateRemoveButtons();
-    var addForm = document.getElementById('add-game-form');
+
+    function nombreBaseArchivo(filename) {
+      return String(filename || '').replace(/\.[^/.]+$/, '');
+    }
+
+    async function enviarJuegoDesdeArchivo(file) {
+      if (!addForm) { throw new Error('Formulario no disponible'); }
+      if (!window.Hashes || typeof window.Hashes.calcularDesdeFile !== 'function') {
+        throw new Error('Módulo de hashes no disponible');
+      }
+
+      var csrfEl = addForm.querySelector('input[name="csrf_token"]');
+      var csrf = csrfEl ? String(csrfEl.value || '') : '';
+      if (!csrf) { throw new Error('Token CSRF ausente'); }
+
+      var resHashes = await window.Hashes.calcularDesdeFile(file);
+
+      var fd = new FormData();
+      fd.append('action', 'add_game');
+      fd.append('csrf_token', csrf);
+      fd.append('game_name', nombreBaseArchivo(file.name));
+      fd.append('description', nombreBaseArchivo(file.name));
+      fd.append('category', '');
+      fd.append('rom_name[]', file.name);
+      fd.append('size[]', String(resHashes.size));
+      fd.append('crc[]', String(resHashes.crc));
+      fd.append('md5[]', String(resHashes.md5));
+      fd.append('sha1[]', String(resHashes.sha1));
+
+      var resp = await fetch(window.location.href, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd,
+        credentials: 'same-origin'
+      });
+      var data = null;
+      try { data = await resp.json(); } catch (_) { data = null; }
+      if (!resp.ok || !data || data.ok !== true) {
+        var msg = (data && data.message) ? data.message : 'No se pudo añadir el juego.';
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function procesarArchivosEnCola(files, dropzone) {
+      if (!files || !files.length) return;
+      var total = files.length;
+      var ok = 0;
+      var fail = 0;
+      if (dropzone) {
+        var sub = dropzone.querySelector('.dropzone-subtitle');
+        if (sub) sub.textContent = 'Procesando ' + total + ' archivo(s)…';
+      }
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        try {
+          if (dropzone) {
+            var sub2 = dropzone.querySelector('.dropzone-subtitle');
+            if (sub2) sub2.textContent = 'Calculando y añadiendo (' + (i + 1) + '/' + total + '): ' + f.name;
+          }
+          await enviarJuegoDesdeArchivo(f);
+          ok++;
+        } catch (e) {
+          console.error(e);
+          fail++;
+        }
+      }
+      if (dropzone) {
+        var sub3 = dropzone.querySelector('.dropzone-subtitle');
+        if (sub3) sub3.textContent = 'Completado. Añadidos: ' + ok + '. Fallos: ' + fail + '.';
+      }
+      if (fail > 0) {
+        alert('Proceso terminado. Añadidos: ' + ok + '. Fallos: ' + fail + '. Revisa consola para detalles.');
+      }
+
+      // Si se añadieron juegos, recargar para verlos reflejados en la lista.
+      // El formulario de este modal es para alta manual; el lote se hace vía AJAX.
+      if (ok > 0 && fail === 0) {
+        try { closeAddBatchModal(); } catch (_) {}
+        setTimeout(function(){ window.location.reload(); }, 300);
+      }
+    }
+
+    function normalizarListaArchivos(fileList) {
+      if (!fileList) return [];
+      try { return Array.prototype.slice.call(fileList); } catch (_) { return []; }
+    }
+
+    // El drag&drop en lote se gestiona en el modal addGameBatchModal
+
     if (addForm) {
       addForm.addEventListener('submit', function(ev){
         var errors = [];
@@ -292,6 +459,143 @@
           if (!/^[0-9a-fA-F]{40}$/.test(sha1)) errors.push('SHA1 debe tener 40 hex.');
         });
         if (errors.length) { ev.preventDefault(); alert(errors.join('\n')); }
+      });
+    }
+  });
+
+  // --- Módulo Añadir juegos (lote drag&drop) ---
+  afterLoad(function(){
+    var dropzone = document.getElementById('ag-batch-dropzone');
+    var batchInput = document.getElementById('ag_batch_files');
+    var batchForm = document.getElementById('add-game-batch-form');
+    var catSelect = document.getElementById('ag_batch_category_select');
+
+    function getCategoriaBatch() {
+      if (catSelect) return String(catSelect.value || '').trim();
+      return '';
+    }
+
+    function normalizarListaArchivos(fileList) {
+      if (!fileList) return [];
+      try { return Array.prototype.slice.call(fileList); } catch (_) { return []; }
+    }
+
+    function activarDropzoneUI(isOver) {
+      if (!dropzone) return;
+      if (isOver) dropzone.classList.add('dragover');
+      else dropzone.classList.remove('dragover');
+    }
+
+    async function enviarJuegoDesdeArchivo(file) {
+      if (!batchForm) { throw new Error('Formulario no disponible'); }
+      if (!window.Hashes || typeof window.Hashes.calcularDesdeFile !== 'function') {
+        throw new Error('Módulo de hashes no disponible');
+      }
+
+      var csrfEl = batchForm.querySelector('input[name="csrf_token"]');
+      var csrf = csrfEl ? String(csrfEl.value || '') : '';
+      if (!csrf) { throw new Error('Token CSRF ausente'); }
+
+      var resHashes = await window.Hashes.calcularDesdeFile(file);
+
+      var fd = new FormData();
+      fd.append('action', 'add_game');
+      fd.append('csrf_token', csrf);
+      fd.append('game_name', String(file.name).replace(/\.[^/.]+$/, ''));
+      fd.append('description', String(file.name).replace(/\.[^/.]+$/, ''));
+      fd.append('category', getCategoriaBatch());
+      fd.append('rom_name[]', file.name);
+      fd.append('size[]', String(resHashes.size));
+      fd.append('crc[]', String(resHashes.crc));
+      fd.append('md5[]', String(resHashes.md5));
+      fd.append('sha1[]', String(resHashes.sha1));
+
+      var resp = await fetch(window.location.href, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd,
+        credentials: 'same-origin'
+      });
+      var data = null;
+      try { data = await resp.json(); } catch (_) { data = null; }
+      if (!resp.ok || !data || data.ok !== true) {
+        var msg = (data && data.message) ? data.message : 'No se pudo añadir el juego.';
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function procesarArchivosEnCola(files) {
+      if (!files || !files.length) return;
+      var total = files.length;
+      var ok = 0;
+      var fail = 0;
+      if (dropzone) {
+        var sub = dropzone.querySelector('.dropzone-subtitle');
+        if (sub) sub.textContent = 'Procesando ' + total + ' archivo(s)…';
+      }
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        try {
+          if (dropzone) {
+            var sub2 = dropzone.querySelector('.dropzone-subtitle');
+            if (sub2) sub2.textContent = 'Calculando y añadiendo (' + (i + 1) + '/' + total + '): ' + f.name;
+          }
+          await enviarJuegoDesdeArchivo(f);
+          ok++;
+        } catch (e) {
+          console.error(e);
+          fail++;
+        }
+      }
+      if (dropzone) {
+        var sub3 = dropzone.querySelector('.dropzone-subtitle');
+        if (sub3) sub3.textContent = 'Completado. Añadidos: ' + ok + '. Fallos: ' + fail + '.';
+      }
+      if (fail > 0) {
+        alert('Proceso terminado. Añadidos: ' + ok + '. Fallos: ' + fail + '. Revisa consola para detalles.');
+      }
+      if (ok > 0 && fail === 0) {
+        try { closeAddBatchModal(); } catch (_) {}
+        setTimeout(function(){ window.location.reload(); }, 300);
+      }
+    }
+
+    if (dropzone && batchInput) {
+      dropzone.addEventListener('click', function(){
+        try { batchInput.click(); } catch (_) {}
+      });
+      dropzone.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          try { batchInput.click(); } catch (_) {}
+        }
+      });
+      dropzone.addEventListener('dragover', function(e){
+        e.preventDefault();
+        if (e.dataTransfer) {
+          try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+        }
+        activarDropzoneUI(true);
+      });
+      dropzone.addEventListener('dragleave', function(){
+        activarDropzoneUI(false);
+      });
+      dropzone.addEventListener('drop', function(e){
+        e.preventDefault();
+        activarDropzoneUI(false);
+        var files = normalizarListaArchivos(e.dataTransfer ? e.dataTransfer.files : null);
+        if (dropzone) {
+          var sub0 = dropzone.querySelector('.dropzone-subtitle');
+          if (sub0) sub0.textContent = 'Recibidos: ' + (files ? files.length : 0) + ' archivo(s).';
+        }
+        procesarArchivosEnCola(files);
+      });
+
+      batchInput.addEventListener('change', function(){
+        var files = normalizarListaArchivos(batchInput.files);
+        procesarArchivosEnCola(files);
+        try { batchInput.value = ''; } catch (_) {}
       });
     }
   });
@@ -497,4 +801,6 @@
   window.closeCreateModal = closeCreateModal;
   window.openAddModal = openAddModal;
   window.closeAddModal = closeAddModal;
+  window.openAddBatchModal = openAddBatchModal;
+  window.closeAddBatchModal = closeAddBatchModal;
 })();

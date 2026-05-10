@@ -267,6 +267,11 @@ export LOG_LEVEL_MIN=INFO
 1. **Ayuda**: botón “Ayuda” (arriba) con guía paso a paso.
 1. **Buscar**: utiliza el cuadro de búsqueda para filtrar por nombre/descr./categoría. El término se mantiene al paginar y cambiar "Mostrar N".
    - Nota MAME: aparece la pestaña **MAME (buscar)** con buscador por nombre, ROM y hash; sin eliminación.
+1. **Crear XML**: en el modal “Crear nuevo XML”, los campos opcionales están agrupados en un bloque plegable para reducir altura.
+1. **Añadir (drag&drop)**: botón “Añadir (drag&drop)” para abrir un modal de lote donde puedes arrastrar y soltar **varios archivos comprimidos**.
+   - Se añadirá **1 juego por archivo**.
+   - Se calculan hashes automáticamente y se van añadiendo en cola (uno por uno).
+   - Puedes fijar una **categoría** para el lote desde un desplegable con categorías detectadas en el XML (incluye `Games`).
 
 ### Flujo: Compactar y Descargar
 
