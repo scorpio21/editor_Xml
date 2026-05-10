@@ -71,8 +71,8 @@ if (!isset($xmlFile)) {
         <form method="post" enctype="multipart/form-data">
             <?= campoCSRF() ?>
             <div class="file-row">
-                <input type="file" name="xmlFile" accept=".xml,.dat" required>
-                <button type="submit">Cargar XML/DAT</button>
+                <input type="file" name="xmlFile" accept=".xml,.dat,.gz" required>
+                <button type="submit">Cargar XML/DAT/GZ</button>
             </div>
         </form>
         <div class="or">
@@ -93,7 +93,7 @@ if (!isset($xmlFile)) {
                 <option value="Asia/Tokyo">Asia/Tokyo</option>
             </select>
         </div>
-        <p class="hint"><small>Sube un archivo XML o DAT con la estructura de juegos para comenzar.</small></p>
+        <p class="hint"><small>Sube un archivo XML, DAT o GZ (comprimido) con la estructura de juegos para comenzar. Los archivos .gz se descomprimirán automáticamente.</small></p>
     </div>
 <?php endif; ?>
 

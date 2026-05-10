@@ -59,11 +59,12 @@ if (isset($_FILES['xmlFile'])) {
     } else {
         // El archivo se subió correctamente, procesarlo
         $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
-        if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
-            // Guardar nombre original para futuras exportaciones
+        $fileExtensionLower = strtolower($fileExtension);
+        
+        if (in_array($fileExtensionLower, ['xml', 'dat'], true)) {
+            // Procesar archivos XML/DAT normales
             $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
             
-            // Verificar que el archivo temporal exista
             if (!is_uploaded_file($_FILES['xmlFile']['tmp_name'])) {
                 $_SESSION['error'] = 'El archivo no es un archivo subido válido.';
                 registrarError('crud.php:upload', 'Archivo temporal no es válido', [
@@ -84,8 +85,51 @@ if (isset($_FILES['xmlFile'])) {
                 $_SESSION['xml_uploaded'] = true;
                 $_SESSION['message'] = 'Archivo cargado correctamente (' . number_format($_FILES['xmlFile']['size'] / 1024, 2) . ' KB).';
             }
+        } elseif ($fileExtensionLower === 'gz') {
+            // Procesar archivos comprimidos .gz
+            $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
+            
+            if (!is_uploaded_file($_FILES['xmlFile']['tmp_name'])) {
+                $_SESSION['error'] = 'El archivo no es un archivo subido válido.';
+                registrarError('crud.php:upload', 'Archivo temporal no es válido', [
+                    'tmp_name' => $_FILES['xmlFile']['tmp_name'] ?? null,
+                    'name' => $_FILES['xmlFile']['name'] ?? null,
+                ]);
+            } else {
+                // Descomprimir el archivo
+                $compressedContent = file_get_contents($_FILES['xmlFile']['tmp_name']);
+                if ($compressedContent === false) {
+                    $_SESSION['error'] = 'No se pudo leer el archivo comprimido.';
+                } else {
+                    $xmlContent = gzdecode($compressedContent);
+                    if ($xmlContent === false) {
+                        $_SESSION['error'] = 'El archivo no está comprimido correctamente con gzip.';
+                    } else {
+                        // Verificar que el contenido descomprimido sea XML válido
+                        $dom = new DOMDocument();
+                        $dom->preserveWhiteSpace = false;
+                        $dom->resolveExternals = false;
+                        $dom->substituteEntities = false;
+                        $dom->validateOnParse = false;
+                        
+                        if (@$dom->loadXML($xmlContent, LIBXML_NONET) === false) {
+                            $_SESSION['error'] = 'El archivo descomprimido no contiene XML válido.';
+                        } elseif (!@file_put_contents($xmlFile, $xmlContent)) {
+                            $error = error_get_last();
+                            $_SESSION['error'] = 'No se pudo guardar el XML descomprimido. ' . ($error['message'] ?? '');
+                        } else {
+                            $_SESSION['xml_uploaded'] = true;
+                            $originalSize = $_FILES['xmlFile']['size'];
+                            $finalSize = strlen($xmlContent);
+                            $_SESSION['message'] = 'Archivo comprimido procesado correctamente. Original: ' . 
+                                              number_format($originalSize / 1024, 2) . ' KB, Final: ' . 
+                                              number_format($finalSize / 1024, 2) . ' KB.';
+                        }
+                    }
+                }
+            }
         } else {
-            $_SESSION['error'] = 'Solo se permiten archivos XML o DAT. Extensión detectada: ' . htmlspecialchars($fileExtension);
+            $_SESSION['error'] = 'Solo se permiten archivos XML, DAT o GZ (comprimidos). Extensión detectada: ' . htmlspecialchars($fileExtension);
         }
     }
 }
