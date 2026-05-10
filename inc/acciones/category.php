@@ -97,6 +97,17 @@ function categoriaCoincide(?string $cat, array $seleccionadas): bool {
     return false;
 }
 
+function categoriasCoincidenEnNodo(DOMXPath $xp, DOMElement $nodo, array $seleccionadas): bool {
+    $catNodes = $xp->query('./category', $nodo);
+    if (!$catNodes || $catNodes->length === 0) { return false; }
+    foreach ($catNodes as $cNode) {
+        if (!($cNode instanceof DOMElement)) { continue; }
+        $cat = (string)$cNode->nodeValue;
+        if (categoriaCoincide($cat, $seleccionadas)) { return true; }
+    }
+    return false;
+}
+
 // Sólo procesar si tenemos XML cargado cuando se requiera
 if (in_array($action, ['category_count','category_delete','category_export_xml'], true)) {
     requireValidCsrf();
@@ -138,9 +149,7 @@ if (in_array($action, ['category_count','category_delete','category_export_xml']
             if (!$nodes) { continue; }
             foreach ($nodes as $n) {
                 if (!($n instanceof DOMElement)) { continue; }
-                $cNode = $xp->query('./category', $n)->item(0);
-                $cat = $cNode ? (string)$cNode->nodeValue : null;
-                if (categoriaCoincide($cat, $cats)) { $total++; }
+                if (categoriasCoincidenEnNodo($xp, $n, $cats)) { $total++; }
             }
         }
         $_SESSION['message'] = 'Coincidencias por categoría: ' . $total . '. (Simulación: no se ha eliminado nada)';
@@ -162,9 +171,7 @@ if (in_array($action, ['category_count','category_delete','category_export_xml']
             for ($i = $nodes->length - 1; $i >= 0; $i--) {
                 $el = $nodes->item($i);
                 if (!($el instanceof DOMElement)) { continue; }
-                $cNode = $xp->query('./category', $el)->item(0);
-                $cat = $cNode ? (string)$cNode->nodeValue : null;
-                if (categoriaCoincide($cat, $cats)) {
+                if (categoriasCoincidenEnNodo($xp, $el, $cats)) {
                     $el->parentNode?->removeChild($el);
                     $eliminados++;
                 }
@@ -199,9 +206,7 @@ if (in_array($action, ['category_count','category_delete','category_export_xml']
             if (!$nodes) { continue; }
             foreach ($nodes as $el) {
                 if (!($el instanceof DOMElement)) { continue; }
-                $cNode = $xp->query('./category', $el)->item(0);
-                $cat = $cNode ? (string)$cNode->nodeValue : null;
-                if (categoriaCoincide($cat, $cats)) {
+                if (categoriasCoincidenEnNodo($xp, $el, $cats)) {
                     $imported = $newDom->importNode($el, true);
                     $root->appendChild($imported);
                     $count++;
