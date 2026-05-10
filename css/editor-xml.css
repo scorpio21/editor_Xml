@@ -473,6 +473,64 @@ textarea:focus {
   color: var(--muted);
 }
 
+/* Dropzone (Añadir juego) */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.dropzone:hover {
+  border-color: var(--accent-500);
+}
+.dropzone:focus-visible {
+  outline: 3px solid rgba(52, 152, 219, 0.30);
+  outline-offset: 2px;
+}
+.dropzone.dragover {
+  border-color: var(--accent-500);
+  background: rgba(52, 152, 219, 0.06);
+  box-shadow: var(--shadow-sm);
+}
+.dropzone .dropzone-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.dropzone .dropzone-subtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Crear XML: layout compacto */
+.create-xml-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+.create-xml-grid .span-2 {
+  grid-column: 1 / -1;
+}
+.create-xml-optional {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  background: #f9fafb;
+}
+.create-xml-optional summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.create-xml-optional-body {
+  margin-top: 10px;
+}
+@media (max-width: 720px) {
+  .create-xml-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .current-file {
   background: color-mix(in srgb, var(--accent-500) 10%, #fff);
   padding: 15px;

@@ -47,6 +47,9 @@ Todas las modificaciones notables de este proyecto se documentarán en este arch
 - Eliminados warnings de `preg_replace(): Unknown modifier ':'` que se colaban al inicio de algunos XML/CSV exportados.
 - Limpieza de buffers de salida antes de enviar cabeceras y contenido en exportaciones críticas para evitar texto basura o HTML previo a los datos.
 - Pestaña **Categorías**: las acciones de contar/eliminar/exportar ahora consideran todas las etiquetas `<category>` dentro de cada `<game>`/`<machine>` (no solo la primera), corrigiendo casos donde un juego tiene múltiples categorías (p. ej. `Games` + `Preproduction`).
+- Modales:
+  - `Crear XML`: layout más compacto (grid) y campos opcionales agrupados en un bloque plegable.
+  - `Añadir (drag&drop)`: modal separado para añadir juegos comprimidos en lote (1 juego por archivo) con cálculo automático de hashes.
 
 ## 2025-08-29
 

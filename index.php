@@ -228,14 +228,16 @@ if ($xml) {
 
     <?php include __DIR__ . '/partials/modal-add-game.php'; ?>
 
-    <script src="js/hashes.js"></script>
+    <?php include __DIR__ . '/partials/modal-add-game-batch.php'; ?>
+
+    <script src="js/hashes.js?v=<?= file_exists('js/hashes.js') ? filemtime('js/hashes.js') : time() ?>"></script>
     <script src="js/utils.js"></script>
     <script src="js/reloj.js"></script>
     <script src="js/multiselect.js"></script>
     <?php if ($uiTabs): ?>
       <script src="js/tabs.js"></script>
     <?php endif; ?>
-    <script src="js/modales.js"></script>
+    <script src="js/modales.js?v=<?= file_exists('js/modales.js') ? filemtime('js/modales.js') : time() ?>"></script>
     <script src="js/bulk.js"></script>
     <script src="js/dedupe.js"></script>
     <script src="js/search-external.js"></script>

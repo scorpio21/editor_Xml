@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/csrf-helper.php';
+
+if (!isset($xmlFile)) {
+    $xmlFile = __DIR__ . '/../uploads/current.xml';
+}
 ?>
 <div class="top-actions">
     <button type="button" class="secondary" onclick="openHelpModal()">Ayuda</button>
@@ -34,6 +38,7 @@ require_once __DIR__ . '/../inc/csrf-helper.php';
         </div>
         <div class="file-actions">
             <button type="button" onclick="openAddModal()">Añadir juego</button>
+            <button type="button" class="secondary" onclick="openAddBatchModal()">Añadir (drag&drop)</button>
         </div>
         <form method="post" class="inline-form">
             <?= campoCSRF() ?>

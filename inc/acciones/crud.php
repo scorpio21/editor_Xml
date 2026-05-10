@@ -4,6 +4,11 @@ declare(strict_types=1);
 // Módulo: acciones CRUD y utilitarias del XML (crear, editar, eliminar, descargar, restaurar, compactar, subir, reset filtros)
 // Requisitos previos: require de common.php, xml-helpers.php y variables $xmlFile, $xml
 
+// Fallback: permitir análisis/carga aislada sin depender del router
+if (!isset($xmlFile)) {
+    $xmlFile = __DIR__ . '/../../uploads/current.xml';
+}
+
 // Helper local para sanear nombres de archivo en Windows sin regex complejas
 function sanearNombreWindowsCrud(string $s): string {
     $s = trim($s);
@@ -734,6 +739,8 @@ if ($action === 'restore_backup') {
 // Añadir juego
 if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     requireValidCsrf();
+    $isAjax = (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower((string)$_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_SERVER['HTTP_ACCEPT']) && strpos((string)$_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
     $gameName = trim((string)($_POST['game_name'] ?? ''));
     $desc = trim((string)($_POST['description'] ?? ''));
     $cat = trim((string)($_POST['category'] ?? ''));
@@ -745,12 +752,22 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $sha1s = isset($_POST['sha1']) ? (array)$_POST['sha1'] : [];
 
     if ($gameName === '' || $desc === '') {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'Faltan campos obligatorios del juego (nombre o descripción).'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Faltan campos obligatorios del juego (nombre o descripción).';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
     $n = min(count($romNames), count($sizes), count($crcs), count($md5s), count($sha1s));
     if ($n === 0) {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'Debes añadir al menos una ROM.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Debes añadir al menos una ROM.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -765,26 +782,51 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
         $rmd5 = strtolower(trim((string)$md5s[$i]));
         $rsha1 = strtolower(trim((string)$sha1s[$i]));
         if ($rname === '' || $rsize === '' || $rcrc === '' || $rmd5 === '' || $rsha1 === '') {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'Faltan campos obligatorios en alguna ROM.'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
             $_SESSION['error'] = 'Faltan campos obligatorios en alguna ROM.';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^\d+$/', $rsize)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'Tamaño inválido en una ROM (debe ser entero en bytes).'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
             $_SESSION['error'] = 'Tamaño inválido en una ROM (debe ser entero en bytes).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9A-F]{8}$/', $rcrc)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'CRC32 inválido en una ROM (8 hex).'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
             $_SESSION['error'] = 'CRC32 inválido en una ROM (8 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9a-f]{32}$/', $rmd5)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'MD5 inválido en una ROM (32 hex).'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
             $_SESSION['error'] = 'MD5 inválido en una ROM (32 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
         }
         if (!preg_match('/^[0-9a-f]{40}$/', $rsha1)) {
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => false, 'message' => 'SHA1 inválido en una ROM (40 hex).'], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
             $_SESSION['error'] = 'SHA1 inválido en una ROM (40 hex).';
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
@@ -800,6 +842,11 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     $dom->validateOnParse = false;
     if (@$dom->loadXML($xml->asXML(), LIBXML_NONET) === false) {
         registrarError('crud.php:add_game', 'Falló loadXML al preparar DOM para añadir juego.', []);
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'No se pudo cargar el XML en memoria.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'No se pudo cargar el XML en memoria.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -808,6 +855,11 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
 
     $df = $xpath->query('/datafile')->item(0);
     if (!($df instanceof DOMElement)) {
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'Estructura XML inválida: falta datafile.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'Estructura XML inválida: falta datafile.';
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
@@ -844,8 +896,19 @@ if ($action === 'add_game' && isset($xml) && $xml instanceof SimpleXMLElement) {
     EditorXml::limpiarEspaciosEnBlancoDom($dom);
     if (!EditorXml::guardarDomConBackup($dom, $xmlFile)) {
         registrarError('crud.php:add_game', 'No se pudo guardar el nuevo juego. Revertido al respaldo.', [ 'file' => $xmlFile ]);
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'message' => 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         $_SESSION['error'] = 'No se pudo guardar el nuevo juego. Se revirtió al respaldo.';
         header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    if ($isAjax) {
+        $_SESSION['pending_save'] = true;
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['ok' => true, 'message' => 'Juego añadido correctamente.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     $_SESSION['message'] = 'Juego añadido correctamente.';
