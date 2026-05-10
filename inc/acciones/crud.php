@@ -18,26 +18,75 @@ function sanearNombreWindowsCrud(string $s): string {
 }
 
 // Subida de fichero (no depende de action) — proteger con CSRF
-if (isset($_FILES['xmlFile']) && isset($_FILES['xmlFile']['error']) && $_FILES['xmlFile']['error'] === UPLOAD_ERR_OK) {
+if (isset($_FILES['xmlFile'])) {
     requireValidCsrf();
-    $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
-    if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
-        // Guardar nombre original para futuras exportaciones
-        $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
-        if (!@move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile)) {
-            registrarError('crud.php:upload', 'No se pudo mover el archivo subido al destino.', [
-                'dest' => $xmlFile,
-                'size' => $_FILES['xmlFile']['size'] ?? null,
-                'name' => $_FILES['xmlFile']['name'] ?? null,
-            ]);
-            $_SESSION['error'] = 'No se pudo mover el archivo subido.';
-        } else {
-            $_SESSION['xml_uploaded'] = true;
-            $_SESSION['message'] = 'Archivo cargado correctamente.';
+    
+    // Manejar diferentes códigos de error de upload
+    if ($_FILES['xmlFile']['error'] !== UPLOAD_ERR_OK) {
+        $errorMsg = 'Error al subir archivo: ';
+        switch ($_FILES['xmlFile']['error']) {
+            case UPLOAD_ERR_INI_SIZE:
+                $errorMsg .= 'El archivo excede el tamaño máximo permitido por PHP (' . ini_get('upload_max_filesize') . ').';
+                break;
+            case UPLOAD_ERR_FORM_SIZE:
+                $errorMsg .= 'El archivo excede el tamaño máximo especificado en el formulario.';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errorMsg .= 'El archivo solo se subió parcialmente.';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errorMsg .= 'No se seleccionó ningún archivo.';
+                break;
+            case UPLOAD_ERR_NO_TMP_DIR:
+                $errorMsg .= 'No hay directorio temporal configurado.';
+                break;
+            case UPLOAD_ERR_CANT_WRITE:
+                $errorMsg .= 'No se pudo escribir el archivo en el disco.';
+                break;
+            case UPLOAD_ERR_EXTENSION:
+                $errorMsg .= 'Una extensión de PHP detuvo la subida del archivo.';
+                break;
+            default:
+                $errorMsg .= 'Error desconocido (código: ' . $_FILES['xmlFile']['error'] . ').';
         }
-
+        $_SESSION['error'] = $errorMsg;
+        registrarError('crud.php:upload', $errorMsg, [
+            'error_code' => $_FILES['xmlFile']['error'],
+            'name' => $_FILES['xmlFile']['name'] ?? null,
+            'size' => $_FILES['xmlFile']['size'] ?? null,
+            'tmp_name' => $_FILES['xmlFile']['tmp_name'] ?? null,
+        ]);
     } else {
-        $_SESSION['error'] = 'Solo se permiten archivos XML o DAT.';
+        // El archivo se subió correctamente, procesarlo
+        $fileExtension = pathinfo($_FILES['xmlFile']['name'], PATHINFO_EXTENSION);
+        if (in_array(strtolower($fileExtension), ['xml', 'dat'], true)) {
+            // Guardar nombre original para futuras exportaciones
+            $_SESSION['original_filename'] = (string)$_FILES['xmlFile']['name'];
+            
+            // Verificar que el archivo temporal exista
+            if (!is_uploaded_file($_FILES['xmlFile']['tmp_name'])) {
+                $_SESSION['error'] = 'El archivo no es un archivo subido válido.';
+                registrarError('crud.php:upload', 'Archivo temporal no es válido', [
+                    'tmp_name' => $_FILES['xmlFile']['tmp_name'] ?? null,
+                    'name' => $_FILES['xmlFile']['name'] ?? null,
+                ]);
+            } elseif (!@move_uploaded_file($_FILES['xmlFile']['tmp_name'], $xmlFile)) {
+                $error = error_get_last();
+                $_SESSION['error'] = 'No se pudo mover el archivo subido. ' . ($error['message'] ?? '');
+                registrarError('crud.php:upload', 'No se pudo mover el archivo subido al destino.', [
+                    'dest' => $xmlFile,
+                    'size' => $_FILES['xmlFile']['size'] ?? null,
+                    'name' => $_FILES['xmlFile']['name'] ?? null,
+                    'tmp_name' => $_FILES['xmlFile']['tmp_name'] ?? null,
+                    'php_error' => $error ?? null,
+                ]);
+            } else {
+                $_SESSION['xml_uploaded'] = true;
+                $_SESSION['message'] = 'Archivo cargado correctamente (' . number_format($_FILES['xmlFile']['size'] / 1024, 2) . ' KB).';
+            }
+        } else {
+            $_SESSION['error'] = 'Solo se permiten archivos XML o DAT. Extensión detectada: ' . htmlspecialchars($fileExtension);
+        }
     }
 }
 
